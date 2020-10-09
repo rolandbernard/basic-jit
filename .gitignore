@@ -1,0 +1,10 @@
+
+build/
+.vscode/
+
+callgrind.*
+perf.*
+gmon.*
+test.*
+
+.gdb_history
