@@ -1,0 +1,94 @@
+#ifndef _SCANNER_H_
+#define _SCANNER_H_
+
+#include <stdbool.h>
+
+typedef enum {
+    TOKEN_NONE,
+
+    TOKEN_KEYWORDS_START,
+    TOKEN_END,
+    TOKEN_STOP,
+    TOKEN_KEY,
+    TOKEN_RETURN,
+    TOKEN_RAN,
+    TOKEN_BEEP,
+    TOKEN_TAB,
+    TOKEN_SPC,
+    TOKEN_SIN,
+    TOKEN_COS,
+    TOKEN_TAN,
+    TOKEN_ASN,
+    TOKEN_ACS,
+    TOKEN_ATN,
+    TOKEN_LOG,
+    TOKEN_LN,
+    TOKEN_EXP,
+    TOKEN_SQR,
+    TOKEN_ABS,
+    TOKEN_SGN,
+    TOKEN_INT,
+    TOKEN_FRAC,
+    TOKEN_RND,
+    TOKEN_DEG,
+    TOKEN_RAD,
+    TOKEN_VAL,
+    TOKEN_STR,
+    TOKEN_GOTO,
+    TOKEN_GOSUB,
+    TOKEN_NEXT,
+    TOKEN_RESTORE,
+    TOKEN_MID,
+    TOKEN_LET,
+    TOKEN_IF,
+    TOKEN_THEN,
+    TOKEN_ELSE,
+    TOKEN_FOR,
+    TOKEN_ON,
+    TOKEN_MOD,
+    TOKEN_KEYWORDS_END,
+    
+    TOKEN_PLUS,
+    TOKEN_MINUS,
+    TOKEN_STAR,
+    TOKEN_SLASH,
+    TOKEN_PERCENT,
+    TOKEN_CARET,
+    TOKEN_EQ,
+    TOKEN_GT,
+    TOKEN_LT,
+    TOKEN_GE,
+    TOKEN_LE,
+    TOKEN_NE,
+    TOKEN_COLON,
+    TOKEN_COMMA,
+    TOKEN_DOLLAR,
+    TOKEN_DOT,
+    TOKEN_BRAC_OPEN,
+    TOKEN_BRAC_CLOSE,
+    
+    TOKEN_STRING,
+    TOKEN_FLOAT,
+    TOKEN_INTEGER,
+    TOKEN_IDENTIFIER,
+    TOKEN_EOF,
+} TokenType;
+
+typedef struct {
+    TokenType type;
+    int start;
+    int len;
+} Token;
+
+typedef struct {
+    const char* input;
+    int offset;
+    bool token_is_cached;
+    Token cached_token;
+} Scanner;
+
+bool acceptToken(Scanner* scanner, TokenType type);
+
+bool consumeToken(Scanner* scanner, TokenType type, Token* token);
+
+#endif
