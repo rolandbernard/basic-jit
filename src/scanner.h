@@ -93,4 +93,6 @@ bool consumeToken(Scanner* scanner, TokenType type, Token* token);
 
 int getScannerOffset(Scanner* scanner);
 
+bool isHexChar(char c);
+
 #endif

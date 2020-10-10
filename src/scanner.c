@@ -45,7 +45,7 @@ static const char* tokenTypeToString[] = {
     [TOKEN_MOD] = "MOD",
 };
 
-static bool isHexChar(char c) {
+bool isHexChar(char c) {
     return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
 }
 
