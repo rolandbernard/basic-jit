@@ -7,6 +7,9 @@
 #define AST_BASE AstType type;
 
 typedef enum {
+    AST_NONE,
+    AST_ERROR,
+    
     // simple
     AST_END,
     AST_STOP,
@@ -56,7 +59,6 @@ typedef enum {
     AST_LE,
     AST_GE,
     AST_NE,
-    AST_MID,
     
     // string
     AST_STRING,
@@ -76,6 +78,7 @@ typedef enum {
     AST_IF_THEN_ELSE,
     AST_FOR,
     AST_VAR,
+    AST_MID,
     
     // switch
     AST_ON_GOTO,
@@ -89,6 +92,11 @@ typedef enum {
 typedef struct {
     AST_BASE
 } Ast;
+
+typedef struct {
+    AST_BASE
+    int offset;
+} AstError;
 
 typedef struct {
     AST_BASE
