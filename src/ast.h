@@ -2,6 +2,7 @@
 #define _AST_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #define AST_BASE AstType type;
 
@@ -65,7 +66,7 @@ typedef enum {
 
     // special
     AST_FLOAT,
-    AST_INT,
+    AST_INTEGER,
     AST_LET,
     AST_IF_THEN_ELSE,
     AST_FOR,
@@ -84,6 +85,17 @@ typedef enum {
 typedef struct {
     AST_BASE
 } Ast;
+
+typedef struct {
+    AST_BASE
+    enum {
+        VAR_UNDEF,
+        VAR_FLOAT,
+        VAR_INT,
+        VAR_STR
+    } var_type;
+    char* name;
+} AstVar;
 
 typedef struct {
     AST_BASE
@@ -119,7 +131,7 @@ typedef struct {
 
 typedef struct {
     AST_BASE
-    char* name;
+    AstVar* name;
     Ast* value;
 } AstLet;
 
@@ -132,7 +144,7 @@ typedef struct {
 
 typedef struct {
     AST_BASE
-    char* variable;
+    AstVar* variable;
     Ast* start;
     Ast* end;
     Ast* step;
@@ -146,17 +158,6 @@ typedef struct {
 
 typedef struct {
     AST_BASE
-    enum {
-        VAR_UNDEF,
-        VAR_FLOAT,
-        VAR_INT,
-        VAR_STR
-    } var_type;
-    char* name;
-} AstVar;
-
-typedef struct {
-    AST_BASE
     Ast* value;
     int count;
     Ast** locations;
@@ -164,9 +165,11 @@ typedef struct {
 
 typedef struct {
     AST_BASE
-    char* name;
+    AstVar* name;
     int count;
-    int* size;
+    Ast** size;
 } AstIndex;
+
+void freeAst(Ast* ast);
 
 #endif
