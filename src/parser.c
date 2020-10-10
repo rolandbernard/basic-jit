@@ -120,6 +120,8 @@ static AstError* createError(int offset) {
     return ret;
 }
 
+static Ast* parseMultiple(Scanner* scanner);
+
 static Ast* parseExpression(Scanner* scanner);
 
 static long stringToInt(const char* str, int len) {
@@ -632,11 +634,107 @@ static Ast* parseSwitchStatement(Scanner* scanner) {
     }
 }
 
+static Ast* parseCondition(Scanner* scanner) {
+    Ast* first = parseExpression(scanner);
+    if (first == NULL) {
+        return NULL;
+    } else if (first->type == AST_ERROR) {
+        return first;
+    } else {
+        AstType type = AST_NONE;
+        if(acceptToken(scanner, TOKEN_EQ)) {
+            type = AST_EQ;
+        } else if(acceptToken(scanner, TOKEN_LT)) {
+            type = AST_LT;
+        } else if(acceptToken(scanner, TOKEN_GT)) {
+            type = AST_GT;
+        } else if(acceptToken(scanner, TOKEN_LE)) {
+            type = AST_LE;
+        } else if(acceptToken(scanner, TOKEN_GE)) {
+            type = AST_GE;
+        } else if(acceptToken(scanner, TOKEN_NE)) {
+            type = AST_NE;
+        }
+        if(type != AST_NONE) {
+            Ast* second = parseExpression(scanner);
+            if (second == NULL) {
+                return (Ast*)createError(getScannerOffset(scanner));
+            } else if (second->type == AST_ERROR) {
+                return second;
+            } else {
+                AstBinary* ret = (AstBinary*)alloc_on_stack(sizeof(AstBinary));
+                ret->type = type;
+                ret->first = first;
+                ret->second = second;
+                return (Ast*)ret;
+            }
+        } else {
+            return (Ast*)createError(getScannerOffset(scanner));
+        }
+    }
+}
+
+static Ast* parseIfThenElseStatement(Scanner* scanner) {
+    if(acceptToken(scanner, TOKEN_IF)) {
+        Ast* condition = parseCondition(scanner);
+        if (condition == NULL) {
+            return (Ast*)createError(getScannerOffset(scanner));
+        } else if (condition->type == AST_ERROR) {
+            return condition;
+        } else {
+            if(!acceptToken(scanner, TOKEN_THEN)) {
+                return (Ast*)createError(getScannerOffset(scanner));
+            } else {
+                Ast* if_true = parseMultiple(scanner);
+                if(if_true == NULL) {
+                    int error_offset = getScannerOffset(scanner);
+                    if_true = parseExpression(scanner);
+                    if (if_true == NULL) {
+                        return (Ast*)createError(error_offset);
+                    } else if (if_true->type == AST_ERROR) {
+                        return if_true;
+                    } else if(if_true->type != AST_INTEGER) {
+                        return (Ast*)createError(error_offset);
+                    }
+                } else if (if_true->type == AST_ERROR) {
+                    return if_true;
+                }
+                Ast* if_false = NULL;
+                if(acceptToken(scanner, TOKEN_ELSE)) {
+                    Ast* if_false = parseMultiple(scanner);
+                    if (if_false == NULL) {
+                        int error_offset = getScannerOffset(scanner);
+                        if_false = parseExpression(scanner);
+                        if (if_false == NULL) {
+                            return (Ast*)createError(error_offset);
+                        } else if (if_false->type == AST_ERROR) {
+                            return if_false;
+                        } else if (if_false->type != AST_INTEGER) {
+                            return (Ast*)createError(error_offset);
+                        }
+                    } else if (if_false->type == AST_ERROR) {
+                        return if_false;
+                    }
+                }
+                AstIfThenElse* ret = (AstIfThenElse*)alloc_on_stack(sizeof(AstIfThenElse));
+                ret->type = AST_IF_THEN_ELSE;
+                ret->condition = condition;
+                ret->if_true = if_true;
+                ret->if_true = if_false;
+                return (Ast*)ret;
+            }
+        }
+    } else {
+        return NULL;
+    }
+}
+
 static Ast* parseSingleOperation(Scanner* scanner) {
     Ast* ret = NULL;
     if((ret = parseSimpleStatement(scanner)) != NULL ||
        (ret = parseUnaryStatement(scanner)) != NULL ||
        (ret = parseSwitchStatement(scanner)) != NULL ||
+       (ret = parseIfThenElseStatement(scanner)) != NULL ||
        (ret = parseInputOrPrintOrDataOrReadStatement(scanner)) != NULL ||
        (ret = parseLetStatmentOrLabel(scanner)) != NULL);
     return ret;
