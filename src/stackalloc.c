@@ -22,7 +22,7 @@ void* alloc_on_stack(size_t size) {
     }
     intptr_t ret = (intptr_t)memory + allocated;
     allocated += size;
-    ret = (ret + 15) & ~(intptr_t)16;
+    ret = (ret + 15) & ~(intptr_t)15;
     return (void*)ret;
 }
 
