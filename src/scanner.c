@@ -1,9 +1,12 @@
 
 #include <strings.h>
+#include <string.h>
+#include <ctype.h>
 
 #include "scanner.h"
 
 static const char* tokenTypeToString[] = {
+    [TOKEN_REM] = "REM",
     [TOKEN_END] = "END",
     [TOKEN_STOP] = "STOP",
     [TOKEN_KEY] = "KEY",
@@ -47,6 +50,12 @@ static const char* tokenTypeToString[] = {
 
 bool isHexChar(char c) {
     return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+}
+
+static void skipWhitespace(Scanner* scanner) {
+    while (isspace(scanner->input[scanner->offset])) {
+        scanner->offset++;
+    }
 }
 
 static Token getToken(const char* input) {
@@ -138,79 +147,113 @@ static Token getToken(const char* input) {
         case '$':
             ret.type = TOKEN_DOLLAR;
             ret.len = 1;
+            break;
         case '=':
             ret.type = TOKEN_EQ;
             ret.len = 1;
+            break;
         case '>':
             switch (input[1]) {
             case '=':
                 ret.type = TOKEN_GE;
                 ret.len = 2;
+                break;
             default:
                 ret.type = TOKEN_GT;
                 ret.len = 1;
+                break;
             }
+            break;
         case '<':
             switch (input[1]) {
             case '=':
                 ret.type = TOKEN_LE;
                 ret.len = 2;
+                break;
             default:
                 ret.type = TOKEN_LT;
                 ret.len = 1;
+                break;
             }
+            break;
         case '^':
             ret.type = TOKEN_CARET;
             ret.len = 1;
+            break;
         case '+':
             ret.type = TOKEN_PLUS;
             ret.len = 1;
+            break;
         case '-':
             ret.type = TOKEN_MINUS;
             ret.len = 1;
+            break;
         case '*':
             ret.type = TOKEN_STAR;
             ret.len = 1;
+            break;
         case '/':
             ret.type = TOKEN_SLASH;
             ret.len = 1;
+            break;
         case '%':
             ret.type = TOKEN_PERCENT;
             ret.len = 1;
+            break;
         case '!':
             switch (input[1]) {
             case '=':
                 ret.type = TOKEN_NE;
                 ret.len = 2;
+                break;
             }
+            break;
         case '.':
             ret.type = TOKEN_DOT;
             ret.len = 1;
+            break;
         case ':':
             ret.type = TOKEN_COLON;
             ret.len = 1;
+            break;
         case ',':
         case ';':
             ret.type = TOKEN_COMMA;
             ret.len = 1;
+            break;
         case '(':
             ret.type = TOKEN_BRAC_OPEN;
             ret.len = 1;
+            break;
         case ')':
             ret.type = TOKEN_BRAC_CLOSE;
             ret.len = 1;
+            break;
         }
     }
     return ret;
 }
 
-bool acceptToken(Scanner* scanner, TokenType type) {
+static inline void cacheToken(Scanner* scanner) {
     if(!scanner->token_is_cached) {
+        skipWhitespace(scanner);
         scanner->cached_token = getToken(scanner->input + scanner->offset);
-        scanner->cached_token.start = scanner->offset;
-        scanner->offset += scanner->cached_token.len;
+        if(scanner->cached_token.type == TOKEN_REM) {
+            scanner->cached_token.type = TOKEN_EOF;
+            scanner->cached_token.start = scanner->offset;
+            scanner->offset = strlen(scanner->input);
+            scanner->cached_token.len = 0;
+        } else {
+            scanner->cached_token.start = scanner->offset;
+            scanner->offset += scanner->cached_token.len;
+        }
         scanner->token_is_cached = true;
+        skipWhitespace(scanner);
     }
+}
+
+bool acceptToken(Scanner* scanner, TokenType type) {
+    cacheToken(scanner);
     bool ret = (type == scanner->cached_token.type);
     if(ret) {
         scanner->token_is_cached = false;
@@ -219,12 +262,7 @@ bool acceptToken(Scanner* scanner, TokenType type) {
 }
 
 bool consumeToken(Scanner* scanner, TokenType type, Token* token) {
-    if(!scanner->token_is_cached) {
-        scanner->cached_token = getToken(scanner->input + scanner->offset);
-        scanner->cached_token.start = scanner->offset;
-        scanner->offset += scanner->cached_token.len;
-        scanner->token_is_cached = true;
-    }
+    cacheToken(scanner);
     *token = scanner->cached_token;
     bool ret = (type == scanner->cached_token.type);
     if(ret) {

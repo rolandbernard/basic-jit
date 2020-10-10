@@ -7,6 +7,7 @@ typedef enum {
     TOKEN_NONE,
 
     TOKEN_KEYWORDS_START,
+    TOKEN_REM,
     TOKEN_END,
     TOKEN_STOP,
     TOKEN_KEY,
