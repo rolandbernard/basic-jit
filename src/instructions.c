@@ -23,3 +23,13 @@ int addRetN(uint8_t* mem) {
     mem[0] = 0xc3;
     return 1;
 }
+
+int addPush(uint8_t* mem, Register reg) {
+    mem[0] = 0x50 + reg;
+    return 1;
+}
+
+int addPop(uint8_t* mem, Register reg) {
+    mem[0] = 0x58 + reg;
+    return 1;
+}

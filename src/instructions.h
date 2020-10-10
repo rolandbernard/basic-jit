@@ -16,4 +16,8 @@ int addMovImm32ToReg(uint8_t* mem, Register reg, int32_t value);
 
 int addRetN(uint8_t* mem);
 
+int addPush(uint8_t* mem, Register reg);
+
+int addPop(uint8_t* mem, Register reg);
+
 #endif
