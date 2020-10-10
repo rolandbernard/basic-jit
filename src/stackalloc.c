@@ -1,5 +1,6 @@
 
 #include <stdlib.h>
+#include <stdint.h>
 
 #include "stackalloc.h"
 
@@ -19,9 +20,10 @@ void* alloc_on_stack(size_t size) {
         }
         memory = realloc(memory, capacity);
     }
-    void* ret = memory + allocated;
+    intptr_t ret = (intptr_t)memory + allocated;
     allocated += size;
-    return ret;
+    ret = (ret + 15) & ~(intptr_t)16;
+    return (void*)ret;
 }
 
 void free_stack_till(void* addr) {
