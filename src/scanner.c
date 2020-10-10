@@ -233,3 +233,7 @@ bool consumeToken(Scanner* scanner, TokenType type, Token* token) {
     }
     return ret;
 }
+
+int getScannerOffset(Scanner* scanner) {
+    return scanner->token_is_cached ? scanner->cached_token.start : scanner->offset;
+}

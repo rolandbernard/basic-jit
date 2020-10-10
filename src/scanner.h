@@ -91,4 +91,6 @@ bool acceptToken(Scanner* scanner, TokenType type);
 
 bool consumeToken(Scanner* scanner, TokenType type, Token* token);
 
+int getScannerOffset(Scanner* scanner);
+
 #endif
