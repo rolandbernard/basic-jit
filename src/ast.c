@@ -72,7 +72,6 @@ void freeAst(Ast* ast) {
         case AST_BEEP:
         case AST_FLOAT:
         case AST_INTEGER:
-        case AST_SET:
             // Nothing to free here
             break;
         case AST_TAB:
@@ -109,7 +108,12 @@ void freeAst(Ast* ast) {
         case AST_MOD:
         case AST_POW:
         case AST_NEG:
-        case AST_COND:
+        case AST_GT:
+        case AST_LT:
+        case AST_EQ:
+        case AST_LE:
+        case AST_GE:
+        case AST_NE:
         case AST_MID:
             freeAstBinary((AstBinary*)ast);
             break;

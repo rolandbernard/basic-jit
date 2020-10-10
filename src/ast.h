@@ -50,7 +50,12 @@ typedef enum {
     AST_MOD,
     AST_POW,
     AST_NEG,
-    AST_COND,
+    AST_GT,
+    AST_LT,
+    AST_EQ,
+    AST_LE,
+    AST_GE,
+    AST_NE,
     AST_MID,
     
     // string
@@ -70,7 +75,6 @@ typedef enum {
     AST_LET,
     AST_IF_THEN_ELSE,
     AST_FOR,
-    AST_SET,
     AST_VAR,
     
     // switch
