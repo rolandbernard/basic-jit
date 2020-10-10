@@ -47,6 +47,10 @@ typedef enum {
     TOKEN_FOR,
     TOKEN_ON,
     TOKEN_MOD,
+    TOKEN_INPUT,
+    TOKEN_PRINT,
+    TOKEN_DATA,
+    TOKEN_READ,
     TOKEN_KEYWORDS_END,
     
     TOKEN_PLUS,
@@ -87,6 +91,8 @@ typedef struct {
     bool token_is_cached;
     Token cached_token;
 } Scanner;
+
+bool testToken(Scanner* scanner, TokenType type);
 
 bool acceptToken(Scanner* scanner, TokenType type);
 

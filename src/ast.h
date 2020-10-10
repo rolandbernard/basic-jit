@@ -129,6 +129,7 @@ typedef struct {
     AST_BASE
     int count;
     Ast** values;
+    bool open_end;
 } AstVariable;
 
 typedef struct {

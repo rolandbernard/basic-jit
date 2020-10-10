@@ -5,6 +5,8 @@
 
 #include "scanner.h"
 
+#define max(X, Y) ((X) > (Y) ? (X) : (Y))
+
 static const char* tokenTypeToString[] = {
     [TOKEN_REM] = "REM",
     [TOKEN_END] = "END",
@@ -46,6 +48,10 @@ static const char* tokenTypeToString[] = {
     [TOKEN_FOR] = "FOR",
     [TOKEN_ON] = "ON",
     [TOKEN_MOD] = "MOD",
+    [TOKEN_INPUT] = "INPUT",
+    [TOKEN_PRINT] = "PRINT",
+    [TOKEN_DATA] = "DATA",
+    [TOKEN_READ] = "READ",
 };
 
 bool isHexChar(char c) {
@@ -70,7 +76,7 @@ static Token getToken(const char* input) {
             len++;
         }
         for(int i = TOKEN_KEYWORDS_START + 1; i < TOKEN_KEYWORDS_END; i++) {
-            if (strncasecmp(tokenTypeToString[i], input, len) == 0) {
+            if (strlen(tokenTypeToString[i]) == len && strncasecmp(tokenTypeToString[i], input, len) == 0) {
                 ret.type = i;
             }
         }
@@ -250,6 +256,11 @@ static inline void cacheToken(Scanner* scanner) {
         scanner->token_is_cached = true;
         skipWhitespace(scanner);
     }
+}
+
+bool testToken(Scanner* scanner, TokenType type) {
+    cacheToken(scanner);
+    return (type == scanner->cached_token.type);
 }
 
 bool acceptToken(Scanner* scanner, TokenType type) {
