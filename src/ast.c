@@ -64,16 +64,6 @@ void freeAstIndex(AstIndex* ast) {
 void freeAst(Ast* ast) {
     if(ast != NULL) {
         switch (ast->type) {
-        case AST_END:
-        case AST_STOP:
-        case AST_KEY:
-        case AST_RETURN:
-        case AST_RAN:
-        case AST_BEEP:
-        case AST_FLOAT:
-        case AST_INTEGER:
-            // Nothing to free here
-            break;
         case AST_TAB:
         case AST_SPC:
         case AST_SIN:
@@ -147,6 +137,8 @@ void freeAst(Ast* ast) {
         case AST_DIM:
         case AST_INDEX:
             freeAstIndex((AstIndex*)ast);
+            break;
+        default:
             break;
         }
         free(ast);
