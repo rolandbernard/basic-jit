@@ -77,47 +77,46 @@ static Token getToken(const char* input) {
             }
             ret.type = TOKEN_INTEGER;
             ret.len = len;
-        }
-        if (input[1] == 'o') {
+        } else if (input[1] == 'o') {
             int len = 2;
             while ((input[len] >= '0' && input[len] <= '7') || input[len] == '_') {
                 len++;
             }
             ret.type = TOKEN_INTEGER;
             ret.len = len;
-        }
-        if (input[1] == 'h' || input[1] == 'x') {
+        } else if (input[1] == 'h' || input[1] == 'x') {
             int len = 2;
             while (isHexChar(input[len]) || input[len] == '_') {
                 len++;
             }
             ret.type = TOKEN_INTEGER;
             ret.len = len;
-        }
-        int len = 0;
-        bool is_float = false;
-        while ((input[len] >= '0' && input[len] <= '9') || input[len] == '_') {
-            len++;
-        }
-        if (input[len] == '.') {
-            len++;
-            is_float = true;
+        } else {
+            int len = 0;
+            bool is_float = false;
             while ((input[len] >= '0' && input[len] <= '9') || input[len] == '_') {
                 len++;
             }
-        }
-        if (input[len] == 'e' && (input[len + 1] == '-' || input[len + 1] == '+' || (input[len + 1] >= '0' && input[len + 1] <= '9') || input[len + 1] == '_')) {
-            is_float = true;
-            len++;
-            if (input[len] == '+' || input[len] == '-') {
+            if (input[len] == '.') {
                 len++;
+                is_float = true;
+                while ((input[len] >= '0' && input[len] <= '9') || input[len] == '_') {
+                    len++;
+                }
             }
-            while ((input[len] >= '0' && input[len] <= '9') || input[len] == '_') {
+            if (input[len] == 'e' && (input[len + 1] == '-' || input[len + 1] == '+' || (input[len + 1] >= '0' && input[len + 1] <= '9') || input[len + 1] == '_')) {
+                is_float = true;
                 len++;
+                if (input[len] == '+' || input[len] == '-') {
+                    len++;
+                }
+                while ((input[len] >= '0' && input[len] <= '9') || input[len] == '_') {
+                    len++;
+                }
             }
+            ret.type = is_float ? TOKEN_FLOAT : TOKEN_INTEGER;
+            ret.len = len;
         }
-        ret.type = is_float ? TOKEN_FLOAT : TOKEN_INTEGER;
-        ret.len = len;
     } else if (input[0] == '\"') {
         int len = 1;
         while (input[len] != '\"' && input[len] != 0) {
