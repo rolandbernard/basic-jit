@@ -5,15 +5,26 @@
 #include "common/stackalloc.h"
 
 typedef enum {
-    REG_A = 0,
-    REG_C = 1,
-    REG_D = 2,
-    REG_B = 3,
+    REG_A = 1 << 0,
+    REG_B = 1 << 1,
+    REG_C = 1 << 2,
+    REG_D = 1 << 3,
+
+    REG_8 = 1 << 4,
+    REG_9 = 1 << 5,
+    REG_10 = 1 << 6,
+    REG_11 = 1 << 7,
+    REG_12 = 1 << 8,
+    REG_13 = 1 << 9,
+    REG_14 = 1 << 10,
+    REG_15 = 1 << 11,
 } Register;
 
 void addJmpRelative32(StackAllocator* mem, int32_t value);
 
 void addMovImm32ToReg(StackAllocator* mem, Register reg, int32_t value);
+
+void addMovRegToReg(StackAllocator* mem, Register dest, Register src);
 
 void addRetN(StackAllocator* mem);
 

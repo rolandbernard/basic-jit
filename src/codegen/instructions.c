@@ -1,6 +1,22 @@
 
 #include "codegen/instructions.h"
     
+static int reg_to_opcodeno[] = {
+    [REG_A] = 0,
+    [REG_B] = 3,
+    [REG_C] = 1,
+    [REG_D] = 2,
+    
+    [REG_8] = 0,
+    [REG_9] = 1,
+    [REG_10] = 2,
+    [REG_11] = 3,
+    [REG_12] = 4,
+    [REG_13] = 5,
+    [REG_14] = 6,
+    [REG_15] = 7,
+};
+
 void addJmpRelative32(StackAllocator* mem, int32_t value) {
     uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 5);
     ptr[0] = 0xe9;
@@ -11,12 +27,23 @@ void addJmpRelative32(StackAllocator* mem, int32_t value) {
 }
 
 void addMovImm32ToReg(StackAllocator* mem, Register reg, int32_t value) {
+    if(reg >= REG_8) {
+        uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 1);
+        ptr[0] = 0x41;
+    }
     uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 5);
-    ptr[0] = 0xb8 + reg;
+    ptr[0] = 0xb8 + reg_to_opcodeno[reg];
     ptr[1] = (value) & 0xff;
     ptr[2] = (value >> 8) & 0xff;
     ptr[3] = (value >> 16) & 0xff;
     ptr[4] = (value >> 24) & 0xff;
+}
+
+void addMovRegToReg(StackAllocator* mem, Register dest, Register src) {
+    uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 3);
+    ptr[0] = 0x48 + (dest >= REG_8 ? 1 : 0) + (src >= REG_8 ? 4 : 0);
+    ptr[1] = 0x89;
+    ptr[2] = 0xc0 + reg_to_opcodeno[dest] + (reg_to_opcodeno[src] * 8);
 }
 
 void addRetN(StackAllocator* mem) {
@@ -25,11 +52,19 @@ void addRetN(StackAllocator* mem) {
 }
 
 void addPush(StackAllocator* mem, Register reg) {
+    if(reg >= REG_8) {
+        uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 1);
+        ptr[0] = 0x41;
+    }
     uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 1);
-    ptr[0] = 0x50 + reg;
+    ptr[0] = 0x50 + reg_to_opcodeno[reg];
 }
 
 void addPop(StackAllocator* mem, Register reg) {
+    if(reg >= REG_8) {
+        uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 1);
+        ptr[0] = 0x41;
+    }
     uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 1);
-    ptr[0] = 0x58 + reg;
+    ptr[0] = 0x58 + reg_to_opcodeno[reg];
 }
