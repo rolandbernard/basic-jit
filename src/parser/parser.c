@@ -7,7 +7,6 @@
 #include "parser/parser.h"
 #include "parser/ast.h"
 #include "parser/scanner.h"
-#include "parser/astalloc.h"
 
 #define MAX_LIST_LENGTH (1 << 20)
 static Ast* tmp_data[MAX_LIST_LENGTH];
@@ -113,16 +112,16 @@ static int printUTF8(int c, char* out) {
     }
 }
 
-static AstError* createError(int offset) {
-    AstError* ret = (AstError*)alloc_ast(sizeof(AstError));
+static AstError* createError(int offset, StackAllocator* mem) {
+    AstError* ret = (AstError*)alloc_aligned(mem, sizeof(AstError));
     ret->type = AST_ERROR;
     ret->offset = offset;
     return ret;
 }
 
-static Ast* parseMultiple(Scanner* scanner);
+static Ast* parseMultiple(Scanner* scanner, StackAllocator* mem);
 
-static Ast* parseExpression(Scanner* scanner);
+static Ast* parseExpression(Scanner* scanner, StackAllocator* mem);
 
 static long stringToInt(const char* str, int len) {
     long ret = 0;
@@ -198,8 +197,8 @@ static double stringToFloat(const char* str, int len) {
     return ret;
 }
 
-static char* copyEscapedString(const char* str, int len) {
-    char* ret = (char*)alloc_ast(len + 1);
+static char* copyEscapedString(const char* str, int len, StackAllocator* mem) {
+    char* ret = (char*)alloc_aligned(mem, len + 1);
     int new = 0;
     int old = 0;
     while (old < len) {
@@ -223,47 +222,47 @@ static char* copyEscapedString(const char* str, int len) {
     return ret;
 }
 
-static char* copyIdentifier(const char* str, int len) {
-    char* ret = (char*)alloc_ast(len + 1);
+static char* copyIdentifier(const char* str, int len, StackAllocator* mem) {
+    char* ret = (char*)alloc_aligned(mem, len + 1);
     memcpy(ret, str, len);
     return ret;
 }
 
-static Ast* parseBaseExpression(Scanner* scanner) {
+static Ast* parseBaseExpression(Scanner* scanner, StackAllocator* mem) {
     int error_offset = getScannerOffset(scanner);
     Token consumed;
     consumeToken(scanner, TOKEN_NONE, &consumed);
     if(acceptToken(scanner, TOKEN_RAN)) {
-        Ast* ret = (Ast*)alloc_ast(sizeof(Ast*));
+        Ast* ret = (Ast*)alloc_aligned(mem, sizeof(Ast*));
         ret->type = AST_RAN;
         return ret;
     } else if(acceptToken(scanner, TOKEN_INTEGER)) {
-        AstInt* ret = (AstInt*)alloc_ast(sizeof(AstInt));
+        AstInt* ret = (AstInt*)alloc_aligned(mem, sizeof(AstInt));
         ret->type = AST_INTEGER;
         ret->value = stringToInt(scanner->input + consumed.start, consumed.len);
         return (Ast*)ret;
     } else if(acceptToken(scanner, TOKEN_FLOAT)) {
-        AstFloat* ret = (AstFloat*)alloc_ast(sizeof(AstFloat));
+        AstFloat* ret = (AstFloat*)alloc_aligned(mem, sizeof(AstFloat));
         ret->type = AST_FLOAT;
         ret->value = stringToFloat(scanner->input + consumed.start, consumed.len);
         return (Ast*)ret;
     } else if(acceptToken(scanner, TOKEN_STRING)) {
-        char* str = copyEscapedString(scanner->input + consumed.start + 1, consumed.len - 2);
+        char* str = copyEscapedString(scanner->input + consumed.start + 1, consumed.len - 2, mem);
         if(str != NULL) {
-            AstString* ret = (AstString*)alloc_ast(sizeof(AstString));
+            AstString* ret = (AstString*)alloc_aligned(mem, sizeof(AstString));
             ret->type = AST_STRING;
             ret->str = str;
             return (Ast*)ret;
         } else {
-            return (Ast*)createError(error_offset);
+            return (Ast*)createError(error_offset, mem);
         }
     } else if(acceptToken(scanner, TOKEN_KEY)) {
-        Ast* ret = (Ast*)alloc_ast(sizeof(Ast*));
+        Ast* ret = (Ast*)alloc_aligned(mem, sizeof(Ast*));
         ret->type = AST_KEY;
         return ret;
     } else if(acceptToken(scanner, TOKEN_IDENTIFIER)) {
-        char* name = copyIdentifier(scanner->input + consumed.start, consumed.len);
-        AstVar* ret = (AstVar*)alloc_ast(sizeof(AstVar));
+        char* name = copyIdentifier(scanner->input + consumed.start, consumed.len, mem);
+        AstVar* ret = (AstVar*)alloc_aligned(mem, sizeof(AstVar));
         ret->type = AST_VAR;
         ret->name = name;
         ret->var_type = VAR_UNDEF;
@@ -276,9 +275,9 @@ static Ast* parseBaseExpression(Scanner* scanner) {
         }
         return (Ast*)ret;
     } else if(acceptToken(scanner, TOKEN_BRAC_OPEN)) {
-        Ast* ret = parseExpression(scanner);
+        Ast* ret = parseExpression(scanner, mem);
         if(!acceptToken(scanner, TOKEN_BRAC_CLOSE)) {
-            return (Ast*)createError(getScannerOffset(scanner));
+            return (Ast*)createError(getScannerOffset(scanner), mem);
         } else {
             return ret;
         }
@@ -287,7 +286,7 @@ static Ast* parseBaseExpression(Scanner* scanner) {
     }
 }
 
-static Ast* parseUnaryExpression(Scanner* scanner) {
+static Ast* parseUnaryExpression(Scanner* scanner, StackAllocator* mem) {
     AstType type = AST_NONE;
     {
         if (acceptToken(scanner, TOKEN_TAB)) {
@@ -336,26 +335,26 @@ static Ast* parseUnaryExpression(Scanner* scanner) {
     }
     if(type != AST_NONE) {
         int error_offset = getScannerOffset(scanner);
-        Ast* value = parseUnaryExpression(scanner);
+        Ast* value = parseUnaryExpression(scanner, mem);
         if (value == NULL) {
-            return (Ast*)createError(error_offset);
+            return (Ast*)createError(error_offset, mem);
         } else if (value->type == AST_ERROR) {
             return value;
         }
-        AstUnary* ret = (AstUnary*)alloc_ast(sizeof(AstUnary));
+        AstUnary* ret = (AstUnary*)alloc_aligned(mem, sizeof(AstUnary));
         ret->type = type;
         ret->value = value;
         return (Ast*)ret;
     } else {
-        return parseBaseExpression(scanner);
+        return parseBaseExpression(scanner, mem);
     }
 }
 
-static Ast* parseMultiplicativeExpression(Scanner* scanner) {
+static Ast* parseMultiplicativeExpression(Scanner* scanner, StackAllocator* mem) {
     int error_offset = getScannerOffset(scanner);
-    Ast* ret = parseUnaryExpression(scanner);
+    Ast* ret = parseUnaryExpression(scanner, mem);
     if (ret == NULL) {
-        return (Ast*)createError(error_offset);
+        return (Ast*)createError(error_offset, mem);
     } else if (ret->type == AST_ERROR) {
         return ret;
     }
@@ -370,13 +369,13 @@ static Ast* parseMultiplicativeExpression(Scanner* scanner) {
             type = AST_DIV;
         }
         if (type != AST_NONE) {
-            Ast* second = parseUnaryExpression(scanner);
+            Ast* second = parseUnaryExpression(scanner, mem);
             if (ret == NULL) {
-                return (Ast*)createError(error_offset);
+                return (Ast*)createError(error_offset, mem);
             } else if (ret->type == AST_ERROR) {
                 return ret;
             }
-            AstBinary* parent = (AstBinary*)alloc_ast(sizeof(AstBinary));
+            AstBinary* parent = (AstBinary*)alloc_aligned(mem, sizeof(AstBinary));
             parent->type = type;
             parent->first = ret;
             parent->second = second;
@@ -386,11 +385,11 @@ static Ast* parseMultiplicativeExpression(Scanner* scanner) {
     return (Ast*)ret;
 }
 
-static Ast* parseAdditiveExpression(Scanner* scanner) {
+static Ast* parseAdditiveExpression(Scanner* scanner, StackAllocator* mem) {
     int error_offset = getScannerOffset(scanner);
-    Ast* ret = parseMultiplicativeExpression(scanner);
+    Ast* ret = parseMultiplicativeExpression(scanner, mem);
     if (ret == NULL) {
-        return (Ast*)createError(error_offset);
+        return (Ast*)createError(error_offset, mem);
     } else if (ret->type == AST_ERROR) {
         return ret;
     }
@@ -403,13 +402,13 @@ static Ast* parseAdditiveExpression(Scanner* scanner) {
             type = AST_SUB;
         }
         if (type != AST_NONE) {
-            Ast* second = parseMultiplicativeExpression(scanner);
+            Ast* second = parseMultiplicativeExpression(scanner, mem);
             if (ret == NULL) {
-                return (Ast*)createError(error_offset);
+                return (Ast*)createError(error_offset, mem);
             } else if (ret->type == AST_ERROR) {
                 return ret;
             }
-            AstBinary* parent = (AstBinary*)alloc_ast(sizeof(AstBinary));
+            AstBinary* parent = (AstBinary*)alloc_aligned(mem, sizeof(AstBinary));
             parent->type = type;
             parent->first = ret;
             parent->second = second;
@@ -419,11 +418,11 @@ static Ast* parseAdditiveExpression(Scanner* scanner) {
     return (Ast*)ret;
 }
 
-static inline Ast* parseExpression(Scanner* scanner) {
-    return parseAdditiveExpression(scanner);
+static inline Ast* parseExpression(Scanner* scanner, StackAllocator* mem) {
+    return parseAdditiveExpression(scanner, mem);
 }
 
-static Ast* parseUnaryStatement(Scanner* scanner) {
+static Ast* parseUnaryStatement(Scanner* scanner, StackAllocator* mem) {
     AstType type = AST_NONE;
     if(acceptToken(scanner, TOKEN_GOTO)) {
         type = AST_GOTO;    
@@ -436,17 +435,17 @@ static Ast* parseUnaryStatement(Scanner* scanner) {
     }
     if(type != AST_NONE) {
         int error_offset = getScannerOffset(scanner);
-        Ast* value = parseExpression(scanner);
+        Ast* value = parseExpression(scanner, mem);
         if (value == NULL) {
-            return (Ast*)createError(error_offset);
+            return (Ast*)createError(error_offset, mem);
         } else if (value->type == AST_ERROR) {
             return value;
         } else if(value->type != AST_VAR && value->type != AST_INTEGER) {
-            return (Ast*)createError(error_offset);
+            return (Ast*)createError(error_offset, mem);
         } else if(value->type != AST_VAR && type == AST_NEXT) {
-            return (Ast*)createError(error_offset);
+            return (Ast*)createError(error_offset, mem);
         }
-        AstUnary* ret = (AstUnary*)alloc_ast(sizeof(AstUnary));
+        AstUnary* ret = (AstUnary*)alloc_aligned(mem, sizeof(AstUnary));
         ret->type = type;
         ret->value = value;
         return (Ast*)ret;
@@ -455,7 +454,7 @@ static Ast* parseUnaryStatement(Scanner* scanner) {
     }
 }
 
-static Ast* parseSimpleStatement(Scanner* scanner) {
+static Ast* parseSimpleStatement(Scanner* scanner, StackAllocator* mem) {
     AstType type = AST_NONE;
     if(acceptToken(scanner, TOKEN_END)) {
         type = AST_END;    
@@ -467,7 +466,7 @@ static Ast* parseSimpleStatement(Scanner* scanner) {
         type = AST_BEEP;
     }
     if(type != AST_NONE) {
-        Ast* ret = (Ast*)alloc_ast(sizeof(Ast));
+        Ast* ret = (Ast*)alloc_aligned(mem, sizeof(Ast));
         ret->type = type;
         return ret;
     } else {
@@ -475,10 +474,10 @@ static Ast* parseSimpleStatement(Scanner* scanner) {
     }
 }
 
-static Ast* parseLetStatmentAfterName(Scanner* scanner, Token name) {
-    AstVar* ast_name = (AstVar*)alloc_ast(sizeof(AstVar));    
+static Ast* parseLetStatmentAfterName(Scanner* scanner, StackAllocator* mem, Token name) {
+    AstVar* ast_name = (AstVar*)alloc_aligned(mem, sizeof(AstVar));    
     ast_name->type = AST_VAR;
-    ast_name->name = copyIdentifier(scanner->input + name.start, name.len);
+    ast_name->name = copyIdentifier(scanner->input + name.start, name.len, mem);
     ast_name->var_type = VAR_UNDEF;
     if(acceptToken(scanner, TOKEN_DOT)) {
         ast_name->var_type = VAR_FLOAT;
@@ -488,15 +487,15 @@ static Ast* parseLetStatmentAfterName(Scanner* scanner, Token name) {
         ast_name->var_type = VAR_INT;
     }
     if(!acceptToken(scanner, TOKEN_EQ)) {
-        return (Ast*)createError(getScannerOffset(scanner));
+        return (Ast*)createError(getScannerOffset(scanner), mem);
     } else {
-        Ast* value = parseExpression(scanner);
+        Ast* value = parseExpression(scanner, mem);
         if (value == NULL) {
-            return (Ast*)createError(getScannerOffset(scanner));
+            return (Ast*)createError(getScannerOffset(scanner), mem);
         } else if (value->type == AST_ERROR) {
             return value;
         }
-        AstLet* ret = (AstLet*)alloc_ast(sizeof(AstLet));
+        AstLet* ret = (AstLet*)alloc_aligned(mem, sizeof(AstLet));
         ret->type = AST_LET;
         ret->name = ast_name;
         ret->value = value;
@@ -504,31 +503,31 @@ static Ast* parseLetStatmentAfterName(Scanner* scanner, Token name) {
     }
 }
 
-static Ast* parseLetStatmentOrLabel(Scanner* scanner) {
+static Ast* parseLetStatmentOrLabel(Scanner* scanner, StackAllocator* mem) {
     Token name;
     if(acceptToken(scanner, TOKEN_LET)) {
         if(!consumeToken(scanner, TOKEN_IDENTIFIER, &name)) {
-            return (Ast*)createError(getScannerOffset(scanner));
+            return (Ast*)createError(getScannerOffset(scanner), mem);
         } else {
-            return parseLetStatmentAfterName(scanner, name);
+            return parseLetStatmentAfterName(scanner, mem, name);
         }
     } else if(consumeToken(scanner, TOKEN_IDENTIFIER, &name)) {
         if(testToken(scanner, TOKEN_EQ)) {
-            return parseLetStatmentAfterName(scanner, name);
+            return parseLetStatmentAfterName(scanner, mem, name);
         } else if(testToken(scanner, TOKEN_COLON)) {
-            AstString* ret = (AstString*)alloc_ast(sizeof(AstString));
+            AstString* ret = (AstString*)alloc_aligned(mem, sizeof(AstString));
             ret->type = AST_LABEL;
-            ret->str = copyIdentifier(scanner->input + name.start, name.len);
+            ret->str = copyIdentifier(scanner->input + name.start, name.len, mem);
             return (Ast*)ret;
         } else {
-            return (Ast*)createError(getScannerOffset(scanner));
+            return (Ast*)createError(getScannerOffset(scanner), mem);
         }
     } else {
         return NULL;
     }
 }
 
-static Ast* parseInputOrPrintOrDataOrReadStatement(Scanner* scanner) {
+static Ast* parseInputOrPrintOrDataOrReadStatement(Scanner* scanner, StackAllocator* mem) {
     AstType type = AST_NONE;
     if(acceptToken(scanner, TOKEN_INPUT)) {
         type = AST_INPUT;    
@@ -545,16 +544,16 @@ static Ast* parseInputOrPrintOrDataOrReadStatement(Scanner* scanner) {
         do {
             if (count < MAX_LIST_LENGTH) {
                 int error_offset = getScannerOffset(scanner);
-                tmp_data[count] = parseExpression(scanner);
+                tmp_data[count] = parseExpression(scanner, mem);
                 if (tmp_data[count] != NULL) {
                     if (tmp_data[count]->type == AST_ERROR) {
                         return tmp_data[count];
                     } else if(type == AST_INPUT && tmp_data[count]->type != AST_STRING && tmp_data[count]->type != AST_VAR) {
-                        return (Ast*)createError(error_offset);
+                        return (Ast*)createError(error_offset, mem);
                     } else if(type == AST_DATA && tmp_data[count]->type != AST_STRING && tmp_data[count]->type != AST_INTEGER && tmp_data[count]->type != AST_FLOAT) {
-                        return (Ast*)createError(error_offset);
+                        return (Ast*)createError(error_offset, mem);
                     } else if(type == AST_READ && tmp_data[count]->type != AST_VAR) {
-                        return (Ast*)createError(error_offset);
+                        return (Ast*)createError(error_offset, mem);
                     }
                     count++;
                     open_end = false;
@@ -562,32 +561,32 @@ static Ast* parseInputOrPrintOrDataOrReadStatement(Scanner* scanner) {
                     open_end = true;
                 }
             } else {
-                return (Ast*)createError(getScannerOffset(scanner));
+                return (Ast*)createError(getScannerOffset(scanner), mem);
             }
         } while (acceptToken(scanner, TOKEN_COMMA));
         if (count > 0) {
-            AstVariable* ret = (AstVariable*)alloc_ast(sizeof(AstVariable));
+            AstVariable* ret = (AstVariable*)alloc_aligned(mem, sizeof(AstVariable));
             ret->type = type;
             ret->count = count;
             ret->open_end = open_end;
-            ret->values = (Ast**)alloc_ast(sizeof(Ast*) * count);
+            ret->values = (Ast**)alloc_aligned(mem, sizeof(Ast*) * count);
             for (int i = 0; i < count; i++) {
                 ret->values[i] = tmp_data[i];
             }
             return (Ast*)ret;
         } else {
-            return (Ast*)createError(getScannerOffset(scanner));
+            return (Ast*)createError(getScannerOffset(scanner), mem);
         }
     } else {
         return NULL;
     }
 }
 
-static Ast* parseSwitchStatement(Scanner* scanner) {
+static Ast* parseSwitchStatement(Scanner* scanner, StackAllocator* mem) {
     if(acceptToken(scanner, TOKEN_ON)) {
-        Ast* value = parseExpression(scanner);
+        Ast* value = parseExpression(scanner, mem);
         if (value == NULL) {
-            return (Ast*)createError(getScannerOffset(scanner));
+            return (Ast*)createError(getScannerOffset(scanner), mem);
         } else if (value->type == AST_ERROR) {
             return value;
         }
@@ -597,45 +596,45 @@ static Ast* parseSwitchStatement(Scanner* scanner) {
         } else if(acceptToken(scanner, TOKEN_GOSUB)) {
             type = AST_ON_GOSUB;
         } else {
-            return (Ast*)createError(getScannerOffset(scanner));
+            return (Ast*)createError(getScannerOffset(scanner), mem);
         }
         int count = 0;
         do {
             if (count < MAX_LIST_LENGTH) {
                 int error_offset = getScannerOffset(scanner);
-                tmp_data[count] = parseExpression(scanner);
+                tmp_data[count] = parseExpression(scanner, mem);
                 if (tmp_data[count] != NULL) {
                     if (tmp_data[count]->type == AST_ERROR) {
                         return tmp_data[count];
                     } else if (value->type != AST_VAR && value->type != AST_INTEGER) {
-                        return (Ast*)createError(error_offset);
+                        return (Ast*)createError(error_offset, mem);
                     }
                 }
                 count++;
             } else {
-                return (Ast*)createError(getScannerOffset(scanner));
+                return (Ast*)createError(getScannerOffset(scanner), mem);
             }
         } while (acceptToken(scanner, TOKEN_COMMA));
         if (count > 0) {
-            AstSwitch* ret = (AstSwitch*)alloc_ast(sizeof(AstSwitch));
+            AstSwitch* ret = (AstSwitch*)alloc_aligned(mem, sizeof(AstSwitch));
             ret->type = type;
             ret->count = count;
             ret->value = value;
-            ret->locations = (Ast**)alloc_ast(sizeof(Ast*) * count);
+            ret->locations = (Ast**)alloc_aligned(mem, sizeof(Ast*) * count);
             for (int i = 0; i < count; i++) {
                 ret->locations[i] = tmp_data[i];
             }
             return (Ast*)ret;
         } else {
-            return (Ast*)createError(getScannerOffset(scanner));
+            return (Ast*)createError(getScannerOffset(scanner), mem);
         }
     } else {
         return NULL;
     }
 }
 
-static Ast* parseCondition(Scanner* scanner) {
-    Ast* first = parseExpression(scanner);
+static Ast* parseCondition(Scanner* scanner, StackAllocator* mem) {
+    Ast* first = parseExpression(scanner, mem);
     if (first == NULL) {
         return NULL;
     } else if (first->type == AST_ERROR) {
@@ -656,67 +655,67 @@ static Ast* parseCondition(Scanner* scanner) {
             type = AST_NE;
         }
         if(type != AST_NONE) {
-            Ast* second = parseExpression(scanner);
+            Ast* second = parseExpression(scanner, mem);
             if (second == NULL) {
-                return (Ast*)createError(getScannerOffset(scanner));
+                return (Ast*)createError(getScannerOffset(scanner), mem);
             } else if (second->type == AST_ERROR) {
                 return second;
             } else {
-                AstBinary* ret = (AstBinary*)alloc_ast(sizeof(AstBinary));
+                AstBinary* ret = (AstBinary*)alloc_aligned(mem, sizeof(AstBinary));
                 ret->type = type;
                 ret->first = first;
                 ret->second = second;
                 return (Ast*)ret;
             }
         } else {
-            return (Ast*)createError(getScannerOffset(scanner));
+            return (Ast*)createError(getScannerOffset(scanner), mem);
         }
     }
 }
 
-static Ast* parseIfThenElseStatement(Scanner* scanner) {
+static Ast* parseIfThenElseStatement(Scanner* scanner, StackAllocator* mem) {
     if(acceptToken(scanner, TOKEN_IF)) {
-        Ast* condition = parseCondition(scanner);
+        Ast* condition = parseCondition(scanner, mem);
         if (condition == NULL) {
-            return (Ast*)createError(getScannerOffset(scanner));
+            return (Ast*)createError(getScannerOffset(scanner), mem);
         } else if (condition->type == AST_ERROR) {
             return condition;
         } else {
             if(!acceptToken(scanner, TOKEN_THEN)) {
-                return (Ast*)createError(getScannerOffset(scanner));
+                return (Ast*)createError(getScannerOffset(scanner), mem);
             } else {
-                Ast* if_true = parseMultiple(scanner);
+                Ast* if_true = parseMultiple(scanner, mem);
                 if(if_true == NULL) {
                     int error_offset = getScannerOffset(scanner);
-                    if_true = parseExpression(scanner);
+                    if_true = parseExpression(scanner, mem);
                     if (if_true == NULL) {
-                        return (Ast*)createError(error_offset);
+                        return (Ast*)createError(error_offset, mem);
                     } else if (if_true->type == AST_ERROR) {
                         return if_true;
                     } else if(if_true->type != AST_INTEGER) {
-                        return (Ast*)createError(error_offset);
+                        return (Ast*)createError(error_offset, mem);
                     }
                 } else if (if_true->type == AST_ERROR) {
                     return if_true;
                 }
                 Ast* if_false = NULL;
                 if(acceptToken(scanner, TOKEN_ELSE)) {
-                    Ast* if_false = parseMultiple(scanner);
+                    Ast* if_false = parseMultiple(scanner, mem);
                     if (if_false == NULL) {
                         int error_offset = getScannerOffset(scanner);
-                        if_false = parseExpression(scanner);
+                        if_false = parseExpression(scanner, mem);
                         if (if_false == NULL) {
-                            return (Ast*)createError(error_offset);
+                            return (Ast*)createError(error_offset, mem);
                         } else if (if_false->type == AST_ERROR) {
                             return if_false;
                         } else if (if_false->type != AST_INTEGER) {
-                            return (Ast*)createError(error_offset);
+                            return (Ast*)createError(error_offset, mem);
                         }
                     } else if (if_false->type == AST_ERROR) {
                         return if_false;
                     }
                 }
-                AstIfThenElse* ret = (AstIfThenElse*)alloc_ast(sizeof(AstIfThenElse));
+                AstIfThenElse* ret = (AstIfThenElse*)alloc_aligned(mem, sizeof(AstIfThenElse));
                 ret->type = AST_IF_THEN_ELSE;
                 ret->condition = condition;
                 ret->if_true = if_true;
@@ -729,41 +728,41 @@ static Ast* parseIfThenElseStatement(Scanner* scanner) {
     }
 }
 
-static Ast* parseForStatement(Scanner* scanner) {
+static Ast* parseForStatement(Scanner* scanner, StackAllocator* mem) {
     if(acceptToken(scanner, TOKEN_FOR)) {
         int error_offset = getScannerOffset(scanner);
-        Ast* variable = parseExpression(scanner);
+        Ast* variable = parseExpression(scanner, mem);
         if (variable == NULL) {
-            return (Ast*)createError(error_offset);
+            return (Ast*)createError(error_offset, mem);
         } else if (variable->type == AST_ERROR) {
             return variable;
         } else if (variable->type != AST_VAR) {
-            return (Ast*)createError(error_offset);
+            return (Ast*)createError(error_offset, mem);
         }
         if(acceptToken(scanner, TOKEN_EQ)) {
-            Ast* initial = parseExpression(scanner);
+            Ast* initial = parseExpression(scanner, mem);
             if (initial == NULL) {
-                return (Ast*)createError(error_offset);
+                return (Ast*)createError(error_offset, mem);
             } else if (initial->type == AST_ERROR) {
                 return initial;
             }
             if(acceptToken(scanner, TOKEN_TO)) {
-                Ast* end = parseExpression(scanner);
+                Ast* end = parseExpression(scanner, mem);
                 if (end == NULL) {
-                    return (Ast*)createError(error_offset);
+                    return (Ast*)createError(error_offset, mem);
                 } else if (end->type == AST_ERROR) {
                     return end;
                 }
                 Ast* step = NULL;
                 if(acceptToken(scanner, TOKEN_TO)) {
-                    step = parseExpression(scanner);
+                    step = parseExpression(scanner, mem);
                     if (step== NULL) {
-                        return (Ast*)createError(error_offset);
+                        return (Ast*)createError(error_offset, mem);
                     } else if (step->type == AST_ERROR) {
                         return step;
                     }
                 } 
-                AstFor* ret = (AstFor*)alloc_ast(sizeof(AstFor));
+                AstFor* ret = (AstFor*)alloc_aligned(mem, sizeof(AstFor));
                 ret->type = AST_FOR;
                 ret->variable = (AstVar*)variable;
                 ret->start = initial;
@@ -771,34 +770,34 @@ static Ast* parseForStatement(Scanner* scanner) {
                 ret->step = step;
                 return (Ast*)ret;
             } else {
-                return (Ast*)createError(getScannerOffset(scanner));
+                return (Ast*)createError(getScannerOffset(scanner), mem);
             }
         } else {
-            return (Ast*)createError(getScannerOffset(scanner));
+            return (Ast*)createError(getScannerOffset(scanner), mem);
         }
     } else {
         return NULL;
     }
 }
 
-static Ast* parseSingleOperation(Scanner* scanner) {
+static Ast* parseSingleOperation(Scanner* scanner, StackAllocator* mem) {
     Ast* ret = NULL;
-    if((ret = parseSimpleStatement(scanner)) != NULL ||
-       (ret = parseUnaryStatement(scanner)) != NULL ||
-       (ret = parseSwitchStatement(scanner)) != NULL ||
-       (ret = parseIfThenElseStatement(scanner)) != NULL ||
-       (ret = parseForStatement(scanner)) != NULL ||
-       (ret = parseInputOrPrintOrDataOrReadStatement(scanner)) != NULL ||
-       (ret = parseLetStatmentOrLabel(scanner)) != NULL);
+    if((ret = parseSimpleStatement(scanner, mem)) != NULL ||
+       (ret = parseUnaryStatement(scanner, mem)) != NULL ||
+       (ret = parseSwitchStatement(scanner, mem)) != NULL ||
+       (ret = parseIfThenElseStatement(scanner, mem)) != NULL ||
+       (ret = parseForStatement(scanner, mem)) != NULL ||
+       (ret = parseInputOrPrintOrDataOrReadStatement(scanner, mem)) != NULL ||
+       (ret = parseLetStatmentOrLabel(scanner, mem)) != NULL);
     return ret;
 }
 
-static Ast* parseMultiple(Scanner* scanner) {
+static Ast* parseMultiple(Scanner* scanner, StackAllocator* mem) {
     int count = 0;
     bool open_end = false;
     do {
         if(count < MAX_LIST_LENGTH) {
-            tmp_data[count] = parseSingleOperation(scanner);
+            tmp_data[count] = parseSingleOperation(scanner, mem);
             if (tmp_data[count] != NULL) {
                 if (tmp_data[count]->type == AST_ERROR) {
                     return tmp_data[count];
@@ -809,15 +808,15 @@ static Ast* parseMultiple(Scanner* scanner) {
                 open_end = true;
             }
         } else {
-            return (Ast*)createError(getScannerOffset(scanner));
+            return (Ast*)createError(getScannerOffset(scanner), mem);
         }
     } while(acceptToken(scanner, TOKEN_COLON));
     if(count > 1) {
-        AstVariable* ret = (AstVariable*)alloc_ast(sizeof(AstVariable));
+        AstVariable* ret = (AstVariable*)alloc_aligned(mem, sizeof(AstVariable));
         ret->type = AST_MULTIPLE;
         ret->count = count;
         ret->open_end = open_end;
-        ret->values = (Ast**)alloc_ast(sizeof(Ast*) * count);
+        ret->values = (Ast**)alloc_aligned(mem, sizeof(Ast*) * count);
         for (int i = 0; i < count; i++) {
             ret->values[i] = tmp_data[i];
         }
@@ -829,23 +828,23 @@ static Ast* parseMultiple(Scanner* scanner) {
     }
 }
 
-static Ast* parseLineRoot(Scanner* scanner) {
-    Ast* ret = parseMultiple(scanner); 
+static Ast* parseLineRoot(Scanner* scanner, StackAllocator* mem) {
+    Ast* ret = parseMultiple(scanner, mem); 
     if (ret != NULL && ret->type == AST_ERROR) {
         return ret;
     }
     if(!acceptToken(scanner, TOKEN_EOF)) {
-        return (Ast*)createError(getScannerOffset(scanner));
+        return (Ast*)createError(getScannerOffset(scanner), mem);
     } else {
         return ret;
     }
 }
 
-Ast* parseLine(const char* line) {
+Ast* parseLine(const char* line, StackAllocator* mem) {
     Scanner scanner = {
         .input = line,
         .offset = 0,
         .token_is_cached = false,
     };
-    return parseLineRoot(&scanner);
+    return parseLineRoot(&scanner, mem);
 }
