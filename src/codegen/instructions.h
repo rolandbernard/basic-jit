@@ -2,42 +2,72 @@
 #define _INSTRUCTIONS_H_
 
 #include <stdint.h>
+
 #include "common/stackalloc.h"
 
-#define REG_COUNT 12
+typedef uint64_t RegisterSet;
+typedef uint64_t Register;
 
-typedef enum {
-    REG_A = 1 << 0,
-    REG_B = 1 << 1,
-    REG_C = 1 << 2,
-    REG_D = 1 << 3,
+uint64_t getFreeRegister(RegisterSet regs);
 
-    REG_8 = 1 << 4,
-    REG_9 = 1 << 5,
-    REG_10 = 1 << 6,
-    REG_11 = 1 << 7,
-    REG_12 = 1 << 8,
-    REG_13 = 1 << 9,
-    REG_14 = 1 << 10,
-    REG_15 = 1 << 11,
-} Register;
+uint64_t getFreeFRegister(RegisterSet regs);
 
-void addJmpRelative32(StackAllocator* mem, int32_t value);
+void addInstMovRegToReg(StackAllocator* mem, RegisterSet regs, Register dest, Register src);
 
-void addJmpAbsoluteReg(StackAllocator* mem, Register reg);
+void addInstMovImmToReg(StackAllocator* mem, RegisterSet regs, Register reg, int64_t value);
 
-void addMovImm32ToReg(StackAllocator* mem, Register reg, int32_t value);
+void addInstMovMemToReg(StackAllocator* mem, RegisterSet regs, Register reg, void* addr);
 
-void addMovImm64ToReg(StackAllocator* mem, Register reg, int64_t value);
+void addInstMovRegToMem(StackAllocator* mem, RegisterSet regs, Register reg, void* addr);
 
-void addMovRegToReg(StackAllocator* mem, Register dest, Register src);
+void addInstJmp(StackAllocator* mem, RegisterSet regs, Register reg, void* to);
 
-void addMovMemRegToReg(StackAllocator* mem, Register dest, Register src_pos);
+void addInstPush(StackAllocator* mem, RegisterSet regs, Register reg);
 
-void addRetN(StackAllocator* mem);
+void addInstPop(StackAllocator* mem, RegisterSet regs, Register reg);
 
-void addPush(StackAllocator* mem, Register reg);
+void addInstPushAll(StackAllocator* mem, RegisterSet regs);
 
-void addPop(StackAllocator* mem, Register reg);
+void addInstPopAll(StackAllocator* mem, RegisterSet regs);
+
+void addInstCall(StackAllocator* mem, RegisterSet regs, void* func);
+
+void addInstReturn(StackAllocator* mem, RegisterSet regs);
+
+void addInstAdd(StackAllocator* mem, RegisterSet regs, Register dest, Register a, Register b);
+
+void addInstSub(StackAllocator* mem, RegisterSet regs, Register dest, Register a, Register b);
+
+void addInstMul(StackAllocator* mem, RegisterSet regs, Register dest, Register a, Register b);
+
+void addInstDiv(StackAllocator* mem, RegisterSet regs, Register dest, Register a, Register b);
+
+void addInstRem(StackAllocator* mem, RegisterSet regs, Register dest, Register a, Register b);
+
+void addInstCondJmp(StackAllocator* mem, RegisterSet regs, void* to);
+
+void addInstFAdd(StackAllocator* mem, RegisterSet regs, Register dest, Register a, Register b);
+
+void addInstFSub(StackAllocator* mem, RegisterSet regs, Register dest, Register a, Register b);
+
+void addInstFMul(StackAllocator* mem, RegisterSet regs, Register dest, Register a, Register b);
+
+void addInstFDiv(StackAllocator* mem, RegisterSet regs, Register dest, Register a, Register b);
+
+void addInstFFrac(StackAllocator* mem, RegisterSet regs, Register dest, Register src);
+
+void addInstFTrunc(StackAllocator* mem, RegisterSet regs, Register dest, Register src);
+
+void addInstMovImmToFReg(StackAllocator* mem, RegisterSet regs, Register reg, int64_t value);
+
+void addInstMovMemToFReg(StackAllocator* mem, RegisterSet regs, Register reg, void* addr);
+
+void addInstMovFRegToMem(StackAllocator* mem, RegisterSet regs, Register reg, void* addr);
+
+void addInstMovFRegToFReg(StackAllocator* mem, RegisterSet regs, Register dest, Register src);
+
+void addInstMovFRegToReg(StackAllocator* mem, RegisterSet regs, Register dest, Register src);
+
+void addInstMovRegToFReg(StackAllocator* mem, RegisterSet regs, Register dest, Register src);
 
 #endif

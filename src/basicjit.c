@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #include "common/stackalloc.h"
-#include "codegen/instructions.h"
+#include "codegen/x86-64.h"
 #include "common/executil.h"
 
 int main(int argc, char** argv) {
