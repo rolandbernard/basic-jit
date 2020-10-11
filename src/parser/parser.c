@@ -437,7 +437,9 @@ static Ast* parseUnaryStatement(Scanner* scanner, StackAllocator* mem) {
         int error_offset = getScannerOffset(scanner);
         Ast* value = parseExpression(scanner, mem);
         if (value == NULL) {
-            return (Ast*)createError(error_offset, mem);
+            if(type != AST_RESTORE) {
+                return (Ast*)createError(error_offset, mem);
+            }
         } else if (value->type == AST_ERROR) {
             return value;
         } else if(value->type != AST_VAR && value->type != AST_INTEGER) {
