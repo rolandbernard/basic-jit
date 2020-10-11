@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include "common/stackalloc.h"
 
+#define REG_COUNT 12
+
 typedef enum {
     REG_A = 1 << 0,
     REG_B = 1 << 1,
@@ -22,9 +24,15 @@ typedef enum {
 
 void addJmpRelative32(StackAllocator* mem, int32_t value);
 
+void addJmpAbsolute64(StackAllocator* mem, uint64_t add);
+
 void addMovImm32ToReg(StackAllocator* mem, Register reg, int32_t value);
 
+void addMovImm64ToReg(StackAllocator* mem, Register reg, int64_t value);
+
 void addMovRegToReg(StackAllocator* mem, Register dest, Register src);
+
+void addMovMemRegToReg(StackAllocator* mem, Register dest, Register src_pos);
 
 void addRetN(StackAllocator* mem);
 
