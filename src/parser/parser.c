@@ -4,10 +4,10 @@
 #include <string.h>
 #include <math.h>
 
-#include "parser.h"
-#include "ast.h"
-#include "scanner.h"
-#include "stackalloc.h"
+#include "parser/parser.h"
+#include "parser/ast.h"
+#include "parser/scanner.h"
+#include "parser/stackalloc.h"
 
 #define MAX_LIST_LENGTH (1 << 20)
 static Ast* tmp_data[MAX_LIST_LENGTH];
@@ -729,12 +729,65 @@ static Ast* parseIfThenElseStatement(Scanner* scanner) {
     }
 }
 
+static Ast* parseForStatement(Scanner* scanner) {
+    if(acceptToken(scanner, TOKEN_FOR)) {
+        int error_offset = getScannerOffset(scanner);
+        Ast* variable = parseExpression(scanner);
+        if (variable == NULL) {
+            return (Ast*)createError(error_offset);
+        } else if (variable->type == AST_ERROR) {
+            return variable;
+        } else if (variable->type != AST_VAR) {
+            return (Ast*)createError(error_offset);
+        }
+        if(acceptToken(scanner, TOKEN_EQ)) {
+            Ast* initial = parseExpression(scanner);
+            if (initial == NULL) {
+                return (Ast*)createError(error_offset);
+            } else if (initial->type == AST_ERROR) {
+                return initial;
+            }
+            if(acceptToken(scanner, TOKEN_TO)) {
+                Ast* end = parseExpression(scanner);
+                if (end == NULL) {
+                    return (Ast*)createError(error_offset);
+                } else if (end->type == AST_ERROR) {
+                    return end;
+                }
+                Ast* step = NULL;
+                if(acceptToken(scanner, TOKEN_TO)) {
+                    step = parseExpression(scanner);
+                    if (step== NULL) {
+                        return (Ast*)createError(error_offset);
+                    } else if (step->type == AST_ERROR) {
+                        return step;
+                    }
+                } 
+                AstFor* ret = (AstFor*)alloc_on_stack(sizeof(AstFor));
+                ret->type = AST_FOR;
+                ret->variable = (AstVar*)variable;
+                ret->start = initial;
+                ret->end = end;
+                ret->step = step;
+                return (Ast*)ret;
+            } else {
+                return (Ast*)createError(getScannerOffset(scanner));
+            }
+        } else {
+            return (Ast*)createError(getScannerOffset(scanner));
+        }
+    } else {
+        return NULL;
+    }
+}
+
 static Ast* parseSingleOperation(Scanner* scanner) {
     Ast* ret = NULL;
     if((ret = parseSimpleStatement(scanner)) != NULL ||
        (ret = parseUnaryStatement(scanner)) != NULL ||
        (ret = parseSwitchStatement(scanner)) != NULL ||
        (ret = parseIfThenElseStatement(scanner)) != NULL ||
+       (ret = parseForStatement(scanner)) != NULL ||
        (ret = parseInputOrPrintOrDataOrReadStatement(scanner)) != NULL ||
        (ret = parseLetStatmentOrLabel(scanner)) != NULL);
     return ret;

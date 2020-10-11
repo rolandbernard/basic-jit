@@ -1,7 +1,7 @@
 #ifndef _PARSER_H_
 #define _PARSER_H_
 
-#include "ast.h"
+#include "parser/ast.h"
 
 Ast* parseLine(const char* line);
 

@@ -51,6 +51,8 @@ typedef enum {
     TOKEN_PRINT,
     TOKEN_DATA,
     TOKEN_READ,
+    TOKEN_TO,
+    TOKEN_STEP,
     TOKEN_KEYWORDS_END,
     
     TOKEN_PLUS,

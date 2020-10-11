@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#include "stackalloc.h"
+#include "parser/stackalloc.h"
 
 #define INITIAL_CAPACITY (1 << 20);
 

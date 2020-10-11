@@ -1,7 +1,7 @@
 
 #include <stdlib.h>
 
-#include "ast.h"
+#include "parser/ast.h"
 
 void freeAstUnary(AstUnary* ast) {
     freeAst(ast->value);

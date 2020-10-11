@@ -3,7 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "scanner.h"
+#include "parser/scanner.h"
 
 #define max(X, Y) ((X) > (Y) ? (X) : (Y))
 
@@ -52,6 +52,8 @@ static const char* tokenTypeToString[] = {
     [TOKEN_PRINT] = "PRINT",
     [TOKEN_DATA] = "DATA",
     [TOKEN_READ] = "READ",
+    [TOKEN_TO] = "TO",
+    [TOKEN_STEP] = "STEP",
 };
 
 bool isHexChar(char c) {
