@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#include "parser/stackalloc.h"
+#include "parser/astalloc.h"
 
 #define INITIAL_CAPACITY (1 << 20);
 
@@ -10,7 +10,7 @@ void* memory = NULL;
 size_t capacity = 0;
 size_t allocated = 0;
 
-void* alloc_on_stack(size_t size) {
+void* alloc_ast(size_t size) {
     if(capacity <= allocated + size) {
         if(capacity == 0) {
             capacity = INITIAL_CAPACITY;
@@ -26,17 +26,7 @@ void* alloc_on_stack(size_t size) {
     return (void*)ret;
 }
 
-void free_stack_till(void* addr) {
-    allocated = (addr - memory);
-    if(allocated < capacity / 64) {
-        while(allocated < capacity / 64) {
-            capacity /= 2;
-        }
-        memory = realloc(memory, capacity);
-    }
-}
-
-void free_complete_stack() {
+void free_all_asts() {
     allocated = 0;
     capacity = 0;
     free(memory);

@@ -7,7 +7,7 @@
 #include <unistd.h>
 
 #include "parser/parser.h"
-#include "parser/stackalloc.h"
+#include "parser/astalloc.h"
 
 int main(int argc, char** argv) {
 
@@ -16,6 +16,6 @@ int main(int argc, char** argv) {
         fprintf(stderr, "Error at: %i\n", ((AstError*)ast)->offset);
     }
 
-    free_complete_stack();
+    free_all_asts();
     return 0;
 }
