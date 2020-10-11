@@ -26,6 +26,16 @@ void addJmpRelative32(StackAllocator* mem, int32_t value) {
     ptr[4] = (value >> 24) & 0xff;
 }
 
+void addJmpAbsoluteReg(StackAllocator* mem, Register reg) {
+    if(reg >= REG_8) {
+        uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 1);
+        ptr[0] = 0x41;
+    }
+    uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 2);
+    ptr[0] = 0xff;
+    ptr[1] = 0xE0 + reg_to_opcodeno[reg];
+}
+
 void addMovImm32ToReg(StackAllocator* mem, Register reg, int32_t value) {
     if(reg >= REG_8) {
         uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 1);

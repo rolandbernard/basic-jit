@@ -24,7 +24,7 @@ typedef enum {
 
 void addJmpRelative32(StackAllocator* mem, int32_t value);
 
-void addJmpAbsolute64(StackAllocator* mem, uint64_t add);
+void addJmpAbsoluteReg(StackAllocator* mem, Register reg);
 
 void addMovImm32ToReg(StackAllocator* mem, Register reg, int32_t value);
 
