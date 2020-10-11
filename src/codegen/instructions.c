@@ -1,35 +1,35 @@
 
 #include "codegen/instructions.h"
     
-int addJmpRelative32(uint8_t* mem, int32_t value) {
-    mem[0] = 0xe9;
-    mem[1] = (value) & 0xff;
-    mem[2] = (value >> 8) & 0xff;
-    mem[3] = (value >> 16) & 0xff;
-    mem[4] = (value >> 24) & 0xff;
-    return 5;
+void addJmpRelative32(StackAllocator* mem, int32_t value) {
+    uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 5);
+    ptr[0] = 0xe9;
+    ptr[1] = (value) & 0xff;
+    ptr[2] = (value >> 8) & 0xff;
+    ptr[3] = (value >> 16) & 0xff;
+    ptr[4] = (value >> 24) & 0xff;
 }
 
-int addMovImm32ToReg(uint8_t* mem, Register reg, int32_t value) {
-    mem[0] = 0xb8 + reg;
-    mem[1] = (value) & 0xff;
-    mem[2] = (value >> 8) & 0xff;
-    mem[3] = (value >> 16) & 0xff;
-    mem[4] = (value >> 24) & 0xff;
-    return 5;
+void addMovImm32ToReg(StackAllocator* mem, Register reg, int32_t value) {
+    uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 5);
+    ptr[0] = 0xb8 + reg;
+    ptr[1] = (value) & 0xff;
+    ptr[2] = (value >> 8) & 0xff;
+    ptr[3] = (value >> 16) & 0xff;
+    ptr[4] = (value >> 24) & 0xff;
 }
 
-int addRetN(uint8_t* mem) {
-    mem[0] = 0xc3;
-    return 1;
+void addRetN(StackAllocator* mem) {
+    uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 1);
+    ptr[0] = 0xc3;
 }
 
-int addPush(uint8_t* mem, Register reg) {
-    mem[0] = 0x50 + reg;
-    return 1;
+void addPush(StackAllocator* mem, Register reg) {
+    uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 1);
+    ptr[0] = 0x50 + reg;
 }
 
-int addPop(uint8_t* mem, Register reg) {
-    mem[0] = 0x58 + reg;
-    return 1;
+void addPop(StackAllocator* mem, Register reg) {
+    uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 1);
+    ptr[0] = 0x58 + reg;
 }

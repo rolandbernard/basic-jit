@@ -2,6 +2,7 @@
 #define _INSTRUCTIONS_H_
 
 #include <stdint.h>
+#include "common/stackalloc.h"
 
 typedef enum {
     REG_A = 0,
@@ -10,14 +11,14 @@ typedef enum {
     REG_B = 3,
 } Register;
 
-int addJmpRelative32(uint8_t* mem, int32_t value);
+void addJmpRelative32(StackAllocator* mem, int32_t value);
 
-int addMovImm32ToReg(uint8_t* mem, Register reg, int32_t value);
+void addMovImm32ToReg(StackAllocator* mem, Register reg, int32_t value);
 
-int addRetN(uint8_t* mem);
+void addRetN(StackAllocator* mem);
 
-int addPush(uint8_t* mem, Register reg);
+void addPush(StackAllocator* mem, Register reg);
 
-int addPop(uint8_t* mem, Register reg);
+void addPop(StackAllocator* mem, Register reg);
 
 #endif

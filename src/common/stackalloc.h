@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 typedef struct {
-    uint8_t* memory;
+    void* memory;
     size_t capacity;
     size_t occupied;
 } StackAllocator;
