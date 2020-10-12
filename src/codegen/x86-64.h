@@ -5,6 +5,7 @@
 #include "common/stackalloc.h"
 
 #define REG_COUNT 12
+#define FREG_COUNT 12
 
 typedef enum {
     REG_A = 1 << 0,
@@ -20,24 +21,69 @@ typedef enum {
     REG_13 = 1 << 9,
     REG_14 = 1 << 10,
     REG_15 = 1 << 11,
-} Register;
+    
+    FREG_1 = 1 << 12,
+    FREG_1 = 1 << 12,
+    FREG_1 = 1 << 12,
+    FREG_1 = 1 << 12,
+    FREG_1 = 1 << 12,
+    FREG_1 = 1 << 12,
+    FREG_1 = 1 << 12,
+    FREG_1 = 1 << 12,
+} X86Register;
 
 void addJmpRelative32(StackAllocator* mem, int32_t value);
 
-void addJmpAbsoluteReg(StackAllocator* mem, Register reg);
+void addJmpAbsoluteReg(StackAllocator* mem, X86Register reg);
 
-void addMovImm32ToReg(StackAllocator* mem, Register reg, int32_t value);
+void addMovImm32ToReg(StackAllocator* mem, X86Register reg, int32_t value);
 
-void addMovImm64ToReg(StackAllocator* mem, Register reg, int64_t value);
+void addMovImm64ToReg(StackAllocator* mem, X86Register reg, int64_t value);
 
-void addMovRegToReg(StackAllocator* mem, Register dest, Register src);
+void addMovRegToReg(StackAllocator* mem, X86Register dest, X86Register src);
 
-void addMovMemRegToReg(StackAllocator* mem, Register dest, Register src_pos);
+void addMovMemRegToReg(StackAllocator* mem, X86Register dest, X86Register src_pos);
+
+void addMovRegToMemReg(StackAllocator* mem, X86Register dest_pos, X86Register src);
 
 void addRetN(StackAllocator* mem);
 
-void addPush(StackAllocator* mem, Register reg);
+void addPush(StackAllocator* mem, X86Register reg);
 
-void addPop(StackAllocator* mem, Register reg);
+void addPop(StackAllocator* mem, X86Register reg);
+
+void addAdd(StackAllocator* mem, X86Register dest, X86Register src);
+
+void addSub(StackAllocator* mem, X86Register dest, X86Register src);
+
+void addTest(StackAllocator* mem, X86Register dest, X86Register src);
+
+void addIMul(StackAllocator* mem, X86Register dest, X86Register src);
+
+void addIDiv(StackAllocator* mem, X86Register by);
+
+void addCallReg(StackAllocator* mem, X86Register reg);
+
+void addJmpEQ(StackAllocator* mem, uint32_t rel);
+
+void addJmpNE(StackAllocator* mem, uint32_t rel);
+
+void addJmpGT(StackAllocator* mem, uint32_t rel);
+
+void addJmpLS(StackAllocator* mem, uint32_t rel);
+
+void addJmpGE(StackAllocator* mem, uint32_t rel);
+
+void addJmpLE(StackAllocator* mem, uint32_t rel);
+
+void addMovFRegToReg(StackAllocator* mem, X86Register dest, X86Register fsrc);
+
+void addMovRegToFReg(StackAllocator* mem, X86Register fdest, X86Register src);
+
+void addMovFRegToFReg(StackAllocator* mem, X86Register fdest, X86Register fsrc);
+
+void addMovMemRegToFReg(StackAllocator* mem, X86Register fdest, X86Register src_pos);
+
+void addMovFRegToMemReg(StackAllocator* mem, X86Register dest_pos, X86Register fsrc);
 
 #endif

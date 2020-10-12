@@ -5,6 +5,15 @@
 
 #include "common/stackalloc.h"
 
+typedef enum {
+    COND_EQ,
+    COND_NE,
+    COND_LT,
+    COND_GT,
+    COND_LE,
+    COND_GE
+} JmpCondistions;
+
 typedef uint64_t RegisterSet;
 typedef uint64_t Register;
 
@@ -44,7 +53,7 @@ void addInstDiv(StackAllocator* mem, RegisterSet regs, Register dest, Register a
 
 void addInstRem(StackAllocator* mem, RegisterSet regs, Register dest, Register a, Register b);
 
-void addInstCondJmp(StackAllocator* mem, RegisterSet regs, void* to);
+void addInstCondJmp(StackAllocator* mem, RegisterSet regs, JmpCondistions cond, Register a, Register b, void* to);
 
 void addInstFAdd(StackAllocator* mem, RegisterSet regs, Register dest, Register a, Register b);
 
@@ -66,8 +75,8 @@ void addInstMovFRegToMem(StackAllocator* mem, RegisterSet regs, Register reg, vo
 
 void addInstMovFRegToFReg(StackAllocator* mem, RegisterSet regs, Register dest, Register src);
 
-void addInstMovFRegToReg(StackAllocator* mem, RegisterSet regs, Register dest, Register src);
+int64_t pop();
 
-void addInstMovRegToFReg(StackAllocator* mem, RegisterSet regs, Register dest, Register src);
+int64_t push();
 
 #endif

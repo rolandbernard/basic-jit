@@ -8,14 +8,18 @@
 #include "common/executil.h"
 
 int main(int argc, char** argv) {
-    StackAllocator data_memory = STACK_ALLOCATOR_INITIALIZER;
     StackAllocator jit_memory = STACK_ALLOCATOR_INITIALIZER;
-    long* test = (long*)alloc_aligned(&data_memory, sizeof(long));
-    *test = 42;
+    long test = 42;
 
-    addMovImm64ToReg(&jit_memory, REG_8, (uint64_t)test);
-    addMovImm32ToReg(&jit_memory, REG_A, 12);
-    addMovMemRegToReg(&jit_memory, REG_A, REG_8);
+    // addMovImm32ToReg(&jit_memory, REG_A, 42);
+    addPush(&jit_memory, REG_8);
+    addMovImm64ToReg(&jit_memory, REG_8, (uint64_t)&test);
+    addMovImm64ToReg(&jit_memory, REG_A, 12);
+    addMovRegToMemReg(&jit_memory, REG_8, REG_A);
+    addMovMemRegToReg(&jit_memory, REG_8, REG_8);
+    addMovRegToReg(&jit_memory, REG_A, REG_8);
+    addPop(&jit_memory, REG_8);
+    // addAdd(&jit_memory, REG_A, REG_B);
     addRetN(&jit_memory);
 
     printMemoryContent(stderr, jit_memory.memory, jit_memory.occupied);
@@ -27,6 +31,5 @@ int main(int argc, char** argv) {
     }
     
     free_stack(&jit_memory);
-    free_stack(&data_memory);
     return 0;
 }
