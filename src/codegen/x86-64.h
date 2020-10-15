@@ -60,23 +60,25 @@ void addXor(StackAllocator* mem, X86Register dest, X86Register src);
 
 void addTest(StackAllocator* mem, X86Register dest, X86Register src);
 
+void addCmp(StackAllocator* mem, X86Register dest, X86Register src);
+
 void addIMul(StackAllocator* mem, X86Register dest, X86Register src);
 
 void addIDiv(StackAllocator* mem, X86Register by);
 
 void addCallReg(StackAllocator* mem, X86Register reg);
 
-void addJmpEQ(StackAllocator* mem, uint32_t rel);
+void addJmpEQ(StackAllocator* mem, int32_t rel);
 
-void addJmpNE(StackAllocator* mem, uint32_t rel);
+void addJmpNE(StackAllocator* mem, int32_t rel);
 
-void addJmpGT(StackAllocator* mem, uint32_t rel);
+void addJmpGT(StackAllocator* mem, int32_t rel);
 
-void addJmpLS(StackAllocator* mem, uint32_t rel);
+void addJmpLS(StackAllocator* mem, int32_t rel);
 
-void addJmpGE(StackAllocator* mem, uint32_t rel);
+void addJmpGE(StackAllocator* mem, int32_t rel);
 
-void addJmpLE(StackAllocator* mem, uint32_t rel);
+void addJmpLE(StackAllocator* mem, int32_t rel);
 
 void addMovFRegToReg(StackAllocator* mem, X86Register dest, X86Register fsrc);
 
@@ -101,5 +103,7 @@ void addFRegCvtToInt(StackAllocator* mem, X86Register fdest, X86Register fsrc);
 void addFRegCvtToFlt(StackAllocator* mem, X86Register fdest, X86Register fsrc);
 
 void addPxor(StackAllocator* mem, X86Register fdest, X86Register fsrc);
+
+void addFCom(StackAllocator* mem, X86Register fdest, X86Register fsrc);
 
 #endif

@@ -147,6 +147,13 @@ void addTest(StackAllocator* mem, X86Register dest, X86Register src) {
     ptr[2] = 0xc0 + reg_to_opcodeno[dest] + (reg_to_opcodeno[src] * 8);
 }
 
+void addCmp(StackAllocator* mem, X86Register dest, X86Register src) {
+    uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 3);
+    ptr[0] = 0x48 + (dest >= REG_8 ? 1 : 0) + (src >= REG_8 ? 4 : 0);
+    ptr[1] = 0x39;
+    ptr[2] = 0xc0 + reg_to_opcodeno[dest] + (reg_to_opcodeno[src] * 8);
+}
+
 void addIMul(StackAllocator* mem, X86Register dest, X86Register src) {
     uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 4);
     ptr[0] = 0x48 + (dest >= REG_8 ? 4 : 0) + (src >= REG_8 ? 1 : 0);
@@ -172,7 +179,7 @@ void addCallReg(StackAllocator* mem, X86Register reg) {
     ptr[1] = 0xD0 + reg_to_opcodeno[reg];
 }
 
-void addJmpEQ(StackAllocator* mem, uint32_t rel) {
+void addJmpEQ(StackAllocator* mem, int32_t rel) {
     uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 6);
     ptr[0] = 0x0f;
     ptr[1] = 0x84;
@@ -182,7 +189,7 @@ void addJmpEQ(StackAllocator* mem, uint32_t rel) {
     ptr[5] = (rel >> 24) & 0xff;
 }
 
-void addJmpNE(StackAllocator* mem, uint32_t rel) {
+void addJmpNE(StackAllocator* mem, int32_t rel) {
     uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 6);
     ptr[0] = 0x0f;
     ptr[1] = 0x85;
@@ -192,7 +199,7 @@ void addJmpNE(StackAllocator* mem, uint32_t rel) {
     ptr[5] = (rel >> 24) & 0xff;
 }
 
-void addJmpGT(StackAllocator* mem, uint32_t rel) {
+void addJmpGT(StackAllocator* mem, int32_t rel) {
     uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 6);
     ptr[0] = 0x0f;
     ptr[1] = 0x8f;
@@ -202,7 +209,7 @@ void addJmpGT(StackAllocator* mem, uint32_t rel) {
     ptr[5] = (rel >> 24) & 0xff;
 }
 
-void addJmpLS(StackAllocator* mem, uint32_t rel) {
+void addJmpLS(StackAllocator* mem, int32_t rel) {
     uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 6);
     ptr[0] = 0x0f;
     ptr[1] = 0x8c;
@@ -212,7 +219,7 @@ void addJmpLS(StackAllocator* mem, uint32_t rel) {
     ptr[5] = (rel >> 24) & 0xff;
 }
 
-void addJmpGE(StackAllocator* mem, uint32_t rel) {
+void addJmpGE(StackAllocator* mem, int32_t rel) {
     uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 6);
     ptr[0] = 0x0f;
     ptr[1] = 0x8d;
@@ -222,7 +229,7 @@ void addJmpGE(StackAllocator* mem, uint32_t rel) {
     ptr[5] = (rel >> 24) & 0xff;
 }
 
-void addJmpLE(StackAllocator* mem, uint32_t rel) {
+void addJmpLE(StackAllocator* mem, int32_t rel) {
     uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 6);
     ptr[0] = 0x0f;
     ptr[1] = 0x8e;
@@ -331,5 +338,13 @@ void addPxor(StackAllocator* mem, X86Register fdest, X86Register fsrc) {
     ptr[0] = 0x66;
     ptr[3] = 0x0f;
     ptr[4] = 0xef;
+    ptr[5] = 0xC0 + (reg_to_opcodeno[fdest] * 8) + reg_to_opcodeno[fsrc];
+}
+
+void addFCom(StackAllocator* mem, X86Register fdest, X86Register fsrc) {
+    uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 4);
+    ptr[0] = 0x66;
+    ptr[3] = 0x0f;
+    ptr[4] = 0x2f;
     ptr[5] = 0xC0 + (reg_to_opcodeno[fdest] * 8) + reg_to_opcodeno[fsrc];
 }
