@@ -4,13 +4,14 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-typedef struct {
+typedef struct StackAllocator_s {
     void* memory;
     size_t capacity;
     size_t occupied;
+    struct StackAllocator_s* next;
 } StackAllocator;
 
-#define STACK_ALLOCATOR_INITIALIZER { .memory = NULL, .capacity = 0, .occupied = 0}
+#define STACK_ALLOCATOR_INITIALIZER { .memory = NULL, .capacity = 0, .occupied = 0, .next = NULL}
 
 void* alloc_aligned(StackAllocator* mem, size_t size);
 
