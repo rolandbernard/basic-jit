@@ -74,7 +74,7 @@ void addJmpNE(StackAllocator* mem, int32_t rel);
 
 void addJmpGT(StackAllocator* mem, int32_t rel);
 
-void addJmpLS(StackAllocator* mem, int32_t rel);
+void addJmpLT(StackAllocator* mem, int32_t rel);
 
 void addJmpGE(StackAllocator* mem, int32_t rel);
 

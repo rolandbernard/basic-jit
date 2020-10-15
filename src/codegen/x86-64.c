@@ -209,7 +209,7 @@ void addJmpGT(StackAllocator* mem, int32_t rel) {
     ptr[5] = (rel >> 24) & 0xff;
 }
 
-void addJmpLS(StackAllocator* mem, int32_t rel) {
+void addJmpLT(StackAllocator* mem, int32_t rel) {
     uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 6);
     ptr[0] = 0x0f;
     ptr[1] = 0x8c;

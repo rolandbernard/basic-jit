@@ -29,7 +29,9 @@ void addInstMovMemToReg(StackAllocator* mem, RegisterSet regs, Register reg, voi
 
 void addInstMovRegToMem(StackAllocator* mem, RegisterSet regs, Register reg, void* addr);
 
-void addInstJmp(StackAllocator* mem, RegisterSet regs, Register reg, void* to);
+void addInstJmp(StackAllocator* mem, RegisterSet regs, void* to);
+
+void addInstJmpRel(StackAllocator* mem, RegisterSet regs, int32_t to);
 
 void addInstPush(StackAllocator* mem, RegisterSet regs, Register reg);
 
@@ -53,7 +55,7 @@ void addInstDiv(StackAllocator* mem, RegisterSet regs, Register dest, Register a
 
 void addInstRem(StackAllocator* mem, RegisterSet regs, Register dest, Register a, Register b);
 
-void addInstCondJmp(StackAllocator* mem, RegisterSet regs, JmpCondistions cond, Register a, Register b, void* to);
+void addInstCondJmpRel(StackAllocator* mem, RegisterSet regs, JmpCondistions cond, Register a, Register b, int32_t to);
 
 void addInstFAdd(StackAllocator* mem, RegisterSet regs, Register dest, Register a, Register b);
 
@@ -67,7 +69,7 @@ void addInstFFrac(StackAllocator* mem, RegisterSet regs, Register dest, Register
 
 void addInstFTrunc(StackAllocator* mem, RegisterSet regs, Register dest, Register src);
 
-void addInstMovImmToFReg(StackAllocator* mem, RegisterSet regs, Register reg, int64_t value);
+void addInstMovImmToFReg(StackAllocator* mem, RegisterSet regs, Register reg, double value);
 
 void addInstMovMemToFReg(StackAllocator* mem, RegisterSet regs, Register reg, void* addr);
 
@@ -75,8 +77,39 @@ void addInstMovFRegToMem(StackAllocator* mem, RegisterSet regs, Register reg, vo
 
 void addInstMovFRegToFReg(StackAllocator* mem, RegisterSet regs, Register dest, Register src);
 
-int64_t pop();
+#ifdef __x86_64__
 
-int64_t push();
+#define pop(R) \
+    asm ( \
+        "pop %0" \
+        : "=r" (R) \
+    );
+
+#define push(V) \
+    asm ( \
+        "push %0" \
+        : \
+        : "r" (V) \
+    );
+
+#define popF(R) { \
+    union { \
+        int64_t i; \
+        double d; \
+    } double_to_uint64; \
+    pop(double_to_uint64.i); \
+    R = double_to_uint64.d; \
+}
+
+#define pushF(V) { \
+    union { \
+        int64_t i; \
+        double d; \
+    } double_to_uint64; \
+    double_to_uint64.d = V; \
+    push(double_to_uint64.i); \
+}
+
+#endif
 
 #endif
