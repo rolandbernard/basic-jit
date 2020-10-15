@@ -14,7 +14,9 @@ void* alloc_unaligned(StackAllocator* mem, size_t size) {
             mem->memory = malloc(INITIAL_CAPACITY);
             mem->capacity = INITIAL_CAPACITY;
         } else {
-            mem->capacity *= 2;
+            while(mem->capacity <= mem->occupied + size) {
+                mem->capacity *= 2;
+            }
             mem->memory = realloc(mem->memory, mem->capacity);
         }
     }
