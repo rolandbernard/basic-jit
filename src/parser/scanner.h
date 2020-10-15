@@ -53,6 +53,7 @@ typedef enum {
     TOKEN_READ,
     TOKEN_TO,
     TOKEN_STEP,
+    TOKEN_DIM,
     TOKEN_KEYWORDS_END,
     
     TOKEN_PLUS,
