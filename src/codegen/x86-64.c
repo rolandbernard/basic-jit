@@ -15,6 +15,15 @@ static int reg_to_opcodeno[] = {
     [REG_13] = 5,
     [REG_14] = 6,
     [REG_15] = 7,
+    
+    [FREG_0] = 0,
+    [FREG_1] = 1,
+    [FREG_2] = 2,
+    [FREG_3] = 3,
+    [FREG_4] = 4,
+    [FREG_5] = 5,
+    [FREG_6] = 6,
+    [FREG_7] = 7,
 };
 
 void addJmpRelative32(StackAllocator* mem, int32_t value) {
@@ -217,21 +226,43 @@ void addJmpLE(StackAllocator* mem, uint32_t rel) {
 }
 
 void addMovFRegToReg(StackAllocator* mem, X86Register dest, X86Register fsrc) {
-
+    uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 5);
+    ptr[0] = 0x66;
+    ptr[1] = 0x48 + (dest >= REG_8 ? 1 : 0);
+    ptr[2] = 0x0f;
+    ptr[3] = 0x7e;
+    ptr[4] = 0xc0 + (reg_to_opcodeno[fsrc] * 8) + reg_to_opcodeno[dest];
 }
 
 void addMovRegToFReg(StackAllocator* mem, X86Register fdest, X86Register src) {
-
+    uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 5);
+    ptr[0] = 0x66;
+    ptr[1] = 0x48 + (src >= REG_8 ? 1 : 0);
+    ptr[2] = 0x0f;
+    ptr[3] = 0x6e;
+    ptr[4] = 0xc0 + (reg_to_opcodeno[fdest] * 8) + reg_to_opcodeno[src];
 }
 
 void addMovFRegToFReg(StackAllocator* mem, X86Register fdest, X86Register fsrc) {
-
+    uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 4);
+    ptr[0] = 0xf3;
+    ptr[1] = 0x0f;
+    ptr[2] = 0x7e;
+    ptr[3] = 0xc0 + (reg_to_opcodeno[fdest] * 8) + reg_to_opcodeno[fsrc];
 }
 
 void addMovMemRegToFReg(StackAllocator* mem, X86Register fdest, X86Register src_pos) {
-
+    uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 4);
+    ptr[0] = 0xf3;
+    ptr[1] = 0x0f;
+    ptr[2] = 0x7e;
+    ptr[3] = 0x00 + (reg_to_opcodeno[fdest] * 8) + reg_to_opcodeno[src_pos];
 }
 
 void addMovFRegToMemReg(StackAllocator* mem, X86Register dest_pos, X86Register fsrc) {
-    
+    uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 4);
+    ptr[0] = 0x66;
+    ptr[1] = 0x0f;
+    ptr[2] = 0xd6;
+    ptr[3] = 0x00 + (reg_to_opcodeno[fsrc] * 8) + reg_to_opcodeno[dest_pos];
 }
