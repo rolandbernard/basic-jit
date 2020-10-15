@@ -133,6 +133,13 @@ void addSub(StackAllocator* mem, X86Register dest, X86Register src) {
     ptr[2] = 0xc0 + reg_to_opcodeno[dest] + (reg_to_opcodeno[src] * 8);
 }
 
+void addXor(StackAllocator* mem, X86Register dest, X86Register src) {
+    uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 3);
+    ptr[0] = 0x48 + (dest >= REG_8 ? 1 : 0) + (src >= REG_8 ? 4 : 0);
+    ptr[1] = 0x31;
+    ptr[2] = 0xc0 + reg_to_opcodeno[dest] + (reg_to_opcodeno[src] * 8);
+}
+
 void addTest(StackAllocator* mem, X86Register dest, X86Register src) {
     uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 3);
     ptr[0] = 0x48 + (dest >= REG_8 ? 1 : 0) + (src >= REG_8 ? 4 : 0);
@@ -316,5 +323,13 @@ void addFRegCvtToFlt(StackAllocator* mem, X86Register fdest, X86Register fsrc) {
     ptr[2] = 0xfe;
     ptr[3] = 0x08;
     ptr[4] = 0xe6;
+    ptr[5] = 0xC0 + (reg_to_opcodeno[fdest] * 8) + reg_to_opcodeno[fsrc];
+}
+
+void addPxor(StackAllocator* mem, X86Register fdest, X86Register fsrc) {
+    uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 4);
+    ptr[0] = 0x66;
+    ptr[3] = 0x0f;
+    ptr[4] = 0xef;
     ptr[5] = 0xC0 + (reg_to_opcodeno[fdest] * 8) + reg_to_opcodeno[fsrc];
 }

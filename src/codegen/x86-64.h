@@ -56,6 +56,8 @@ void addAdd(StackAllocator* mem, X86Register dest, X86Register src);
 
 void addSub(StackAllocator* mem, X86Register dest, X86Register src);
 
+void addXor(StackAllocator* mem, X86Register dest, X86Register src);
+
 void addTest(StackAllocator* mem, X86Register dest, X86Register src);
 
 void addIMul(StackAllocator* mem, X86Register dest, X86Register src);
@@ -97,5 +99,7 @@ void addFDiv(StackAllocator* mem, X86Register fdest, X86Register fsrc);
 void addFRegCvtToInt(StackAllocator* mem, X86Register fdest, X86Register fsrc);
 
 void addFRegCvtToFlt(StackAllocator* mem, X86Register fdest, X86Register fsrc);
+
+void addPxor(StackAllocator* mem, X86Register fdest, X86Register fsrc);
 
 #endif
