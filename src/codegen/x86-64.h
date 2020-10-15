@@ -86,4 +86,16 @@ void addMovMemRegToFReg(StackAllocator* mem, X86Register fdest, X86Register src_
 
 void addMovFRegToMemReg(StackAllocator* mem, X86Register dest_pos, X86Register fsrc);
 
+void addFAdd(StackAllocator* mem, X86Register fdest, X86Register fsrc);
+
+void addFSub(StackAllocator* mem, X86Register fdest, X86Register fsrc);
+
+void addFMul(StackAllocator* mem, X86Register fdest, X86Register fsrc);
+
+void addFDiv(StackAllocator* mem, X86Register fdest, X86Register fsrc);
+
+void addFRegCvtToInt(StackAllocator* mem, X86Register fdest, X86Register fsrc);
+
+void addFRegCvtToFlt(StackAllocator* mem, X86Register fdest, X86Register fsrc);
+
 #endif

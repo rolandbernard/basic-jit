@@ -266,3 +266,55 @@ void addMovFRegToMemReg(StackAllocator* mem, X86Register dest_pos, X86Register f
     ptr[2] = 0xd6;
     ptr[3] = 0x00 + (reg_to_opcodeno[fsrc] * 8) + reg_to_opcodeno[dest_pos];
 }
+
+void addFAdd(StackAllocator* mem, X86Register fdest, X86Register fsrc) {
+    uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 4);
+    ptr[0] = 0xf2;
+    ptr[1] = 0x0f;
+    ptr[2] = 0x58;
+    ptr[3] = 0xC0 + (reg_to_opcodeno[fdest] * 8) + reg_to_opcodeno[fsrc];
+}
+
+void addFSub(StackAllocator* mem, X86Register fdest, X86Register fsrc) {
+    uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 4);
+    ptr[0] = 0xf2;
+    ptr[1] = 0x0f;
+    ptr[2] = 0x5c;
+    ptr[3] = 0xC0 + (reg_to_opcodeno[fdest] * 8) + reg_to_opcodeno[fsrc];
+}
+
+void addFMul(StackAllocator* mem, X86Register fdest, X86Register fsrc) {
+    uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 4);
+    ptr[0] = 0xf2;
+    ptr[1] = 0x0f;
+    ptr[2] = 0x59;
+    ptr[3] = 0xC0 + (reg_to_opcodeno[fdest] * 8) + reg_to_opcodeno[fsrc];
+}
+
+void addFDiv(StackAllocator* mem, X86Register fdest, X86Register fsrc) {
+    uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 4);
+    ptr[0] = 0xf2;
+    ptr[1] = 0x0f;
+    ptr[2] = 0x5e;
+    ptr[3] = 0xC0 + (reg_to_opcodeno[fdest] * 8) + reg_to_opcodeno[fsrc];
+}
+
+void addFRegCvtToInt(StackAllocator* mem, X86Register fdest, X86Register fsrc) {
+    uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 6);
+    ptr[0] = 0x62;
+    ptr[1] = 0xf1;
+    ptr[2] = 0xfd;
+    ptr[3] = 0x08;
+    ptr[4] = 0x7a;
+    ptr[5] = 0xC0 + (reg_to_opcodeno[fdest] * 8) + reg_to_opcodeno[fsrc];
+}
+
+void addFRegCvtToFlt(StackAllocator* mem, X86Register fdest, X86Register fsrc) {
+    uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 6);
+    ptr[0] = 0x62;
+    ptr[1] = 0xf1;
+    ptr[2] = 0xfe;
+    ptr[3] = 0x08;
+    ptr[4] = 0xe6;
+    ptr[5] = 0xC0 + (reg_to_opcodeno[fdest] * 8) + reg_to_opcodeno[fsrc];
+}
