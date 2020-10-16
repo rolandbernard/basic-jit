@@ -40,7 +40,6 @@ static const char* tokenTypeToString[] = {
     [TOKEN_GOSUB] = "GOSUB",
     [TOKEN_NEXT] = "NEXT",
     [TOKEN_RESTORE] = "RESTORE",
-    [TOKEN_MID] = "MID",
     [TOKEN_LET] = "LET",
     [TOKEN_IF] = "IF",
     [TOKEN_THEN] = "THEN",

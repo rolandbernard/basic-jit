@@ -78,7 +78,6 @@ typedef enum {
     AST_IF_THEN_ELSE,
     AST_FOR,
     AST_VAR,
-    AST_MID,
     
     // switch
     AST_ON_GOTO,

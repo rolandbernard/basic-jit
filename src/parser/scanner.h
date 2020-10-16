@@ -39,7 +39,6 @@ typedef enum {
     TOKEN_GOSUB,
     TOKEN_NEXT,
     TOKEN_RESTORE,
-    TOKEN_MID,
     TOKEN_LET,
     TOKEN_IF,
     TOKEN_THEN,
