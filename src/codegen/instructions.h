@@ -31,7 +31,7 @@ void addInstMovRegToMem(StackAllocator* mem, RegisterSet regs, Register reg, voi
 
 void addInstJmp(StackAllocator* mem, RegisterSet regs, void* to);
 
-void addInstJmpRel(StackAllocator* mem, RegisterSet regs, int32_t to);
+size_t addInstJmpRel(StackAllocator* mem, RegisterSet regs, int32_t to);
 
 void addInstPush(StackAllocator* mem, RegisterSet regs, Register reg);
 
@@ -55,7 +55,7 @@ void addInstDiv(StackAllocator* mem, RegisterSet regs, Register dest, Register a
 
 void addInstRem(StackAllocator* mem, RegisterSet regs, Register dest, Register a, Register b);
 
-void addInstCondJmpRel(StackAllocator* mem, RegisterSet regs, JmpCondistions cond, Register a, Register b, int32_t to);
+size_t addInstCondJmpRel(StackAllocator* mem, RegisterSet regs, JmpCondistions cond, Register a, Register b, int32_t to);
 
 void addInstFAdd(StackAllocator* mem, RegisterSet regs, Register dest, Register a, Register b);
 

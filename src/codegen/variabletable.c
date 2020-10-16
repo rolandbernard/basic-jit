@@ -47,16 +47,10 @@ void addVariable(VariableTable* table, const char* name, Variable* variable, Sta
     if (table->count * 3 >= table->capacity * 2) {
         if (table->capacity == 0) {
             table->capacity = 32;
-            table->data = (VariableTableEntry*)alloc_aligned(mem, table->capacity * sizeof(VariableTableEntry));
-            for(int i = 0; i < table->capacity; i++) {
-                table->data[i].key = NULL;
-            }
+            table->data = (VariableTableEntry*)calloc(mem, table->capacity * sizeof(VariableTableEntry));
         } else {
             int new_capacity = table->capacity * 2;
-            VariableTableEntry* new_data = (VariableTableEntry*)alloc_aligned(mem, new_capacity * sizeof(VariableTableEntry));
-            for(int i = 0; i < new_capacity; i++) {
-                new_data[i].key = NULL;
-            }
+            VariableTableEntry* new_data = (VariableTableEntry*)calloc(mem, new_capacity * sizeof(VariableTableEntry));
             rehashEntrys(table, new_data, new_capacity);
             free(table->data);
             table->capacity = new_capacity;
@@ -82,4 +76,8 @@ Variable* getVariable(VariableTable* table, const char* name) {
         ret = table->data[index].value;
     }
     return ret;
+}
+
+void freeVariableTable(VariableTable* table) {
+    free(table->data);
 }

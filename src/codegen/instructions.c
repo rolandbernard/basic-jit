@@ -66,8 +66,9 @@ void addInstJmp(StackAllocator* mem, RegisterSet regs, void* to) {
     }
 }
 
-void addInstJmpRel(StackAllocator* mem, RegisterSet regs, int32_t to) {
+size_t addInstJmpRel(StackAllocator* mem, RegisterSet regs, int32_t to) {
     addJmpRelative32(mem, to);
+    return mem->occupied - 4;
 }
 
 void addInstPush(StackAllocator* mem, RegisterSet regs, Register reg) {
@@ -260,7 +261,7 @@ void addInstRem(StackAllocator* mem, RegisterSet regs, Register dest, Register a
     }
 }
 
-void addInstCondJmpRel(StackAllocator* mem, RegisterSet regs, JmpCondistions cond, Register a, Register b, int32_t to) {
+size_t addInstCondJmpRel(StackAllocator* mem, RegisterSet regs, JmpCondistions cond, Register a, Register b, int32_t to) {
     addCmp(mem, a, b);
     switch(cond) {
         case COND_EQ:
@@ -282,6 +283,7 @@ void addInstCondJmpRel(StackAllocator* mem, RegisterSet regs, JmpCondistions con
             addJmpLE(mem, to);
             break;
     }
+    return mem->occupied - 4;
 }
 
 void addInstFAdd(StackAllocator* mem, RegisterSet regs, Register dest, Register a, Register b) {
