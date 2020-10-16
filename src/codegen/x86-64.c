@@ -35,6 +35,15 @@ void addJmpRelative32(StackAllocator* mem, int32_t value) {
     ptr[4] = (value >> 24) & 0xff;
 }
 
+void addCallRel(StackAllocator* mem, int32_t value) {
+    uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 5);
+    ptr[0] = 0xe8;
+    ptr[1] = (value) & 0xff;
+    ptr[2] = (value >> 8) & 0xff;
+    ptr[3] = (value >> 16) & 0xff;
+    ptr[4] = (value >> 24) & 0xff;
+}
+
 void addJmpAbsoluteReg(StackAllocator* mem, X86Register reg) {
     if(reg >= REG_8) {
         uint8_t* ptr = (uint8_t*)alloc_unaligned(mem, 1);

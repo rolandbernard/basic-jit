@@ -2,6 +2,7 @@
 #define _INSTRUCTIONS_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "common/stackalloc.h"
 
@@ -23,11 +24,11 @@ uint64_t getFreeFRegister(RegisterSet regs);
 
 void addInstMovRegToReg(StackAllocator* mem, RegisterSet regs, Register dest, Register src);
 
-void addInstMovImmToReg(StackAllocator* mem, RegisterSet regs, Register reg, int64_t value);
+size_t addInstMovImmToReg(StackAllocator* mem, RegisterSet regs, Register reg, int64_t value, bool force64bit);
 
 void addInstMovMemToReg(StackAllocator* mem, RegisterSet regs, Register reg, void* addr);
 
-void addInstMovRegToMem(StackAllocator* mem, RegisterSet regs, Register reg, void* addr);
+size_t addInstMovRegToMem(StackAllocator* mem, RegisterSet regs, Register reg, void* addr);
 
 void addInstJmp(StackAllocator* mem, RegisterSet regs, void* to);
 
@@ -42,6 +43,8 @@ void addInstPushAll(StackAllocator* mem, RegisterSet regs);
 void addInstPopAll(StackAllocator* mem, RegisterSet regs);
 
 void addInstCall(StackAllocator* mem, RegisterSet regs, void* func);
+
+size_t addInstCallRel(StackAllocator* mem, RegisterSet regs, int32_t func);
 
 void addInstReturn(StackAllocator* mem, RegisterSet regs);
 

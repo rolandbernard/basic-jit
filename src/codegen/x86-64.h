@@ -66,6 +66,8 @@ void addIMul(StackAllocator* mem, X86Register dest, X86Register src);
 
 void addIDiv(StackAllocator* mem, X86Register by);
 
+void addCallRel(StackAllocator* mem, int32_t value);
+
 void addCallReg(StackAllocator* mem, X86Register reg);
 
 void addJmpEQ(StackAllocator* mem, int32_t rel);

@@ -27,11 +27,13 @@ void addInstMovRegToReg(StackAllocator* mem, RegisterSet regs, Register dest, Re
     addMovRegToReg(mem, dest, src);
 }
 
-void addInstMovImmToReg(StackAllocator* mem, RegisterSet regs, Register reg, int64_t value) {
-    if(value >> 32 == 0 || value >> 32 == -1) {
+size_t addInstMovImmToReg(StackAllocator* mem, RegisterSet regs, Register reg, int64_t value, bool force64) {
+    if((value >> 32 == 0 || value >> 32 == -1) && !force64) {
         addMovImm32ToReg(mem, reg, value);
+        return mem->occupied - 4;
     } else {
         addMovImm64ToReg(mem, reg, value);
+        return mem->occupied - 8;
     }
 }
 
@@ -40,17 +42,21 @@ void addInstMovMemToReg(StackAllocator* mem, RegisterSet regs, Register reg, voi
     addMovMemRegToReg(mem, reg, reg);
 }
 
-void addInstMovRegToMem(StackAllocator* mem, RegisterSet regs, Register reg, void* addr) {
+size_t addInstMovRegToMem(StackAllocator* mem, RegisterSet regs, Register reg, void* addr) {
+    size_t ret = 0;
     int free_reg = getFreeRegister(regs);
     if(free_reg == 0) {
         addPush(mem, REG_A);
         addMovImm64ToReg(mem, REG_A, (uint64_t)addr);
+        ret = mem->occupied - 8;
         addMovRegToMemReg(mem, reg, reg);
         addPop(mem, REG_A);
     } else {
         addMovImm64ToReg(mem, free_reg, (uint64_t)addr);
+        ret = mem->occupied - 8;
         addMovRegToMemReg(mem, free_reg, reg);
     }
+    return ret;
 }
 
 void addInstJmp(StackAllocator* mem, RegisterSet regs, void* to) {
@@ -115,6 +121,11 @@ void addInstPopAll(StackAllocator* mem, RegisterSet regs) {
     for(int i = REG_COUNT + FREG_COUNT - 1; i >= 0; i--) {
         addInstPop(mem, regs, (1 << i));
     }
+}
+
+size_t addInstCallRel(StackAllocator* mem, RegisterSet regs, int32_t func) {
+    addCallRel(mem, func);
+    return mem->occupied - 4;
 }
 
 void addInstCall(StackAllocator* mem, RegisterSet regs, void* func) {
