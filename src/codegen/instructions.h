@@ -22,6 +22,18 @@ uint64_t getFreeRegister(RegisterSet regs);
 
 uint64_t getFreeFRegister(RegisterSet regs);
 
+uint64_t getUsedRegister(RegisterSet regs);
+
+uint64_t getUsedFRegister(RegisterSet regs);
+
+int countFreeRegister(RegisterSet regs);
+
+int countFreeFRegister(RegisterSet regs);
+
+uint64_t getFirstRegister();
+
+uint64_t getFirstFRegister();
+
 void addInstMovRegToReg(StackAllocator* mem, RegisterSet regs, Register dest, Register src);
 
 size_t addInstMovImmToReg(StackAllocator* mem, RegisterSet regs, Register reg, int64_t value, bool force64bit);
@@ -79,6 +91,10 @@ void addInstMovMemToFReg(StackAllocator* mem, RegisterSet regs, Register reg, vo
 void addInstMovFRegToMem(StackAllocator* mem, RegisterSet regs, Register reg, void* addr);
 
 void addInstMovFRegToFReg(StackAllocator* mem, RegisterSet regs, Register dest, Register src);
+
+void addInstMovRegToFReg(StackAllocator* mem, RegisterSet regs, Register dest, Register src);
+
+void addInstMovFRegToReg(StackAllocator* mem, RegisterSet regs, Register dest, Register src);
 
 #ifdef __x86_64__
 

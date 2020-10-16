@@ -23,6 +23,52 @@ uint64_t getFreeFRegister(RegisterSet regs) {
     return 0;
 }
 
+uint64_t getUsedRegister(RegisterSet regs) {
+    for(int i = 0; i < REG_COUNT; i++) {
+        if((regs & (1 << i)) != 0) {
+            return 1 << i;
+        }
+    }
+    return 0;
+}
+
+uint64_t getUsedFRegister(RegisterSet regs) {
+    for(int i = REG_COUNT; i < REG_COUNT + FREG_COUNT; i++) {
+        if((regs & (1 << i)) != 0) {
+            return 1 << i;
+        }
+    }
+    return 0;
+}
+
+int countFreeRegister(RegisterSet regs) {
+    int ret = 0;
+    for(int i = 0; i < REG_COUNT; i++) {
+        if((regs & (1 << i)) == 0) {
+            ret++;
+        }
+    }
+    return ret;
+}
+
+int countFreeFRegister(RegisterSet regs) {
+    int ret = 0;
+    for(int i = REG_COUNT; i < REG_COUNT + FREG_COUNT; i++) {
+        if((regs & (1 << i)) == 0) {
+            ret++;
+        }
+    }
+    return ret;
+}
+
+uint64_t getFirstRegister() {
+    return 1;
+}
+
+uint64_t getFirstFRegister() {
+    return 1 << REG_COUNT;
+}
+
 void addInstMovRegToReg(StackAllocator* mem, RegisterSet regs, Register dest, Register src) {
     addMovRegToReg(mem, dest, src);
 }
@@ -413,6 +459,26 @@ void addInstMovFRegToMem(StackAllocator* mem, RegisterSet regs, Register reg, vo
 
 void addInstMovFRegToFReg(StackAllocator* mem, RegisterSet regs, Register dest, Register src) {
     addMovFRegToFReg(mem, dest, src);
+}
+
+void addInstMovRegToFReg(StackAllocator* mem, RegisterSet regs, Register dest, Register src) {
+    addMovRegToFReg(mem, dest, src);
+    addFRegCvtToFlt(mem, dest, dest);
+}
+
+void addInstMovFRegToReg(StackAllocator* mem, RegisterSet regs, Register dest, Register src) {
+    int free_reg = getFreeFRegister(regs);
+    if(free_reg == 0) {
+        addPush(mem, FREG_0);
+        addMovFRegToFReg(mem, FREG_0, src);
+        addFRegCvtToInt(mem, FREG_0, FREG_0);
+        addMovFRegToReg(mem, dest, FREG_0);
+        addPop(mem, FREG_0);
+    } else {
+        addMovFRegToFReg(mem, free_reg, src);
+        addFRegCvtToInt(mem, free_reg, free_reg);
+        addMovFRegToReg(mem, dest, free_reg);
+    }
 }
 
 #else
