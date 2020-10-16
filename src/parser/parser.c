@@ -320,8 +320,10 @@ static Ast* parseUnaryExpression(Scanner* scanner, StackAllocator* mem) {
     AstType type = AST_NONE;
     {
         if (acceptToken(scanner, TOKEN_TAB)) {
+            acceptToken(scanner, TOKEN_DOLLAR);
             type = AST_TAB;
         } else if (acceptToken(scanner, TOKEN_SPC)) {
+            acceptToken(scanner, TOKEN_DOLLAR);
             type = AST_SPC;
         } else if (acceptToken(scanner, TOKEN_SIN)) {
             type = AST_SIN;
@@ -360,6 +362,7 @@ static Ast* parseUnaryExpression(Scanner* scanner, StackAllocator* mem) {
         } else if (acceptToken(scanner, TOKEN_VAL)) {
             type = AST_VAL;
         } else if (acceptToken(scanner, TOKEN_STR)) {
+            acceptToken(scanner, TOKEN_DOLLAR);
             type = AST_STR;
         }
     }
@@ -472,7 +475,7 @@ static Ast* parseUnaryStatement(Scanner* scanner, StackAllocator* mem) {
             }
         } else if (value->type == AST_ERROR) {
             return value;
-        } else if(value->type != AST_VAR && value->type != AST_INTEGER) {
+        } else if((value->type != AST_VAR || ((AstVar*)value)->var_type != VAR_UNDEF) && value->type != AST_INTEGER) {
             return (Ast*)createError(error_offset, mem);
         } else if(value->type != AST_VAR && type == AST_NEXT) {
             return (Ast*)createError(error_offset, mem);
@@ -638,7 +641,7 @@ static Ast* parseSwitchStatement(Scanner* scanner, StackAllocator* mem) {
                 if (tmp_data[count] != NULL) {
                     if (tmp_data[count]->type == AST_ERROR) {
                         return tmp_data[count];
-                    } else if (value->type != AST_VAR && value->type != AST_INTEGER) {
+                    } else if ((value->type != AST_VAR || ((AstVar*)value)->var_type != VAR_UNDEF) && value->type != AST_INTEGER) {
                         return (Ast*)createError(error_offset, mem);
                     }
                 }

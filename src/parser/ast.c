@@ -104,7 +104,6 @@ void freeAst(Ast* ast) {
         case AST_LE:
         case AST_GE:
         case AST_NE:
-        case AST_MID:
             freeAstBinary((AstBinary*)ast);
             break;
         case AST_STRING:
