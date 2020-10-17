@@ -143,7 +143,7 @@ typedef struct {
 
 typedef struct {
     AST_BASE
-    AstVar* name;
+    Ast* name;
     Ast* value;
 } AstLet;
 

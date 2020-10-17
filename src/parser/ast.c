@@ -24,7 +24,7 @@ void freeAstVariable(AstVariable* ast) {
 }
 
 void freeAstLet(AstLet* ast) {
-    free(ast->name);
+    freeAst(ast->name);
     freeAst(ast->value);
 }
 

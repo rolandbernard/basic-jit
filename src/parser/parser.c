@@ -361,6 +361,8 @@ static Ast* parseUnaryExpression(Scanner* scanner, StackAllocator* mem) {
             type = AST_RAD;
         } else if (acceptToken(scanner, TOKEN_VAL)) {
             type = AST_VAL;
+        } else if (acceptToken(scanner, TOKEN_MINUS)) {
+            type = AST_NEG;
         } else if (acceptToken(scanner, TOKEN_STR)) {
             acceptToken(scanner, TOKEN_DOLLAR);
             type = AST_STR;
@@ -521,6 +523,36 @@ static Ast* parseLetStatmentAfterName(Scanner* scanner, StackAllocator* mem, Tok
     } else if(acceptToken(scanner, TOKEN_PERCENT)) {
         ast_name->var_type = VAR_INT;
     }
+    Ast* ast_name_ret = (Ast*)ast_name;
+    if(acceptToken(scanner, TOKEN_BRAC_OPEN)) {
+        int count = 0;
+        do {
+            if (count < MAX_LIST_LENGTH) {
+                tmp_data[count] = parseExpression(scanner, mem);
+                if (tmp_data[count] != NULL) {
+                    if (tmp_data[count]->type == AST_ERROR) {
+                        return tmp_data[count];
+                    }
+                    count++;
+                }
+            } else {
+                return (Ast*)createError(getScannerOffset(scanner), mem);
+            }
+        } while (acceptToken(scanner, TOKEN_COMMA));
+        if(acceptToken(scanner, TOKEN_BRAC_CLOSE)) {
+            AstIndex* index = (AstIndex*)alloc_aligned(mem, sizeof(AstIndex));
+            index->type = AST_INDEX;
+            index->name = ast_name;
+            index->count = count;
+            index->size = (Ast**)alloc_aligned(mem, sizeof(Ast*) * count);
+            for(int i = 0; i < count; i++) {
+                index->size[i] = tmp_data[i];
+            }
+            ast_name_ret = (Ast*)index;
+        } else {
+            return (Ast*)createError(getScannerOffset(scanner), mem);
+        }
+    }
     if(!acceptToken(scanner, TOKEN_EQ)) {
         return (Ast*)createError(getScannerOffset(scanner), mem);
     } else {
@@ -532,7 +564,7 @@ static Ast* parseLetStatmentAfterName(Scanner* scanner, StackAllocator* mem, Tok
         }
         AstLet* ret = (AstLet*)alloc_aligned(mem, sizeof(AstLet));
         ret->type = AST_LET;
-        ret->name = ast_name;
+        ret->name = ast_name_ret;
         ret->value = value;
         return (Ast*)ret;
     }
@@ -587,7 +619,7 @@ static Ast* parseInputOrPrintOrDataOrReadStatement(Scanner* scanner, StackAlloca
                         return (Ast*)createError(error_offset, mem);
                     } else if(type == AST_DATA && tmp_data[count]->type != AST_STRING && tmp_data[count]->type != AST_INTEGER && tmp_data[count]->type != AST_FLOAT) {
                         return (Ast*)createError(error_offset, mem);
-                    } else if(type == AST_READ && tmp_data[count]->type != AST_VAR) {
+                    } else if(type == AST_READ && tmp_data[count]->type != AST_VAR && tmp_data[count]->type != AST_INDEX) {
                         return (Ast*)createError(error_offset, mem);
                     }
                     count++;
