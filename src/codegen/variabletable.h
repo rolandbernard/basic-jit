@@ -24,11 +24,13 @@ typedef struct {
 typedef struct {
     VARIABLE_BASE
     int64_t value;
+    size_t for_jmp_loc;
 } VariableInt;
 
 typedef struct {
     VARIABLE_BASE
     double value;
+    size_t for_jmp_loc;
 } VariableFloat;
 
 typedef struct {
@@ -60,6 +62,7 @@ typedef struct {
 typedef struct {
     VARIABLE_BASE
     size_t pos;
+    size_t data_pos;
 } VariableLabel;
 
 typedef struct {

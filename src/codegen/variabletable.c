@@ -47,10 +47,10 @@ void addVariable(VariableTable* table, const char* name, Variable* variable, Sta
     if (table->count * 3 >= table->capacity * 2) {
         if (table->capacity == 0) {
             table->capacity = 32;
-            table->data = (VariableTableEntry*)calloc(mem, table->capacity * sizeof(VariableTableEntry));
+            table->data = (VariableTableEntry*)calloc(table->capacity, sizeof(VariableTableEntry));
         } else {
             int new_capacity = table->capacity * 2;
-            VariableTableEntry* new_data = (VariableTableEntry*)calloc(mem, new_capacity * sizeof(VariableTableEntry));
+            VariableTableEntry* new_data = (VariableTableEntry*)calloc(new_capacity, sizeof(VariableTableEntry));
             rehashEntrys(table, new_data, new_capacity);
             free(table->data);
             table->capacity = new_capacity;
