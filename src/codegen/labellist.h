@@ -2,11 +2,13 @@
 #define _LABEL_LIST_H_
 
 #include <stddef.h>
+#include <stdbool.h>
 
 typedef struct {
     char* name;
     int line;
     size_t position;
+    bool for_restore;
 } UnhandeledLabelEntry;
 
 typedef struct {

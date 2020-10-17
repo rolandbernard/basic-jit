@@ -5,6 +5,7 @@
 
 #include "common/stackalloc.h"
 #include "codegen/x86-64.h"
+#include "codegen/instructions.h"
 #include "common/executil.h"
 
 int main(int argc, char** argv) {
@@ -15,9 +16,7 @@ int main(int argc, char** argv) {
     addPush(&jit_memory, REG_8);
     addMovImm64ToReg(&jit_memory, REG_8, (uint64_t)&test);
     addMovImm64ToReg(&jit_memory, REG_A, 12);
-    addMovRegToMemReg(&jit_memory, REG_8, REG_A);
-    addMovMemRegToReg(&jit_memory, REG_8, REG_8);
-    addMovRegToReg(&jit_memory, REG_A, REG_8);
+    addMovMemRegToReg(&jit_memory, REG_A, REG_8);
     addPop(&jit_memory, REG_8);
     // addAdd(&jit_memory, REG_A, REG_B);
     addRetN(&jit_memory);
@@ -27,6 +26,10 @@ int main(int argc, char** argv) {
     if(executeFunctionInMemory(jit_memory.memory, jit_memory.occupied, &ret)) {
         perror("Failed to execute");
     } else {
+        uint64_t r = ret;
+        push(r);
+        pop(r);
+        ret = r;
         fprintf(stderr, "Return: %i\n", ret);
     }
     
