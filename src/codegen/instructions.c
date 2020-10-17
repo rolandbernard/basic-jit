@@ -516,6 +516,14 @@ void addInstMovFRegToReg(StackAllocator* mem, RegisterSet regs, Register dest, R
     }
 }
 
+void addInstMovMemRegToFReg(StackAllocator* mem, RegisterSet regs, Register reg, Register addr) {
+    addMovMemRegToFReg(mem, reg, addr);
+}
+
+void addInstMovFRegToMemReg(StackAllocator* mem, RegisterSet regs, Register addr, Register reg) {
+    addMovFRegToMemReg(mem, addr, reg);
+}
+
 #else
 
 #error The target architecture is not supported

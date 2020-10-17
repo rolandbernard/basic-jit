@@ -100,6 +100,10 @@ void addInstMovRegToFReg(StackAllocator* mem, RegisterSet regs, Register dest, R
 
 void addInstMovFRegToReg(StackAllocator* mem, RegisterSet regs, Register dest, Register src);
 
+void addInstMovMemRegToFReg(StackAllocator* mem, RegisterSet regs, Register reg, Register addr);
+
+void addInstMovFRegToMemReg(StackAllocator* mem, RegisterSet regs, Register addr, Register reg);
+
 #ifdef __x86_64__
 
 #define pop(R) \
