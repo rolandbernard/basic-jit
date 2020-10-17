@@ -42,6 +42,10 @@ void addInstMovMemToReg(StackAllocator* mem, RegisterSet regs, Register reg, voi
 
 size_t addInstMovRegToMem(StackAllocator* mem, RegisterSet regs, Register reg, void* addr);
 
+void addInstMovMemRegToReg(StackAllocator* mem, RegisterSet regs, Register reg, Register addr);
+
+void addInstMovRegToMemReg(StackAllocator* mem, RegisterSet regs, Register addr, Register reg);
+
 void addInstJmp(StackAllocator* mem, RegisterSet regs, void* to);
 
 size_t addInstJmpRel(StackAllocator* mem, RegisterSet regs, int32_t to);

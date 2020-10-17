@@ -75,8 +75,13 @@ void addInstMovRegToReg(StackAllocator* mem, RegisterSet regs, Register dest, Re
 
 size_t addInstMovImmToReg(StackAllocator* mem, RegisterSet regs, Register reg, int64_t value, bool force64) {
     if((value >> 32 == 0 || value >> 32 == -1) && !force64) {
-        addMovImm32ToReg(mem, reg, value);
-        return mem->occupied - 4;
+        if(value == 0) {
+            addXor(mem, reg, reg);
+            return -1;
+        } else {
+            addMovImm32ToReg(mem, reg, value);
+            return mem->occupied - 4;
+        }
     } else {
         addMovImm64ToReg(mem, reg, value);
         return mem->occupied - 8;
@@ -103,6 +108,14 @@ size_t addInstMovRegToMem(StackAllocator* mem, RegisterSet regs, Register reg, v
         addMovRegToMemReg(mem, free_reg, reg);
     }
     return ret;
+}
+
+void addInstMovMemRegToReg(StackAllocator* mem, RegisterSet regs, Register reg, Register addr) {
+    addMovMemRegToReg(mem, reg, addr);
+}
+
+void addInstMovRegToMemReg(StackAllocator* mem, RegisterSet regs, Register addr, Register reg) {
+    addMovRegToMemReg(mem, addr, reg);
 }
 
 void addInstJmp(StackAllocator* mem, RegisterSet regs, void* to) {
@@ -206,7 +219,18 @@ void addInstSub(StackAllocator* mem, RegisterSet regs, Register dest, Register a
     if(a == dest) {
         addSub(mem, dest, b);
     } else if(b == dest) {
-        addSub(mem, dest, a);
+        int free_reg = getFreeRegister(regs);
+        if (free_reg == 0) {
+            addPush(mem, REG_A);
+            addMovRegToReg(mem, REG_A, b);
+            addMovRegToReg(mem, dest, a);
+            addSub(mem, dest, REG_A);
+            addPop(mem, REG_A);
+        } else {
+            addMovRegToReg(mem, free_reg, b);
+            addMovRegToReg(mem, dest, a);
+            addSub(mem, dest, free_reg);
+        }
     } else {
         addMovRegToReg(mem, dest, a);
         addSub(mem, dest, b);
@@ -358,7 +382,18 @@ void addInstFSub(StackAllocator* mem, RegisterSet regs, Register dest, Register 
     if(a == dest) {
         addFSub(mem, dest, b);
     } else if(b == dest) {
-        addFSub(mem, dest, a);
+        int free_reg = getFreeFRegister(regs);
+        if (free_reg == 0) {
+            addPush(mem, FREG_0);
+            addMovFRegToFReg(mem, FREG_0, b);
+            addMovFRegToFReg(mem, dest, a);
+            addFSub(mem, dest, FREG_0);
+            addPop(mem, FREG_0);
+        } else {
+            addMovFRegToFReg(mem, free_reg, b);
+            addMovFRegToFReg(mem, dest, a);
+            addFSub(mem, dest, free_reg);
+        }
     } else {
         addMovFRegToFReg(mem, dest, a);
         addFSub(mem, dest, b);
