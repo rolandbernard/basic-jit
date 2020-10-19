@@ -821,7 +821,7 @@ static Ast* parseForStatement(Scanner* scanner, StackAllocator* mem) {
                     return end;
                 }
                 Ast* step = NULL;
-                if(acceptToken(scanner, TOKEN_TO)) {
+                if(acceptToken(scanner, TOKEN_STEP)) {
                     step = parseExpression(scanner, mem);
                     if (step== NULL) {
                         return (Ast*)createError(error_offset, mem);
