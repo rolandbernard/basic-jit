@@ -172,13 +172,17 @@ void addInstPop(StackAllocator* mem, RegisterSet regs, Register reg) {
 
 void addInstPushAll(StackAllocator* mem, RegisterSet regs) {
     for(int i = 0; i < REG_COUNT + FREG_COUNT; i++) {
-        addInstPush(mem, regs, (1 << i));
+        if(regs & (1 << i) != 0) {
+            addInstPush(mem, regs, (1 << i));
+        }
     }
 }
 
 void addInstPopAll(StackAllocator* mem, RegisterSet regs) {
     for(int i = REG_COUNT + FREG_COUNT - 1; i >= 0; i--) {
-        addInstPop(mem, regs, (1 << i));
+        if(regs & (1 << i) != 0) {
+            addInstPop(mem, regs, (1 << i));
+        }
     }
 }
 
@@ -343,7 +347,11 @@ void addInstRem(StackAllocator* mem, RegisterSet regs, Register dest, Register a
 }
 
 size_t addInstCondJmpRel(StackAllocator* mem, RegisterSet regs, JmpCondistions cond, Register a, Register b, int32_t to) {
-    addCmp(mem, a, b);
+    if(a < (1 << REG_COUNT)) {
+        addCmp(mem, a, b);
+    } else {
+        addFCom(mem, a, b);
+    }
     switch(cond) {
         case COND_EQ:
             addJmpEQ(mem, to);
