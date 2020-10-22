@@ -71,8 +71,8 @@ static Value generateMCNext(AstUnary* ast, MCGenerationData* data) {
             return ret;
         }
     }
-    size_t jmp_for_cond;
-    size_t jmp_for_pos;
+    size_t jmp_for_cond = ~0;
+    size_t jmp_for_pos = ~0;
     if(variable->type == VARIABLE_INT) {
         VariableFloat* varib = (VariableFloat*)varib;
         jmp_for_cond = varib->for_call_loc;
@@ -311,7 +311,7 @@ static Value generateMCString(AstString* ast, MCGenerationData* data) {
 }
 
 static Value generateMCLabel(AstString* ast, MCGenerationData* data) {
-    if(getVariable(data->label_list, ast->str) == NULL) {
+    if(getVariable(data->label_table, ast->str) == NULL) {
         VariableLabel* var = (VariableLabel*)alloc_aligned(data->variable_mem, sizeof(VariableLabel));
         var->type = VARIABLE_LABEL;
         var->pos = data->inst_mem->occupied;
@@ -476,6 +476,9 @@ static Value generateMCReadAfterFreeReg(AstVariable* ast, MCGenerationData* data
                     Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
                     return ret;
                 }
+            } else if (variable->type != VARIABLE_FLOAT && variable->type != VARIABLE_INT && variable->type != VARIABLE_STRING) {
+                Value ret = {.type = VALUE_ERROR, .error = ERROR_UNINDEXED_ARRAY};
+                return ret;
             }
             Register imm_reg = getFreeRegister(data->registers);
             data->registers |= imm_reg;
@@ -666,6 +669,9 @@ static Value generateMCLetAfterFreeReg(AstLet* ast, MCGenerationData* data) {
                 Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
                 return ret;
             }
+        } else if (variable->type != VARIABLE_FLOAT && variable->type != VARIABLE_INT && variable->type != VARIABLE_STRING) {
+            Value ret = {.type = VALUE_ERROR, .error = ERROR_UNINDEXED_ARRAY};
+            return ret;
         }
         Value a = generateMCForAst(ast->value, data);
         if(a.type == VALUE_ERROR) {
@@ -794,7 +800,7 @@ static Value generateMCIfThenElseAfterFreeReg(AstIfThenElse* ast, MCGenerationDa
 }
 
 static Value generateMCIfThenElse(AstIfThenElse* ast, MCGenerationData* data) {
-    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCLetAfterFreeReg, 2, 2);
+    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCIfThenElseAfterFreeReg, 2, 2);
 }
 
 static Value generateMCForAfterFreeReg(AstFor* ast, MCGenerationData* data) {
@@ -828,6 +834,9 @@ static Value generateMCForAfterFreeReg(AstFor* ast, MCGenerationData* data) {
             Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
             return ret;
         }
+    } else if (variable->type != VARIABLE_FLOAT && variable->type != VARIABLE_INT) {
+        Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
+        return ret;
     }
     Value initial = generateMCForAst(ast->start, data);
     if(initial.type == VALUE_ERROR) {
@@ -955,8 +964,69 @@ static Value generateMCFor(AstFor* ast, MCGenerationData* data) {
     return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCForAfterFreeReg, 2, 2);
 }
 
+static Value generateMCVarAfterFreeReg(AstVar* ast, MCGenerationData* data) {
+    Variable* variable = getVariable(data->variable_table, ast->name);
+    if (variable == NULL) {
+        if (ast->var_type == VAR_UNDEF || ast->var_type == VAR_FLOAT) {
+            VariableFloat* varib = (VariableFloat*)alloc_aligned(data->variable_mem, sizeof(VariableFloat));
+            varib->type = VARIABLE_FLOAT;
+            varib->for_jmp_loc = ~0;
+            varib->for_call_loc = ~0;
+            varib->value = 0.0;
+            addVariable(data->variable_table, ast->name, (Variable*)varib, data->variable_mem);
+            variable = (Variable*)varib;
+        } else if (ast->var_type == VAR_INT) {
+            VariableInt* varib = (VariableInt*)alloc_aligned(data->variable_mem, sizeof(VariableInt));
+            varib->type = VARIABLE_INT;
+            varib->for_jmp_loc = ~0;
+            varib->for_call_loc = ~0;
+            varib->value = 0;
+            addVariable(data->variable_table, ast->name, (Variable*)varib, data->variable_mem);
+            variable = (Variable*)varib;
+        } else if (ast->var_type == VAR_STR) {
+            VariableString* varib = (VariableString*)alloc_aligned(data->variable_mem, sizeof(VariableString));
+            varib->type = VARIABLE_STRING;
+            varib->str = NULL;
+            addVariable(data->variable_table, ast->name, (Variable*)varib, data->variable_mem);
+            variable = (Variable*)varib;
+        }
+    } else if (ast->var_type != VAR_UNDEF) {
+        if ((variable->type == VARIABLE_INT && ast->var_type != VAR_INT) ||
+            (variable->type == VARIABLE_FLOAT && ast->var_type != VAR_FLOAT) ||
+            (variable->type == VARIABLE_STRING && ast->var_type != VAR_STR)) {
+            Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
+            return ret;
+        }
+    } else if (variable->type != VARIABLE_FLOAT && variable->type != VARIABLE_INT && variable->type != VARIABLE_STRING) {
+        Value ret = {.type = VALUE_ERROR, .error = ERROR_UNINDEXED_ARRAY};
+        return ret;
+    }
+    Register imm_reg;
+    Value ret;
+    if(variable->type == VARIABLE_INT) {
+        imm_reg = getFreeRegister(data->registers);
+        data->registers |= imm_reg;
+        addInstMovMemToReg(data->inst_mem, data->registers, imm_reg, &((VariableInt*)variable)->value);
+        ret.type = VALUE_INT;
+        ret.reg = imm_reg;
+    } else if(variable->type == VARIABLE_FLOAT) {
+        imm_reg = getFreeFRegister(data->registers);
+        data->registers |= imm_reg;
+        addInstMovMemToFReg(data->inst_mem, data->registers, imm_reg, &((VariableFloat*)variable)->value);
+        ret.type = VALUE_FLOAT;
+        ret.reg = imm_reg;
+    } else if(variable->type == VARIABLE_STRING) {
+        imm_reg = getFreeRegister(data->registers);
+        data->registers |= imm_reg;
+        addInstMovMemToReg(data->inst_mem, data->registers, imm_reg, &((VariableString*)variable)->str);
+        ret.type = VALUE_STRING;
+        ret.reg = imm_reg;
+    }
+    return ret;
+}
+
 static Value generateMCVar(AstVar* ast, MCGenerationData* data) {
-    
+    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCVarAfterFreeReg, 1, 1);
 }
 
 static Value generateMCOnGo(AstSwitch* ast, MCGenerationData* data) {

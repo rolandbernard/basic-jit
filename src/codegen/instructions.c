@@ -172,7 +172,7 @@ void addInstPop(StackAllocator* mem, RegisterSet regs, Register reg) {
 
 void addInstPushAll(StackAllocator* mem, RegisterSet regs) {
     for(int i = 0; i < REG_COUNT + FREG_COUNT; i++) {
-        if(regs & (1 << i) != 0) {
+        if((regs & (1 << i)) != 0) {
             addInstPush(mem, regs, (1 << i));
         }
     }
@@ -180,7 +180,7 @@ void addInstPushAll(StackAllocator* mem, RegisterSet regs) {
 
 void addInstPopAll(StackAllocator* mem, RegisterSet regs) {
     for(int i = REG_COUNT + FREG_COUNT - 1; i >= 0; i--) {
-        if(regs & (1 << i) != 0) {
+        if((regs & (1 << i)) != 0) {
             addInstPop(mem, regs, (1 << i));
         }
     }

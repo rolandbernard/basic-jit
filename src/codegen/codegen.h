@@ -36,6 +36,7 @@ typedef enum {
     ERROR_ARRAY_NOT_DEF,
     ERROR_ARRAY_DIM_COUNT_MISMATCH,
     ERROR_DUBLICATE_LABEL,
+    ERROR_UNINDEXED_ARRAY,
 } Error;
 
 typedef struct {
