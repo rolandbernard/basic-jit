@@ -328,7 +328,7 @@ static Value generateMCValAfterFreeReg(AstUnary* ast, MCGenerationData* data) {
 }
 
 static Value generateMCVal(AstUnary* ast, MCGenerationData* data) {
-    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCVal, 1, 1);
+    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCValAfterFreeReg, 1, 1);
 }
 
 static char* stringifyInt(int64_t x) {
@@ -378,16 +378,113 @@ static Value generateMCStr(AstUnary* ast, MCGenerationData* data) {
     return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCStrAfterFreeReg, 1, 1);
 }
 
-static Value generateMCPrint(AstVariable* ast, MCGenerationData* data) {
+static void printInt64(int64_t x) {
+    fprintf(stdout, "%li", x);
+}
 
+static void printFloat(double x) {
+    fprintf(stdout, "%lg", x);
+}
+
+static void printString(char* x) {
+    fprintf(stdout, "%s", x);
+}
+
+static void printLn() {
+    fprintf(stdout, "\n");
+}
+
+static Value generateMCPrintAfterFreeReg(AstVariable* ast, MCGenerationData* data) {
+    for(int i = 0; i < ast->count; i++) {
+        Value a = generateMCForAst(ast->values[i], data);
+        if (a.type == VALUE_ERROR) {
+            return a;
+        } else if (a.type == VALUE_NONE) {
+            Value ret = {.type = VALUE_ERROR, .error = ERROR_SYNTAX};
+            return ret;
+        } else {
+            if (a.type == VALUE_INT) {
+                addInstFunctionCallUnaryNoRet(data->inst_mem, data->registers, a.reg, printInt64);
+            } else if (a.type == VALUE_FLOAT) {
+                addInstFunctionCallUnaryNoRet(data->inst_mem, data->registers, a.reg, printFloat);
+            } else if(a.type == VALUE_STRING) {
+                addInstFunctionCallUnaryNoRet(data->inst_mem, data->registers, a.reg, printString);
+            } else {
+                Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
+                return ret;
+            }
+            data->registers &= ~a.reg;
+        }
+    }
+    if(!ast->open_end) {
+        addInstFunctionCallSimple(data->inst_mem, data->registers, printLn);
+    }
+    Value ret = {.type = VALUE_NONE};
+    return ret;
+}
+
+static Value generateMCPrint(AstVariable* ast, MCGenerationData* data) {
+    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCPrintAfterFreeReg, 1, 1);
 }
 
 static Value generateMCInput(AstVariable* ast, MCGenerationData* data) {
 
 }
 
-static Value generateMCSimpleCall(Ast* ast, MCGenerationData* data) {
+static double random() {
+    return rand() / (double)RAND_MAX;
+}
 
+static Value generateMCRan(Ast* ast, MCGenerationData* data) {
+    Register freg = getFreeFRegister(data->registers);
+    addInstFunctionCallRetOnly(data->inst_mem, data->registers, freg, random);
+    Value ret = {.type = VALUE_FLOAT, .reg = freg};
+    return ret;
+}
+
+static char* key() {
+    char* ret = (char*)malloc(2);
+    ret[0] = getc(stdin);
+    ret[1] = 0;
+    return ret;
+}
+
+static Value generateMCKey(Ast* ast, MCGenerationData* data) {
+    Register reg = getFreeRegister(data->registers);
+    addInstFunctionCallRetOnly(data->inst_mem, data->registers, reg, key);
+    Value ret = {.type = VALUE_STRING, .reg = reg};
+    return ret;
+}
+
+static void beep() {
+    fprintf(stderr, "\a");
+}
+
+static void end() {
+    exit(0);
+}
+
+static void stop() {
+    fprintf(stderr, "Press [ENTER] to continue...");
+    getc(stdin);
+}
+
+static Value generateMCSimpleCall(Ast* ast, MCGenerationData* data) {
+    switch(ast->type) {
+    case AST_BEEP:
+        addInstFunctionCallSimple(data->inst_mem, data->registers, beep);
+        break;
+    case AST_END:
+        addInstFunctionCallSimple(data->inst_mem, data->registers, end);
+        break;
+    case AST_STOP:
+        addInstFunctionCallSimple(data->inst_mem, data->registers, stop);
+        break;
+    default:
+        break;
+    }
+    Value ret = {.type = VALUE_NONE};
+    return ret;
 }
 
 Value generateMCForFunctions(Ast* ast, MCGenerationData* data) {
@@ -427,17 +524,21 @@ Value generateMCForFunctions(Ast* ast, MCGenerationData* data) {
         case AST_STR:
             value = generateMCStr((AstUnary*)ast, data);
             break;
+        case AST_PRINT:
+            value = generateMCPrint((AstVariable*)ast, data);
+            break;
         case AST_INPUT:
             break;
-        case AST_PRINT:
-            break;
         case AST_RAN:
+            value = generateMCRan(ast, data);
+            break;
+        case AST_KEY:
+            value = generateMCKey(ast, data);
             break;
         case AST_BEEP:
         case AST_END:
         case AST_STOP:
-            break;
-        case AST_KEY:
+            value = generateMCSimpleCall(ast, data);
             break;
         default:
             value.type = VALUE_ERROR;
