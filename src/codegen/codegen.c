@@ -1079,7 +1079,57 @@ static Value generateMCVar(AstVar* ast, MCGenerationData* data) {
 }
 
 static Value generateMCOnGoAfterFreeReg(AstSwitch* ast, MCGenerationData* data) {
-    
+    Value index = generateMCForAst(ast->value, data);
+    if(index.type == VALUE_ERROR) {
+        return index;
+    } else if(index.type == VALUE_NONE) {
+        Value ret = {.type = VALUE_ERROR, .error = ERROR_SYNTAX};
+        return ret;
+    } else if(index.type != VALUE_INT) {
+        Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
+        return ret;
+    } else {
+        Register imm_reg = getFreeRegister(data->registers);
+        for(int i = 0; i < ast->count; i++) {
+            addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, i, false); 
+            size_t pos;
+            if(ast->type == AST_GOSUB) {
+                size_t skip_call = addInstCondJmpRel(data->inst_mem, data->registers, COND_NE, index.reg, imm_reg, 0);
+                pos = addInstCallRel(data->inst_mem, data->registers, 0);
+                *((int32_t*)(data->inst_mem->memory + skip_call)) = data->inst_mem->occupied - (skip_call + 4);
+            } else {
+                pos = addInstCondJmpRel(data->inst_mem, data->registers, COND_EQ, index.reg, imm_reg, 0);
+            }
+            if(ast->locations[i]->type == AST_INTEGER) {
+                char name[25]; 
+                AstInt* line = (AstInt*)ast->locations[i];
+                int len = int64ToString(name, line->value);
+                char* sym = (char*)alloc_aligned(data->variable_mem, len + 1);
+                memcpy(sym, name, len + 1);
+                UnhandeledLabelEntry entry = {
+                    .name = sym,
+                    .line = data->line,
+                    .position = pos,
+                    .for_restore = false,
+                };
+                addLabelToList(data->label_list, entry);
+            } else {
+                AstVar* var = (AstVar*)ast->locations[i];
+                int len = strlen(var->name);
+                char* sym = (char*)alloc_aligned(data->variable_mem, len + 1);
+                memcpy(sym, var->name, len + 1);
+                UnhandeledLabelEntry entry = {
+                    .name = sym,
+                    .line = data->line,
+                    .position = pos,
+                    .for_restore = false,
+                };
+                addLabelToList(data->label_list, entry);
+            }
+        }
+    }
+    Value ret = {.type=VALUE_NONE};
+    return ret;
 }
 
 static Value generateMCOnGo(AstSwitch* ast, MCGenerationData* data) {
