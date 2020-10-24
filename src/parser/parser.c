@@ -754,14 +754,7 @@ static Ast* parseIfThenElseStatement(Scanner* scanner, StackAllocator* mem) {
                 Ast* if_true = parseMultiple(scanner, mem);
                 if(if_true == NULL) {
                     int error_offset = getScannerOffset(scanner);
-                    if_true = parseExpression(scanner, mem);
-                    if (if_true == NULL) {
-                        return (Ast*)createError(error_offset, mem);
-                    } else if (if_true->type == AST_ERROR) {
-                        return if_true;
-                    } else if(if_true->type != AST_INTEGER) {
-                        return (Ast*)createError(error_offset, mem);
-                    }
+                    return (Ast*)createError(error_offset, mem);
                 } else if (if_true->type == AST_ERROR) {
                     return if_true;
                 }
@@ -770,14 +763,7 @@ static Ast* parseIfThenElseStatement(Scanner* scanner, StackAllocator* mem) {
                     Ast* if_false = parseMultiple(scanner, mem);
                     if (if_false == NULL) {
                         int error_offset = getScannerOffset(scanner);
-                        if_false = parseExpression(scanner, mem);
-                        if (if_false == NULL) {
-                            return (Ast*)createError(error_offset, mem);
-                        } else if (if_false->type == AST_ERROR) {
-                            return if_false;
-                        } else if (if_false->type != AST_INTEGER) {
-                            return (Ast*)createError(error_offset, mem);
-                        }
+                        return (Ast*)createError(error_offset, mem);
                     } else if (if_false->type == AST_ERROR) {
                         return if_false;
                     }
