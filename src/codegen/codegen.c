@@ -22,6 +22,37 @@ static int int64ToString(char* str, int64_t v) {
     return len;
 }
 
+typedef Value (*GenerateMCFunction)(Ast*, MCGenerationData*);
+
+static Value withFreeRegister(Ast* ast, MCGenerationData* data, GenerateMCFunction func, int num_regs, int num_fregs) {
+    int free_regs = countFreeRegister(data->registers);
+    int free_fregs = countFreeFRegister(data->registers);
+    uint64_t to_pop[num_regs + num_fregs];
+    int to_pop_count = 0;
+    while(free_regs < num_regs) {
+        uint64_t reg = getUsedRegister(data->registers);
+        addInstPush(data->inst_mem, data->registers, reg);
+        data->registers &= ~reg;
+        to_pop[to_pop_count] = reg;
+        to_pop_count++;
+    }
+    while(free_fregs < num_fregs) {
+        uint64_t freg = getUsedFRegister(data->registers);
+        addInstPush(data->inst_mem, data->registers, freg);
+        data->registers &= ~freg;
+        to_pop[to_pop_count] = freg;
+        to_pop_count++;
+    }
+    Value ret = func(ast, data);
+    while(to_pop_count > 0) {
+        to_pop_count--;
+        uint64_t reg = to_pop[to_pop_count];
+        addInstPop(data->inst_mem, data->registers, reg);
+        data->registers |= reg;
+    }
+    return ret;
+}
+
 static Value generateMCGo(AstUnary* ast, MCGenerationData* data) {
     size_t pos;
     if(ast->type == AST_GOSUB) {
@@ -104,39 +135,42 @@ static Value generateMCNext(AstUnary* ast, MCGenerationData* data) {
     return ret;
 }
 
-static Value generateMCRestore(AstUnary* ast, MCGenerationData* data) {
-    
+static Value generateMCRestoreAfterFreeReg(AstUnary* ast, MCGenerationData* data) {
+    Register reg = getFreeRegister(data->registers);
+    size_t pos = addInstMovImmToReg(data->inst_mem, data->registers, reg, 0, true);
+    addInstMovRegToMem(data->inst_mem, data->registers, reg, (void*)&data_index);
+    if(ast->value->type == AST_INTEGER) {
+        char name[25]; 
+        AstInt* line = (AstInt*)ast->value;
+        int len = int64ToString(name, line->value);
+        char* sym = (char*)alloc_aligned(data->variable_mem, len + 1);
+        memcpy(sym, name, len + 1);
+        UnhandeledLabelEntry entry = {
+            .name = sym,
+            .line = data->line,
+            .position = pos,
+            .for_restore = true,
+        };
+        addLabelToList(data->label_list, entry);
+    } else {
+        AstVar* var = (AstVar*)ast->value;
+        int len = strlen(var->name);
+        char* sym = (char*)alloc_aligned(data->variable_mem, len + 1);
+        memcpy(sym, var->name, len + 1);
+        UnhandeledLabelEntry entry = {
+            .name = sym,
+            .line = data->line,
+            .position = pos,
+            .for_restore = true,
+        };
+        addLabelToList(data->label_list, entry);
+    }
+    Value ret = {.type = VALUE_NONE};
+    return ret;
 }
 
-typedef Value (*GenerateMCFunction)(Ast*, MCGenerationData*);
-
-static Value withFreeRegister(Ast* ast, MCGenerationData* data, GenerateMCFunction func, int num_regs, int num_fregs) {
-    int free_regs = countFreeRegister(data->registers);
-    int free_fregs = countFreeFRegister(data->registers);
-    uint64_t to_pop[num_regs + num_fregs];
-    int to_pop_count = 0;
-    while(free_regs < num_regs) {
-        uint64_t reg = getUsedRegister(data->registers);
-        addInstPush(data->inst_mem, data->registers, reg);
-        data->registers &= ~reg;
-        to_pop[to_pop_count] = reg;
-        to_pop_count++;
-    }
-    while(free_fregs < num_fregs) {
-        uint64_t freg = getUsedFRegister(data->registers);
-        addInstPush(data->inst_mem, data->registers, freg);
-        data->registers &= ~freg;
-        to_pop[to_pop_count] = freg;
-        to_pop_count++;
-    }
-    Value ret = func(ast, data);
-    while(to_pop_count > 0) {
-        to_pop_count--;
-        uint64_t reg = to_pop[to_pop_count];
-        addInstPop(data->inst_mem, data->registers, reg);
-        data->registers |= reg;
-    }
-    return ret;
+static Value generateMCRestore(AstUnary* ast, MCGenerationData* data) {
+    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCRestoreAfterFreeReg, 1, 0);
 }
 
 static Value generateMCBinarayOperationAfterFreeReg(AstBinary* ast, MCGenerationData* data) {
@@ -1044,12 +1078,48 @@ static Value generateMCVar(AstVar* ast, MCGenerationData* data) {
     return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCVarAfterFreeReg, 1, 1);
 }
 
-static Value generateMCOnGo(AstSwitch* ast, MCGenerationData* data) {
+static Value generateMCOnGoAfterFreeReg(AstSwitch* ast, MCGenerationData* data) {
     
 }
 
+static Value generateMCOnGo(AstSwitch* ast, MCGenerationData* data) {
+    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCOnGoAfterFreeReg, 2, 0);
+}
+
 static Value generateMCDim(AstIndex* ast, MCGenerationData* data) {
-    
+    AstVar* var = ast->name;
+    size_t size = 1;
+    for(int i = 0; i < ast->count; i++) {
+        AstInt* ds = (AstInt*)ast->size[i];
+        size *= ds->value;
+    }
+    if (var->var_type == VAR_UNDEF || var->var_type == VAR_FLOAT) {
+        VariableFloatArray* varib = (VariableFloatArray*)alloc_aligned(data->variable_mem, sizeof(VariableFloatArray));
+        varib->type = VARIABLE_FLOAT_ARRAY;
+        varib->value = (double*)alloc_aligned(data->variable_mem, sizeof(double) * size);
+        for(int i = 0; i < size; i++) {
+            varib->value[i] = 0;
+        }
+        addVariable(data->variable_table, var->name, (Variable*)varib, data->variable_mem);
+    } else if (var->var_type == VAR_INT) {
+        VariableIntArray* varib = (VariableIntArray*)alloc_aligned(data->variable_mem, sizeof(VariableIntArray));
+        varib->type = VARIABLE_INT_ARRAY;
+        varib->value = (int64_t*)alloc_aligned(data->variable_mem, sizeof(int64_t) * size);
+        for(int i = 0; i < size; i++) {
+            varib->value[i] = 0;
+        }
+        addVariable(data->variable_table, var->name, (Variable*)varib, data->variable_mem);
+    } else if (var->var_type == VAR_STR) {
+        VariableStringArray* varib = (VariableStringArray*)alloc_aligned(data->variable_mem, sizeof(VariableStringArray));
+        varib->type = VARIABLE_STRING_ARRAY;
+        varib->str = (char**)alloc_aligned(data->variable_mem, sizeof(char*) * size);
+        for(int i = 0; i < size; i++) {
+            varib->str[i] = NULL;
+        }
+        addVariable(data->variable_table, var->name, (Variable*)varib, data->variable_mem);
+    }
+    Value ret = {.type = VALUE_NONE};
+    return ret;
 }
 
 static Value generateMCIndexAfterFreeReg(AstIndex* ast, MCGenerationData* data) {
