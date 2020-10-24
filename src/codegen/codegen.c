@@ -744,7 +744,7 @@ static Value generateMCLetAfterFreeReg(AstLet* ast, MCGenerationData* data) {
         Value ret = {.type=VALUE_NONE};
         return ret;
     } else if(ast->name->type == AST_INDEX) { 
-        AstIndex* index = (AstIndex*)ast->name->type;
+        AstIndex* index = (AstIndex*)ast->name;
         Value ret = withFreeRegister((Ast*)index, data, (GenerateMCFunction)generateMCLetOfArrayAccessAfterFreeReg, 3, 1);
         return ret;
     } else {
