@@ -22,9 +22,7 @@ static int int64ToString(char* str, int64_t v) {
     return len;
 }
 
-typedef Value (*GenerateMCFunction)(Ast*, MCGenerationData*);
-
-static Value withFreeRegister(Ast* ast, MCGenerationData* data, GenerateMCFunction func, int num_regs, int num_fregs) {
+Value withFreeRegister(Ast* ast, MCGenerationData* data, GenerateMCFunction func, int num_regs, int num_fregs) {
     int free_regs = countFreeRegister(data->registers);
     int free_fregs = countFreeFRegister(data->registers);
     uint64_t to_pop[num_regs + num_fregs];
@@ -1292,6 +1290,32 @@ static Value generateMCFloat(AstFloat* ast, MCGenerationData* data) {
     return ret;
 }
 
+static Value generateMCToIntConvAfterFreeReg(AstUnary* ast, MCGenerationData* data) {
+    Value a = generateMCForAst(ast->value, data);
+    if(a.type == VALUE_ERROR) {
+        return a;
+    } else {
+        if (a.type == VALUE_INT) {
+            return a;
+        } else if (a.type == VALUE_FLOAT) {
+            Register reg = getFreeRegister(data->registers);
+            data->registers |= reg;
+            addInstMovFRegToReg(data->inst_mem, data->registers, reg, a.reg);
+            data->registers &= ~a.reg;
+            a.type = VALUE_INT;
+            a.reg = reg;
+            return a;
+        } else {
+            Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
+            return ret;
+        }
+    }
+}
+
+static Value generateMCToIntConv(AstUnary* ast, MCGenerationData* data) {
+    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCToIntConvAfterFreeReg, 1, 1);
+}
+
 Value generateMCForAst(Ast* ast, MCGenerationData* data) {
     Value value = {.type = VALUE_NONE};
     switch (ast->type) {
@@ -1360,6 +1384,9 @@ Value generateMCForAst(Ast* ast, MCGenerationData* data) {
         break;
     case AST_INTEGER:
         value = generateMCInteger((AstInt*)ast, data);
+        break;
+    case AST_INT:
+        value = generateMCToIntConv((AstUnary*)ast, data);
         break;
     default:
         value = generateMCForFunctions(ast, data);

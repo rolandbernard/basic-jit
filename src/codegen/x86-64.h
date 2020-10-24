@@ -4,32 +4,34 @@
 #include <stdint.h>
 #include "common/stackalloc.h"
 
-#define REG_COUNT 12
-#define FREG_COUNT 16
+#define REG_COUNT 14
+#define FREG_COUNT 8
 
 typedef enum {
     REG_A = 1 << 0,
     REG_B = 1 << 1,
     REG_C = 1 << 2,
     REG_D = 1 << 3,
+    REG_DI = 1 << 4,
+    REG_SI = 1 << 5,
 
-    REG_8 = 1 << 4,
-    REG_9 = 1 << 5,
-    REG_10 = 1 << 6,
-    REG_11 = 1 << 7,
-    REG_12 = 1 << 8,
-    REG_13 = 1 << 9,
-    REG_14 = 1 << 10,
-    REG_15 = 1 << 11,
+    REG_8 = 1 << 6,
+    REG_9 = 1 << 7,
+    REG_10 = 1 << 8,
+    REG_11 = 1 << 9,
+    REG_12 = 1 << 10,
+    REG_13 = 1 << 11,
+    REG_14 = 1 << 12,
+    REG_15 = 1 << 13,
     
-    FREG_0 = 1 << 12,
-    FREG_1 = 1 << 13,
-    FREG_2 = 1 << 14,
-    FREG_3 = 1 << 15,
-    FREG_4 = 1 << 16,
-    FREG_5 = 1 << 17,
-    FREG_6 = 1 << 18,
-    FREG_7 = 1 << 19,
+    FREG_0 = 1 << 14,
+    FREG_1 = 1 << 15,
+    FREG_2 = 1 << 16,
+    FREG_3 = 1 << 17,
+    FREG_4 = 1 << 18,
+    FREG_5 = 1 << 19,
+    FREG_6 = 1 << 20,
+    FREG_7 = 1 << 21,
 } X86Register;
 
 void addJmpRelative32(StackAllocator* mem, int32_t value);

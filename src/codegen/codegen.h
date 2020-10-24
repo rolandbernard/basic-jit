@@ -47,8 +47,12 @@ typedef struct {
     };
 } Value;
 
+typedef Value (*GenerateMCFunction)(Ast*, MCGenerationData*);
+
 Value generateMCForAst(Ast* ast, MCGenerationData* data);
 
 Error generateMC(Ast* ast, MCGenerationData* data);
+
+Value withFreeRegister(Ast* ast, MCGenerationData* data, GenerateMCFunction func, int num_regs, int num_fregs);
 
 #endif

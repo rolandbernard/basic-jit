@@ -6,6 +6,8 @@ static int reg_to_opcodeno[] = {
     [REG_B] = 3,
     [REG_C] = 1,
     [REG_D] = 2,
+    [REG_DI] = 7,
+    [REG_SI] = 6,
     
     [REG_8] = 0,
     [REG_9] = 1,

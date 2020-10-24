@@ -532,6 +532,120 @@ void addInstMovFRegToMemReg(StackAllocator* mem, RegisterSet regs, Register addr
     addMovFRegToMemReg(mem, addr, reg);
 }
 
+void addInstFunctionCallUnary(StackAllocator* mem, RegisterSet regs, Register ret, Register a, void* func) {
+    addInstPushAll(mem, regs);
+    if(a >= (1 << REG_COUNT)) {
+        if(a != FREG_0) {
+            addMovFRegToFReg(mem, FREG_0, a);
+        }
+    } else {
+        if(a != REG_DI) {
+            addMovRegToReg(mem, REG_DI, a);
+        }
+    }
+    addInstCall(mem, regs, func);
+    if(ret >= (1 << REG_COUNT)) {
+        if(ret != FREG_0) {
+            addMovFRegToFReg(mem, ret, FREG_0);
+        }
+    } else {
+        if(ret != REG_A) {
+            addMovRegToReg(mem, ret, REG_A);
+        }
+    }
+    regs &= ~ret;
+    addInstPopAll(mem, regs);
+}
+
+void addInstFunctionCallBinary(StackAllocator* mem, RegisterSet regs, Register ret, Register a, Register b, void* func) {
+    addInstPushAll(mem, regs);
+    if(a >= (1 << REG_COUNT)) {
+        if(a != FREG_0) {
+            if(b == FREG_0) {
+                if(a == FREG_1) {
+                    addMovFRegToFReg(mem, FREG_2, b);
+                    b = FREG_2;
+                } else {
+                    addMovFRegToFReg(mem, FREG_1, b);
+                    b = FREG_1;
+                }
+            }
+            addMovFRegToFReg(mem, FREG_0, a);
+        }
+    } else {
+        if(a != REG_DI) {
+            if(b == REG_DI) {
+                if(a == REG_SI) {
+                    addMovFRegToFReg(mem, REG_D, b);
+                    b = REG_D;
+                } else {
+                    addMovFRegToFReg(mem, REG_SI, b);
+                    b = REG_SI;
+                }
+            }
+            addMovRegToReg(mem, REG_DI, a);
+        }
+    }
+    if(b >= (1 << REG_COUNT)) {
+        if(b != FREG_1) {
+            addMovFRegToFReg(mem, FREG_1, b);
+        }
+    } else {
+        if(b != REG_SI) {
+            addMovRegToReg(mem, REG_SI, b);
+        }
+    }
+    addInstCall(mem, regs, func);
+    if(ret >= (1 << REG_COUNT)) {
+        if(ret != FREG_0) {
+            addMovFRegToFReg(mem, ret, FREG_0);
+        }
+    } else {
+        if(ret != REG_A) {
+            addMovRegToReg(mem, ret, REG_A);
+        }
+    }
+    regs &= ~ret;
+    addInstPopAll(mem, regs);
+}
+
+void addInstFunctionCallUnaryNoRet(StackAllocator* mem, RegisterSet regs, Register a, void* func) {
+    addInstPushAll(mem, regs);
+    if(a >= (1 << REG_COUNT)) {
+        if(a != FREG_0) {
+            addMovFRegToFReg(mem, FREG_0, a);
+        }
+    } else {
+        if(a != REG_DI) {
+            addMovRegToReg(mem, REG_DI, a);
+        }
+    }
+    addInstCall(mem, regs, func);
+    addInstPopAll(mem, regs);
+}
+
+void addInstFunctionCallRetOnly(StackAllocator* mem, RegisterSet regs, Register ret, void* func) {
+    addInstPushAll(mem, regs);
+    addInstCall(mem, regs, func);
+    if(ret >= (1 << REG_COUNT)) {
+        if(ret != FREG_0) {
+            addMovFRegToFReg(mem, ret, FREG_0);
+        }
+    } else {
+        if(ret != REG_A) {
+            addMovRegToReg(mem, ret, REG_A);
+        }
+    }
+    regs &= ~ret;
+    addInstPopAll(mem, regs);
+}
+
+void addInstFunctionCallSimple(StackAllocator* mem, RegisterSet regs, void* func) {
+    addInstPushAll(mem, regs);
+    addInstCall(mem, regs, func);
+    addInstPopAll(mem, regs);
+}
+
 #else
 
 #error The target architecture is not supported

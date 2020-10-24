@@ -104,6 +104,16 @@ void addInstMovMemRegToFReg(StackAllocator* mem, RegisterSet regs, Register reg,
 
 void addInstMovFRegToMemReg(StackAllocator* mem, RegisterSet regs, Register addr, Register reg);
 
+void addInstFunctionCallUnary(StackAllocator* mem, RegisterSet regs, Register ret, Register a, void* func);
+
+void addInstFunctionCallBinary(StackAllocator* mem, RegisterSet regs, Register ret, Register a, Register b, void* func);
+
+void addInstFunctionCallUnaryNoRet(StackAllocator* mem, RegisterSet regs, Register a, void* func);
+
+void addInstFunctionCallRetOnly(StackAllocator* mem, RegisterSet regs, Register ret, void* func);
+
+void addInstFunctionCallSimple(StackAllocator* mem, RegisterSet regs, void* func);
+
 #ifdef __x86_64__
 
 #define pop(R) \
