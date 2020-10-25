@@ -646,6 +646,22 @@ void addInstFunctionCallSimple(StackAllocator* mem, RegisterSet regs, void* func
     addInstPopAll(mem, regs);
 }
 
+void addInstPushCallerRegs(StackAllocator* mem, RegisterSet regs) {
+    addInstPush(mem, regs, REG_B);
+    addInstPush(mem, regs, REG_12);
+    addInstPush(mem, regs, REG_13);
+    addInstPush(mem, regs, REG_14);
+    addInstPush(mem, regs, REG_15);
+}
+
+void addInstPopCallerRegs(StackAllocator* mem, RegisterSet regs) {
+    addInstPop(mem, regs, REG_15);
+    addInstPop(mem, regs, REG_14);
+    addInstPop(mem, regs, REG_13);
+    addInstPop(mem, regs, REG_12);
+    addInstPop(mem, regs, REG_B);
+}
+
 #else
 
 #error The target architecture is not supported

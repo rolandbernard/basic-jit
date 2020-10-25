@@ -114,6 +114,10 @@ void addInstFunctionCallRetOnly(StackAllocator* mem, RegisterSet regs, Register 
 
 void addInstFunctionCallSimple(StackAllocator* mem, RegisterSet regs, void* func);
 
+void addInstPushCallerRegs(StackAllocator* mem, RegisterSet regs);
+
+void addInstPopCallerRegs(StackAllocator* mem, RegisterSet regs);
+
 #ifdef __x86_64__
 
 #define pop(R) \
