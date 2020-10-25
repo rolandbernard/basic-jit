@@ -84,4 +84,6 @@ void addVariable(VariableTable* table, const char* name, Variable* variable, Sta
 
 Variable* getVariable(VariableTable* table, const char* name);
 
+void freeVariableTable(VariableTable* table);
+
 #endif

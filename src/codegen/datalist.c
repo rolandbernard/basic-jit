@@ -15,3 +15,7 @@ void addDataToList(DataList* list, DataElement entry) {
     list->data[list->count] = entry;
     list->count++;
 }
+
+void freeDataList(DataList* list) {
+    free(list->data);
+}

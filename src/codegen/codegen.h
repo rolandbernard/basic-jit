@@ -47,6 +47,8 @@ typedef struct {
     };
 } Value;
 
+const char* getErrorName(Error e);
+
 typedef Value (*GenerateMCFunction)(Ast*, MCGenerationData*);
 
 Value generateMCForAst(Ast* ast, MCGenerationData* data);

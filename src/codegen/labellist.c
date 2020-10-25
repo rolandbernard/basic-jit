@@ -15,3 +15,7 @@ void addLabelToList(UnhandeledLabelList* list, UnhandeledLabelEntry entry) {
     list->data[list->count] = entry;
     list->count++;
 }
+
+void freeLabelList(UnhandeledLabelList* list) {
+    free(list->data);
+}

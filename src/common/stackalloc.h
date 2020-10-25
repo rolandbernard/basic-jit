@@ -13,10 +13,10 @@ typedef struct StackAllocator_s {
 
 #define STACK_ALLOCATOR_INITIALIZER { .memory = NULL, .capacity = 0, .occupied = 0, .next = NULL}
 
-void* alloc_aligned(StackAllocator* mem, size_t size);
+void* allocAligned(StackAllocator* mem, size_t size);
 
-void* alloc_unaligned(StackAllocator* mem, size_t size);
+void* allocUnaligned(StackAllocator* mem, size_t size);
 
-void free_stack(StackAllocator* mem);
+void freeStack(StackAllocator* mem);
 
 #endif

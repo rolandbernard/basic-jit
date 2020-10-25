@@ -21,4 +21,6 @@ typedef struct {
 
 void addLabelToList(UnhandeledLabelList* list, UnhandeledLabelEntry entry);
 
+void freeLabelList(UnhandeledLabelList* list);
+
 #endif

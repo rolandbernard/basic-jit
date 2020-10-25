@@ -6,6 +6,22 @@
 
 static uint64_t data_index = 0;
 
+static const char* error_to_name[] = {
+    [ERROR_NONE] = "No error",
+    [ERROR_SYNTAX] = "Syntax error",
+    [ERROR_TYPE] = "Type error",
+    [ERROR_VARIABLE_NOT_DEF] = "Variable not defined",
+    [ERROR_NO_MATCHING_FOR] = "No matching for",
+    [ERROR_ARRAY_NOT_DEF] = "Array not defined",
+    [ERROR_ARRAY_DIM_COUNT_MISMATCH] = "Array size mismatch",
+    [ERROR_DUBLICATE_LABEL] = "Dublicate label name",
+    [ERROR_UNINDEXED_ARRAY] = "Unindexed array use",
+};
+
+const char* getErrorName(Error e) {
+    return error_to_name[e];
+}
+
 static int int64ToString(char* str, int64_t v) {
     int len = 0;
     while (v > 0) {
@@ -62,7 +78,7 @@ static Value generateMCGo(AstUnary* ast, MCGenerationData* data) {
         char name[25]; 
         AstInt* line = (AstInt*)ast->value;
         int len = int64ToString(name, line->value);
-        char* sym = (char*)alloc_aligned(data->variable_mem, len + 1);
+        char* sym = (char*)allocAligned(data->variable_mem, len + 1);
         memcpy(sym, name, len + 1);
         UnhandeledLabelEntry entry = {
             .name = sym,
@@ -74,7 +90,7 @@ static Value generateMCGo(AstUnary* ast, MCGenerationData* data) {
     } else {
         AstVar* var = (AstVar*)ast->value;
         int len = strlen(var->name);
-        char* sym = (char*)alloc_aligned(data->variable_mem, len + 1);
+        char* sym = (char*)allocAligned(data->variable_mem, len + 1);
         memcpy(sym, var->name, len + 1);
         UnhandeledLabelEntry entry = {
             .name = sym,
@@ -141,7 +157,7 @@ static Value generateMCRestoreAfterFreeReg(AstUnary* ast, MCGenerationData* data
         char name[25]; 
         AstInt* line = (AstInt*)ast->value;
         int len = int64ToString(name, line->value);
-        char* sym = (char*)alloc_aligned(data->variable_mem, len + 1);
+        char* sym = (char*)allocAligned(data->variable_mem, len + 1);
         memcpy(sym, name, len + 1);
         UnhandeledLabelEntry entry = {
             .name = sym,
@@ -153,7 +169,7 @@ static Value generateMCRestoreAfterFreeReg(AstUnary* ast, MCGenerationData* data
     } else {
         AstVar* var = (AstVar*)ast->value;
         int len = strlen(var->name);
-        char* sym = (char*)alloc_aligned(data->variable_mem, len + 1);
+        char* sym = (char*)allocAligned(data->variable_mem, len + 1);
         memcpy(sym, var->name, len + 1);
         UnhandeledLabelEntry entry = {
             .name = sym,
@@ -355,7 +371,7 @@ static Value generateMCNeg(AstUnary* ast, MCGenerationData* data) {
 
 static Value generateMCString(AstString* ast, MCGenerationData* data) {
     int len = strlen(ast->str);
-    char* value = (char*)alloc_aligned(data->variable_mem, len + 1);
+    char* value = (char*)allocAligned(data->variable_mem, len + 1);
     memcpy(value, ast->str, len + 1);
     Register reg = getFreeRegister(data->registers);
     data->registers |= reg;
@@ -369,7 +385,7 @@ static Value generateMCString(AstString* ast, MCGenerationData* data) {
 
 static Value generateMCLabel(AstString* ast, MCGenerationData* data) {
     if(getVariable(data->label_table, ast->str) == NULL) {
-        VariableLabel* var = (VariableLabel*)alloc_aligned(data->variable_mem, sizeof(VariableLabel));
+        VariableLabel* var = (VariableLabel*)allocAligned(data->variable_mem, sizeof(VariableLabel));
         var->type = VARIABLE_LABEL;
         var->pos = data->inst_mem->occupied;
         var->data_pos = data->data_mem->count;
@@ -396,7 +412,7 @@ static Value generateMCData(AstVariable* ast, MCGenerationData* data) {
         } else {
             AstString* value = (AstString*)ast->values[i];
             int len = strlen(value->str);
-            char* v = (char*)alloc_aligned(data->variable_mem, len + 1);
+            char* v = (char*)allocAligned(data->variable_mem, len + 1);
             memcpy(v, value->str, len + 1);
             data_element.string = v;
         }
@@ -510,7 +526,7 @@ static Value generateMCReadAfterFreeReg(AstVariable* ast, MCGenerationData* data
             Variable* variable = getVariable(data->variable_table, var->name);
             if(variable == NULL) {
                 if(var->var_type == VAR_UNDEF || var->var_type == VAR_FLOAT) {
-                    VariableFloat* varib = (VariableFloat*)alloc_aligned(data->variable_mem, sizeof(VariableFloat));
+                    VariableFloat* varib = (VariableFloat*)allocAligned(data->variable_mem, sizeof(VariableFloat));
                     varib->type = VARIABLE_FLOAT;
                     varib->for_jmp_loc = ~0;
                     varib->for_call_loc = ~0;
@@ -518,7 +534,7 @@ static Value generateMCReadAfterFreeReg(AstVariable* ast, MCGenerationData* data
                     addVariable(data->variable_table, var->name, (Variable*)varib, data->variable_mem);
                     variable = (Variable*)varib;
                 } else if(var->var_type == VAR_INT) {
-                    VariableInt* varib = (VariableInt*)alloc_aligned(data->variable_mem, sizeof(VariableInt));
+                    VariableInt* varib = (VariableInt*)allocAligned(data->variable_mem, sizeof(VariableInt));
                     varib->type = VARIABLE_INT;
                     varib->for_jmp_loc = ~0;
                     varib->for_call_loc = ~0;
@@ -526,7 +542,7 @@ static Value generateMCReadAfterFreeReg(AstVariable* ast, MCGenerationData* data
                     addVariable(data->variable_table, var->name, (Variable*)varib, data->variable_mem);
                     variable = (Variable*)varib;
                 } else if(var->var_type == VAR_STR) {
-                    VariableString* varib = (VariableString*)alloc_aligned(data->variable_mem, sizeof(VariableString));
+                    VariableString* varib = (VariableString*)allocAligned(data->variable_mem, sizeof(VariableString));
                     varib->type = VARIABLE_STRING;
                     varib->str = NULL;
                     addVariable(data->variable_table, var->name, (Variable*)varib, data->variable_mem);
@@ -705,7 +721,7 @@ static Value generateMCLetAfterFreeReg(AstLet* ast, MCGenerationData* data) {
         Variable* variable = getVariable(data->variable_table, var->name);
         if(variable == NULL) {
             if (var->var_type == VAR_UNDEF || var->var_type == VAR_FLOAT) {
-                VariableFloat* varib = (VariableFloat*)alloc_aligned(data->variable_mem, sizeof(VariableFloat));
+                VariableFloat* varib = (VariableFloat*)allocAligned(data->variable_mem, sizeof(VariableFloat));
                 varib->type = VARIABLE_FLOAT;
                 varib->for_jmp_loc = ~0;
                 varib->for_call_loc = ~0;
@@ -713,7 +729,7 @@ static Value generateMCLetAfterFreeReg(AstLet* ast, MCGenerationData* data) {
                 addVariable(data->variable_table, var->name, (Variable*)varib, data->variable_mem);
                 variable = (Variable*)varib;
             } else if (var->var_type == VAR_INT) {
-                VariableInt* varib = (VariableInt*)alloc_aligned(data->variable_mem, sizeof(VariableInt));
+                VariableInt* varib = (VariableInt*)allocAligned(data->variable_mem, sizeof(VariableInt));
                 varib->type = VARIABLE_INT;
                 varib->for_jmp_loc = ~0;
                 varib->for_call_loc = ~0;
@@ -721,7 +737,7 @@ static Value generateMCLetAfterFreeReg(AstLet* ast, MCGenerationData* data) {
                 addVariable(data->variable_table, var->name, (Variable*)varib, data->variable_mem);
                 variable = (Variable*)varib;
             } else if (var->var_type == VAR_STR) {
-                VariableString* varib = (VariableString*)alloc_aligned(data->variable_mem, sizeof(VariableString));
+                VariableString* varib = (VariableString*)allocAligned(data->variable_mem, sizeof(VariableString));
                 varib->type = VARIABLE_STRING;
                 varib->str = NULL;
                 addVariable(data->variable_table, var->name, (Variable*)varib, data->variable_mem);
@@ -888,7 +904,7 @@ static Value generateMCForAfterFreeReg(AstFor* ast, MCGenerationData* data) {
     Variable* variable = getVariable(data->variable_table, var->name);
     if(variable == NULL) {
         if (var->var_type == VAR_UNDEF || var->var_type == VAR_FLOAT) {
-            VariableFloat* varib = (VariableFloat*)alloc_aligned(data->variable_mem, sizeof(VariableFloat));
+            VariableFloat* varib = (VariableFloat*)allocAligned(data->variable_mem, sizeof(VariableFloat));
             varib->type = VARIABLE_FLOAT;
             varib->for_jmp_loc = ~0;
             varib->for_call_loc = ~0;
@@ -896,7 +912,7 @@ static Value generateMCForAfterFreeReg(AstFor* ast, MCGenerationData* data) {
             addVariable(data->variable_table, var->name, (Variable*)varib, data->variable_mem);
             variable = (Variable*)varib;
         } else if (var->var_type == VAR_INT) {
-            VariableInt* varib = (VariableInt*)alloc_aligned(data->variable_mem, sizeof(VariableInt));
+            VariableInt* varib = (VariableInt*)allocAligned(data->variable_mem, sizeof(VariableInt));
             varib->type = VARIABLE_INT;
             varib->for_jmp_loc = ~0;
             varib->for_call_loc = ~0;
@@ -1050,7 +1066,7 @@ static Value generateMCVarAfterFreeReg(AstVar* ast, MCGenerationData* data) {
     Variable* variable = getVariable(data->variable_table, ast->name);
     if (variable == NULL) {
         if (ast->var_type == VAR_UNDEF || ast->var_type == VAR_FLOAT) {
-            VariableFloat* varib = (VariableFloat*)alloc_aligned(data->variable_mem, sizeof(VariableFloat));
+            VariableFloat* varib = (VariableFloat*)allocAligned(data->variable_mem, sizeof(VariableFloat));
             varib->type = VARIABLE_FLOAT;
             varib->for_jmp_loc = ~0;
             varib->for_call_loc = ~0;
@@ -1058,7 +1074,7 @@ static Value generateMCVarAfterFreeReg(AstVar* ast, MCGenerationData* data) {
             addVariable(data->variable_table, ast->name, (Variable*)varib, data->variable_mem);
             variable = (Variable*)varib;
         } else if (ast->var_type == VAR_INT) {
-            VariableInt* varib = (VariableInt*)alloc_aligned(data->variable_mem, sizeof(VariableInt));
+            VariableInt* varib = (VariableInt*)allocAligned(data->variable_mem, sizeof(VariableInt));
             varib->type = VARIABLE_INT;
             varib->for_jmp_loc = ~0;
             varib->for_call_loc = ~0;
@@ -1066,7 +1082,7 @@ static Value generateMCVarAfterFreeReg(AstVar* ast, MCGenerationData* data) {
             addVariable(data->variable_table, ast->name, (Variable*)varib, data->variable_mem);
             variable = (Variable*)varib;
         } else if (ast->var_type == VAR_STR) {
-            VariableString* varib = (VariableString*)alloc_aligned(data->variable_mem, sizeof(VariableString));
+            VariableString* varib = (VariableString*)allocAligned(data->variable_mem, sizeof(VariableString));
             varib->type = VARIABLE_STRING;
             varib->str = NULL;
             addVariable(data->variable_table, ast->name, (Variable*)varib, data->variable_mem);
@@ -1137,7 +1153,7 @@ static Value generateMCOnGoAfterFreeReg(AstSwitch* ast, MCGenerationData* data) 
                 char name[25]; 
                 AstInt* line = (AstInt*)ast->locations[i];
                 int len = int64ToString(name, line->value);
-                char* sym = (char*)alloc_aligned(data->variable_mem, len + 1);
+                char* sym = (char*)allocAligned(data->variable_mem, len + 1);
                 memcpy(sym, name, len + 1);
                 UnhandeledLabelEntry entry = {
                     .name = sym,
@@ -1149,7 +1165,7 @@ static Value generateMCOnGoAfterFreeReg(AstSwitch* ast, MCGenerationData* data) 
             } else {
                 AstVar* var = (AstVar*)ast->locations[i];
                 int len = strlen(var->name);
-                char* sym = (char*)alloc_aligned(data->variable_mem, len + 1);
+                char* sym = (char*)allocAligned(data->variable_mem, len + 1);
                 memcpy(sym, var->name, len + 1);
                 UnhandeledLabelEntry entry = {
                     .name = sym,
@@ -1177,25 +1193,25 @@ static Value generateMCDim(AstIndex* ast, MCGenerationData* data) {
         size *= ds->value;
     }
     if (var->var_type == VAR_UNDEF || var->var_type == VAR_FLOAT) {
-        VariableFloatArray* varib = (VariableFloatArray*)alloc_aligned(data->variable_mem, sizeof(VariableFloatArray));
+        VariableFloatArray* varib = (VariableFloatArray*)allocAligned(data->variable_mem, sizeof(VariableFloatArray));
         varib->type = VARIABLE_FLOAT_ARRAY;
-        varib->value = (double*)alloc_aligned(data->variable_mem, sizeof(double) * size);
+        varib->value = (double*)allocAligned(data->variable_mem, sizeof(double) * size);
         for(int i = 0; i < size; i++) {
             varib->value[i] = 0;
         }
         addVariable(data->variable_table, var->name, (Variable*)varib, data->variable_mem);
     } else if (var->var_type == VAR_INT) {
-        VariableIntArray* varib = (VariableIntArray*)alloc_aligned(data->variable_mem, sizeof(VariableIntArray));
+        VariableIntArray* varib = (VariableIntArray*)allocAligned(data->variable_mem, sizeof(VariableIntArray));
         varib->type = VARIABLE_INT_ARRAY;
-        varib->value = (int64_t*)alloc_aligned(data->variable_mem, sizeof(int64_t) * size);
+        varib->value = (int64_t*)allocAligned(data->variable_mem, sizeof(int64_t) * size);
         for(int i = 0; i < size; i++) {
             varib->value[i] = 0;
         }
         addVariable(data->variable_table, var->name, (Variable*)varib, data->variable_mem);
     } else if (var->var_type == VAR_STR) {
-        VariableStringArray* varib = (VariableStringArray*)alloc_aligned(data->variable_mem, sizeof(VariableStringArray));
+        VariableStringArray* varib = (VariableStringArray*)allocAligned(data->variable_mem, sizeof(VariableStringArray));
         varib->type = VARIABLE_STRING_ARRAY;
-        varib->str = (char**)alloc_aligned(data->variable_mem, sizeof(char*) * size);
+        varib->str = (char**)allocAligned(data->variable_mem, sizeof(char*) * size);
         for(int i = 0; i < size; i++) {
             varib->str[i] = NULL;
         }

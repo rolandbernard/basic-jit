@@ -60,7 +60,7 @@ void addVariable(VariableTable* table, const char* name, Variable* variable, Sta
     int index = findEntry(table->data, table->capacity, name);
     if (index == -1) {
         int len = strlen(name);
-        char* key_copy = (char*)alloc_aligned(mem, len + 1);
+        char* key_copy = (char*)allocAligned(mem, len + 1);
         memcpy(key_copy, name, len + 1);
         insertIntoData(table->data, table->capacity, key_copy, variable);
         table->count++;

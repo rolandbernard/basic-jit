@@ -548,7 +548,7 @@ static Value generateMCInputAfterFreeReg(AstVariable* ast, MCGenerationData* dat
             Variable* variable = getVariable(data->variable_table, var->name);
             if (variable == NULL) {
                 if (var->var_type == VAR_UNDEF || var->var_type == VAR_FLOAT) {
-                    VariableFloat* varib = (VariableFloat*)alloc_aligned(data->variable_mem, sizeof(VariableFloat));
+                    VariableFloat* varib = (VariableFloat*)allocAligned(data->variable_mem, sizeof(VariableFloat));
                     varib->type = VARIABLE_FLOAT;
                     varib->for_jmp_loc = ~0;
                     varib->for_call_loc = ~0;
@@ -556,7 +556,7 @@ static Value generateMCInputAfterFreeReg(AstVariable* ast, MCGenerationData* dat
                     addVariable(data->variable_table, var->name, (Variable*)varib, data->variable_mem);
                     variable = (Variable*)varib;
                 } else if (var->var_type == VAR_INT) {
-                    VariableInt* varib = (VariableInt*)alloc_aligned(data->variable_mem, sizeof(VariableInt));
+                    VariableInt* varib = (VariableInt*)allocAligned(data->variable_mem, sizeof(VariableInt));
                     varib->type = VARIABLE_INT;
                     varib->for_jmp_loc = ~0;
                     varib->for_call_loc = ~0;
@@ -564,7 +564,7 @@ static Value generateMCInputAfterFreeReg(AstVariable* ast, MCGenerationData* dat
                     addVariable(data->variable_table, var->name, (Variable*)varib, data->variable_mem);
                     variable = (Variable*)varib;
                 } else if (var->var_type == VAR_STR) {
-                    VariableString* varib = (VariableString*)alloc_aligned(data->variable_mem, sizeof(VariableString));
+                    VariableString* varib = (VariableString*)allocAligned(data->variable_mem, sizeof(VariableString));
                     varib->type = VARIABLE_STRING;
                     varib->str = NULL;
                     addVariable(data->variable_table, var->name, (Variable*)varib, data->variable_mem);

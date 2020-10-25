@@ -8,7 +8,7 @@
 #define INITIAL_CAPACITY (1 << 20)
 
 // This is used for instruction allocation, where the absolute address doesn't mather (I only use relative jumps)
-void* alloc_unaligned(StackAllocator* mem, size_t size) {
+void* allocUnaligned(StackAllocator* mem, size_t size) {
     if(mem->capacity <= mem->occupied + size) {
         if(mem->capacity == 0) {
             mem->memory = malloc(INITIAL_CAPACITY);
@@ -26,7 +26,7 @@ void* alloc_unaligned(StackAllocator* mem, size_t size) {
 }
 
 // This is used for ast allocation, where the absolute address must stay constant
-void* alloc_aligned(StackAllocator* mem, size_t size) {
+void* allocAligned(StackAllocator* mem, size_t size) {
     if(size > INITIAL_CAPACITY) {
         if(mem->next == NULL) {
             StackAllocator* next = (StackAllocator*)malloc(sizeof(StackAllocator));
@@ -37,7 +37,7 @@ void* alloc_aligned(StackAllocator* mem, size_t size) {
             mem->next = next;
             return next->memory;
         } else {
-            return alloc_aligned(mem->next, size);
+            return allocAligned(mem->next, size);
         }
     } else {
         if (mem->capacity <= mem->occupied + 2 * size) {
@@ -52,7 +52,7 @@ void* alloc_aligned(StackAllocator* mem, size_t size) {
                     next->next = NULL;
                     mem->next = next;
                 }
-                return alloc_aligned(mem->next, size);
+                return allocAligned(mem->next, size);
             }
         }
         mem->occupied = (mem->occupied + 15) & ~(size_t)15;
@@ -62,12 +62,12 @@ void* alloc_aligned(StackAllocator* mem, size_t size) {
     }
 }
 
-void free_stack(StackAllocator* mem) {
+void freeStack(StackAllocator* mem) {
     if(mem != NULL) {
         mem->occupied = 0;
         mem->capacity = 0;
         free(mem->memory);
-        free_stack(mem->next);
+        freeStack(mem->next);
         free(mem->next);
     }
 }

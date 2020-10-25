@@ -20,4 +20,6 @@ typedef struct {
 
 void addDataToList(DataList* list, DataElement entry);
 
+void freeDataList(DataList* list);
+
 #endif
