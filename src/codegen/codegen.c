@@ -655,11 +655,11 @@ static Value generateMCLetOfArrayAccessAfterFreeReg(AstLet* ast, MCGenerationDat
         } else if(a.type == VALUE_NONE) {
             Value ret = {.type = VALUE_ERROR, .error = ERROR_SYNTAX};
             return ret;
-        } else if((variable->type == VARIABLE_INT && a.type == VALUE_INT) || (variable->type == VARIABLE_STRING && a.type == VALUE_STRING)) {
+        } else if((variable->type == VARIABLE_INT_ARRAY && a.type == VALUE_INT) || (variable->type == VARIABLE_STRING_ARRAY && a.type == VALUE_STRING)) {
             addInstMovRegToMemReg(data->inst_mem, data->registers, index_reg, a.reg);
-        } else if(variable->type == VARIABLE_FLOAT && a.type == VALUE_FLOAT) {
+        } else if(variable->type == VARIABLE_FLOAT_ARRAY && a.type == VALUE_FLOAT) {
             addInstMovFRegToMemReg(data->inst_mem, data->registers, index_reg, a.reg);
-        } else if(variable->type == VARIABLE_FLOAT && a.type == VALUE_INT) {
+        } else if(variable->type == VARIABLE_FLOAT_ARRAY && a.type == VALUE_INT) {
             Register freg = getFreeFRegister(data->registers);
             data->registers |= freg;
             addInstMovRegToFReg(data->inst_mem, data->registers, freg, a.reg);
