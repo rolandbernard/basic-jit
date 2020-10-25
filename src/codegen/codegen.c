@@ -171,6 +171,16 @@ static Value generateMCRestore(AstUnary* ast, MCGenerationData* data) {
     return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCRestoreAfterFreeReg, 1, 0);
 }
 
+static char* concatStrings(char* a, char* b) {
+    int a_len = strlen(a);
+    int b_len = strlen(b);
+    char* ret = (char*)malloc(a_len + b_len + 1);
+    memcpy(ret, a, a_len);
+    memcpy(ret + a_len, b, b_len);
+    ret[a_len + b_len] = 0;
+    return ret;
+}
+
 static Value generateMCBinarayOperationAfterFreeReg(AstBinary* ast, MCGenerationData* data) {
     Value a = generateMCForAst(ast->first, data);
     if(a.type == VALUE_ERROR) {
@@ -286,6 +296,16 @@ static Value generateMCBinarayOperationAfterFreeReg(AstBinary* ast, MCGeneration
                     }
                     default:
                         break;
+                    }
+                } else if(a.type == VALUE_STRING) {
+                    switch (ast->type) {
+                    case AST_ADD:
+                        addInstFunctionCallBinary(data->inst_mem, data->registers, a.reg, a.reg, b.reg, concatStrings);
+                        break; 
+                    default: {
+                        Value ret = { .type = VALUE_ERROR, .error = ERROR_TYPE };
+                        return ret;
+                    }
                     }
                 } else {
                     Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
@@ -757,6 +777,10 @@ static Value generateMCLet(AstLet* ast, MCGenerationData* data) {
     return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCLetAfterFreeReg, 1, 1);
 }
 
+static int64_t compareStrings(char* a, char* b) {
+    return strcmp(a, b);
+}
+
 static Value generateMCIfThenElseAfterFreeReg(AstIfThenElse* ast, MCGenerationData* data) {
     size_t ifendjmp;
     size_t elsejmp;
@@ -795,27 +819,38 @@ static Value generateMCIfThenElseAfterFreeReg(AstIfThenElse* ast, MCGenerationDa
                     return ret;
                 }
             }
-            switch (condition->type) {
-            case AST_EQ:
-                elsejmp = addInstCondJmpRel(data->inst_mem, data->registers, COND_NE, a.reg, b.reg, 0);
-                break;
-            case AST_NE:
-                elsejmp = addInstCondJmpRel(data->inst_mem, data->registers, COND_EQ, a.reg, b.reg, 0);
-                break;
-            case AST_LT:
-                elsejmp = addInstCondJmpRel(data->inst_mem, data->registers, COND_GE, a.reg, b.reg, 0);
-                break;
-            case AST_GT:
-                elsejmp = addInstCondJmpRel(data->inst_mem, data->registers, COND_LE, a.reg, b.reg, 0);
-                break;
-            case AST_LE:
-                elsejmp = addInstCondJmpRel(data->inst_mem, data->registers, COND_GT, a.reg, b.reg, 0);
-                break;
-            case AST_GE:
-                elsejmp = addInstCondJmpRel(data->inst_mem, data->registers, COND_LT, a.reg, b.reg, 0);
-                break;
-            default:
-                break;
+            if (a.type == VALUE_INT || a.type == VALUE_FLOAT || a.type == VALUE_STRING) {
+                if (a.type == VALUE_STRING) {
+                    addInstFunctionCallBinary(data->inst_mem, data->registers, a.reg, a.reg, b.reg, compareStrings);
+                    a.type = VALUE_INT;
+                    addInstMovImmToReg(data->inst_mem, data->registers, b.reg, 0, false);
+                    b.type = VALUE_INT;
+                }
+                switch (condition->type) {
+                case AST_EQ:
+                    elsejmp = addInstCondJmpRel(data->inst_mem, data->registers, COND_NE, a.reg, b.reg, 0);
+                    break;
+                case AST_NE:
+                    elsejmp = addInstCondJmpRel(data->inst_mem, data->registers, COND_EQ, a.reg, b.reg, 0);
+                    break;
+                case AST_LT:
+                    elsejmp = addInstCondJmpRel(data->inst_mem, data->registers, COND_GE, a.reg, b.reg, 0);
+                    break;
+                case AST_GT:
+                    elsejmp = addInstCondJmpRel(data->inst_mem, data->registers, COND_LE, a.reg, b.reg, 0);
+                    break;
+                case AST_LE:
+                    elsejmp = addInstCondJmpRel(data->inst_mem, data->registers, COND_GT, a.reg, b.reg, 0);
+                    break;
+                case AST_GE:
+                    elsejmp = addInstCondJmpRel(data->inst_mem, data->registers, COND_LT, a.reg, b.reg, 0);
+                    break;
+                default:
+                    break;
+                }
+            } else {
+                Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
+                return ret;
             }
             data->registers &= ~a.reg;
             data->registers &= ~b.reg;
