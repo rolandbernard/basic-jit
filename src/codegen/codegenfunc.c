@@ -359,13 +359,23 @@ static Value generateMCStrAfterFreeReg(AstUnary* ast, MCGenerationData* data) {
 
 static Value generateMCStr(AstUnary* ast, MCGenerationData* data) { return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCStrAfterFreeReg, 1, 1); }
 
-static void printInt64(int64_t x) { fprintf(stdout, "%li", x); }
+static void printInt64(int64_t x) {
+    fprintf(stdout, "%li", x);
+}
 
-static void printFloat(double x) { fprintf(stdout, "%lg", x); }
+static void printFloat(double x) {
+    fprintf(stdout, "%lg", x);
+}
 
-static void printString(char* x) { fprintf(stdout, "%s", x); }
+static void printString(char* x) {
+    if(x != NULL) {
+        fprintf(stdout, "%s", x);
+    }
+}
 
-static void printLn() { fprintf(stdout, "\n"); }
+static void printLn() {
+    fprintf(stdout, "\n");
+}
 
 static Value generateMCPrintAfterFreeReg(AstVariable* ast, MCGenerationData* data) {
     for (int i = 0; i < ast->count; i++) {

@@ -191,8 +191,8 @@ static Value generateMCRestore(AstUnary* ast, MCGenerationData* data) {
 }
 
 static char* concatStrings(char* a, char* b) {
-    int a_len = strlen(a);
-    int b_len = strlen(b);
+    int a_len = a == NULL ? 0 : strlen(a);
+    int b_len = b == NULL ? 0 : strlen(b);
     char* ret = (char*)allocAligned(&global_exec_alloc, a_len + b_len + 1);
     memcpy(ret, a, a_len);
     memcpy(ret + a_len, b, b_len);
@@ -797,7 +797,7 @@ static Value generateMCLet(AstLet* ast, MCGenerationData* data) {
 }
 
 static int64_t compareStrings(char* a, char* b) {
-    return strcmp(a, b);
+    return strcmp(a == NULL ? "" : a, b == NULL ? "" : b);
 }
 
 static Value generateMCIfThenElseAfterFreeReg(AstIfThenElse* ast, MCGenerationData* data) {

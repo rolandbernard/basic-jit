@@ -164,6 +164,7 @@ static double stringToFloat(const char* str, int len) {
     }
     if(*str == '.') {
         str++;
+        len--;
         double mult = 1;
         while (len > 0 && *str != 'e') {
             if (*str != '_') {
@@ -176,13 +177,16 @@ static double stringToFloat(const char* str, int len) {
     }
     if(*str == 'e') {
         str++;
+        len--;
         int exp = 0;
         int sign = 1;
         if(*str == '-') {
             sign = -1;
             str++;
+            len--;
         } else if(*str == '+') {
             str++;
+            len--;
         }
         while (len > 0) {
             if (*str != '_') {
