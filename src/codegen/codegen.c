@@ -3,6 +3,7 @@
 
 #include "codegen/codegen.h"
 #include "codegen/codegenfunc.h"
+#include "exec/execalloc.h"
 
 static uint64_t data_index = 0;
 
@@ -151,8 +152,10 @@ static Value generateMCNext(AstUnary* ast, MCGenerationData* data) {
 
 static Value generateMCRestoreAfterFreeReg(AstUnary* ast, MCGenerationData* data) {
     Register reg = getFreeRegister(data->registers);
+    data->registers |= reg;
     size_t pos = addInstMovImmToReg(data->inst_mem, data->registers, reg, 0, true);
     addInstMovRegToMem(data->inst_mem, data->registers, reg, (void*)&data_index);
+    data->registers &= ~reg;
     if(ast->value->type == AST_INTEGER) {
         char name[25]; 
         AstInt* line = (AstInt*)ast->value;
@@ -190,7 +193,7 @@ static Value generateMCRestore(AstUnary* ast, MCGenerationData* data) {
 static char* concatStrings(char* a, char* b) {
     int a_len = strlen(a);
     int b_len = strlen(b);
-    char* ret = (char*)malloc(a_len + b_len + 1);
+    char* ret = (char*)allocAligned(&global_exec_alloc, a_len + b_len + 1);
     memcpy(ret, a, a_len);
     memcpy(ret + a_len, b, b_len);
     ret[a_len + b_len] = 0;
@@ -1139,6 +1142,7 @@ static Value generateMCOnGoAfterFreeReg(AstSwitch* ast, MCGenerationData* data) 
         return ret;
     } else {
         Register imm_reg = getFreeRegister(data->registers);
+        data->registers |= imm_reg;
         for(int i = 0; i < ast->count; i++) {
             addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, i, false); 
             size_t pos;
@@ -1176,6 +1180,7 @@ static Value generateMCOnGoAfterFreeReg(AstSwitch* ast, MCGenerationData* data) 
                 addLabelToList(data->label_list, entry);
             }
         }
+        data->registers &= ~imm_reg;
     }
     Value ret = {.type=VALUE_NONE};
     return ret;
@@ -1323,6 +1328,7 @@ static Value generateMCReturn(Ast* ast, MCGenerationData* data) {
 
 static Value generateMCInteger(AstInt* ast, MCGenerationData* data) {
     Register reg = getFreeRegister(data->registers);
+    data->registers |= reg;
     addInstMovImmToReg(data->inst_mem, data->registers, reg, ast->value, false);
     Value ret = {
         .type = VALUE_INT,
@@ -1333,6 +1339,7 @@ static Value generateMCInteger(AstInt* ast, MCGenerationData* data) {
 
 static Value generateMCFloat(AstFloat* ast, MCGenerationData* data) {
     Register freg = getFreeFRegister(data->registers);
+    data->registers |= freg;
     addInstMovImmToFReg(data->inst_mem, data->registers, freg, ast->value);
     Value ret = {
         .type = VALUE_FLOAT,
@@ -1455,6 +1462,7 @@ Error generateMC(Ast* ast, MCGenerationData* data) {
         } else {
             return ERROR_NONE;
         }
+    } else {
+        return ERROR_SYNTAX;
     }
-    return ERROR_NONE;
 }

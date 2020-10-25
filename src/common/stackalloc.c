@@ -43,6 +43,7 @@ void* allocAligned(StackAllocator* mem, size_t size) {
         if (mem->capacity <= mem->occupied + 2 * size) {
             if (mem->capacity == 0) {
                 mem->memory = malloc(INITIAL_CAPACITY);
+                mem->capacity = INITIAL_CAPACITY;
             } else {
                 if (mem->next == NULL) {
                     StackAllocator* next = (StackAllocator*)malloc(sizeof(StackAllocator));

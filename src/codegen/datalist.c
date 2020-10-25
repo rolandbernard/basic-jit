@@ -17,5 +17,7 @@ void addDataToList(DataList* list, DataElement entry) {
 }
 
 void freeDataList(DataList* list) {
-    free(list->data);
+    if(list != NULL) {
+        free(list->data);
+    }
 }

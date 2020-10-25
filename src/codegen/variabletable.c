@@ -79,5 +79,7 @@ Variable* getVariable(VariableTable* table, const char* name) {
 }
 
 void freeVariableTable(VariableTable* table) {
-    free(table->data);
+    if(table != NULL) {
+        free(table->data);
+    }
 }

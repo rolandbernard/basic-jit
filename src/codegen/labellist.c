@@ -17,5 +17,7 @@ void addLabelToList(UnhandeledLabelList* list, UnhandeledLabelEntry entry) {
 }
 
 void freeLabelList(UnhandeledLabelList* list) {
-    free(list->data);
+    if(list != NULL) {
+        free(list->data);
+    }
 }

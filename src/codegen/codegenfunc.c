@@ -4,12 +4,13 @@
 #include <string.h>
 
 #include "codegenfunc.h"
+#include "exec/execalloc.h"
 
 #define PI 3.14159265358979323
 
 static int64_t powInt64(int64_t b, int64_t e) {
-    if(e < 0) {
-        if(b == 1) {
+    if (e < 0) {
+        if (b == 1) {
             return 1;
         } else {
             return 0;
@@ -32,28 +33,28 @@ static int64_t powInt64(int64_t b, int64_t e) {
 
 static Value generateMCPowCallAfterFreeReg(AstBinary* ast, MCGenerationData* data) {
     Value a = generateMCForAst(ast->first, data);
-    if(a.type == VALUE_ERROR) {
+    if (a.type == VALUE_ERROR) {
         return a;
-    } else if(a.type == VALUE_NONE) {
+    } else if (a.type == VALUE_NONE) {
         Value ret = {.type = VALUE_ERROR, .error = ERROR_SYNTAX};
         return ret;
     } else {
         Value b = generateMCForAst(ast->second, data);
-        if(b.type == VALUE_ERROR) {
+        if (b.type == VALUE_ERROR) {
             return b;
-        } else if(b.type == VALUE_NONE) {
+        } else if (b.type == VALUE_NONE) {
             Value ret = {.type = VALUE_ERROR, .error = ERROR_SYNTAX};
             return ret;
         } else {
-            if(a.type != b.type) {
-                if(a.type == VALUE_INT && b.type == VALUE_FLOAT) {
+            if (a.type != b.type) {
+                if (a.type == VALUE_INT && b.type == VALUE_FLOAT) {
                     Register freg = getFreeFRegister(data->registers);
                     data->registers |= freg;
                     addInstMovRegToFReg(data->inst_mem, data->registers, freg, a.reg);
                     data->registers &= ~a.reg;
                     a.type = VALUE_FLOAT;
                     a.reg = freg;
-                } else if(a.type == VALUE_FLOAT && b.type == VALUE_INT) {
+                } else if (a.type == VALUE_FLOAT && b.type == VALUE_INT) {
                     Register freg = getFreeFRegister(data->registers);
                     data->registers |= freg;
                     addInstMovRegToFReg(data->inst_mem, data->registers, freg, b.reg);
@@ -61,13 +62,13 @@ static Value generateMCPowCallAfterFreeReg(AstBinary* ast, MCGenerationData* dat
                     b.type = VALUE_FLOAT;
                     b.reg = freg;
                 } else {
-                    Value ret = { .type = VALUE_ERROR, .error = ERROR_TYPE };
+                    Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
                     return ret;
                 }
             }
-            if(a.type == VALUE_INT) {
+            if (a.type == VALUE_INT) {
                 addInstFunctionCallBinary(data->inst_mem, data->registers, a.reg, a.reg, b.reg, powInt64);
-            } else if(a.type == VALUE_FLOAT) {
+            } else if (a.type == VALUE_FLOAT) {
                 addInstFunctionCallBinary(data->inst_mem, data->registers, a.reg, a.reg, b.reg, pow);
             } else {
                 Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
@@ -79,28 +80,22 @@ static Value generateMCPowCallAfterFreeReg(AstBinary* ast, MCGenerationData* dat
     }
 }
 
-static Value generateMCPowCall(AstBinary* ast, MCGenerationData* data) {
-    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCPowCallAfterFreeReg, 2, 2);
-}
+static Value generateMCPowCall(AstBinary* ast, MCGenerationData* data) { return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCPowCallAfterFreeReg, 2, 2); }
 
 static double frac(double x) {
     double integ;
     return modf(x, &integ);
 }
 
-static double toDeg(double x) {
-    return x * 180.0 / PI;
-}
+static double toDeg(double x) { return x * 180.0 / PI; }
 
-static double toRad(double x) {
-    return x * PI / 180.0;
-}
+static double toRad(double x) { return x * PI / 180.0; }
 
 static Value generateMCUnaryFloatCallAfterFreeReg(AstUnary* ast, MCGenerationData* data) {
     Value a = generateMCForAst(ast->value, data);
-    if(a.type == VALUE_ERROR) {
+    if (a.type == VALUE_ERROR) {
         return a;
-    } else if(a.type == VALUE_NONE) {
+    } else if (a.type == VALUE_NONE) {
         Value ret = {.type = VALUE_ERROR, .error = ERROR_SYNTAX};
         return ret;
     } else {
@@ -115,7 +110,7 @@ static Value generateMCUnaryFloatCallAfterFreeReg(AstUnary* ast, MCGenerationDat
             Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
             return ret;
         }
-        switch(ast->type) {
+        switch (ast->type) {
         case AST_SIN:
             addInstFunctionCallUnary(data->inst_mem, data->registers, a.reg, a.reg, sin);
             break;
@@ -165,20 +160,18 @@ static Value generateMCUnaryFloatCallAfterFreeReg(AstUnary* ast, MCGenerationDat
     }
 }
 
-static Value generateMCUnaryFloatCall(AstUnary* ast, MCGenerationData* data) {
-    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCUnaryFloatCallAfterFreeReg, 1, 1);
-}
+static Value generateMCUnaryFloatCall(AstUnary* ast, MCGenerationData* data) { return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCUnaryFloatCallAfterFreeReg, 1, 1); }
 
 static char* tabFunction(int64_t x) {
     char out[25];
     int len = snprintf(out, 25, "\e[%liG", x);
-    char* ret = (char*)malloc(len + 1);
+    char* ret = (char*)allocAligned(&global_exec_alloc, len + 1);
     memcpy(ret, out, len + 1);
     return ret;
 }
 
 static char* spcFunction(int64_t x) {
-    char* ret = (char*)malloc(x + 1);
+    char* ret = (char*)allocAligned(&global_exec_alloc, x + 1);
     memset(ret, ' ', x);
     ret[x + 1] = 0;
     return ret;
@@ -211,14 +204,12 @@ static Value generateMCUnaryIntToStringAfterFreeReg(AstUnary* ast, MCGenerationD
     }
 }
 
-static Value generateMCUnaryIntToString(AstUnary* ast, MCGenerationData* data) {
-    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCUnaryIntToStringAfterFreeReg, 1, 1);
-}
+static Value generateMCUnaryIntToString(AstUnary* ast, MCGenerationData* data) { return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCUnaryIntToStringAfterFreeReg, 1, 1); }
 
 static int64_t int64Sign(int64_t x) {
-    if(x == 0) {
+    if (x == 0) {
         return 0;
-    } else if(x > 0) {
+    } else if (x > 0) {
         return 1;
     } else {
         return -1;
@@ -226,7 +217,7 @@ static int64_t int64Sign(int64_t x) {
 }
 
 static int64_t int64Abs(int64_t x) {
-    if(x < 0) {
+    if (x < 0) {
         return -x;
     } else {
         return x;
@@ -234,9 +225,9 @@ static int64_t int64Abs(int64_t x) {
 }
 
 static double floatSign(double x) {
-    if(x == 0) {
+    if (x == 0) {
         return 0.0;
-    } else if(x > 0) {
+    } else if (x > 0) {
         return 1.0;
     } else {
         return -1.0;
@@ -244,7 +235,7 @@ static double floatSign(double x) {
 }
 
 static double floatAbs(double x) {
-    if(x < 0) {
+    if (x < 0) {
         return -x;
     } else {
         return x;
@@ -290,9 +281,7 @@ static Value generateMCUnaryIntOrFloatAfterFreeReg(AstUnary* ast, MCGenerationDa
     }
 }
 
-static Value generateMCUnaryIntOrFloat(AstUnary* ast, MCGenerationData* data) {
-    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCUnaryIntOrFloatAfterFreeReg, 1, 1);
-}
+static Value generateMCUnaryIntOrFloat(AstUnary* ast, MCGenerationData* data) { return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCUnaryIntOrFloatAfterFreeReg, 1, 1); }
 
 static double parseString(char* str) {
     double ret;
@@ -323,14 +312,12 @@ static Value generateMCValAfterFreeReg(AstUnary* ast, MCGenerationData* data) {
     }
 }
 
-static Value generateMCVal(AstUnary* ast, MCGenerationData* data) {
-    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCValAfterFreeReg, 1, 1);
-}
+static Value generateMCVal(AstUnary* ast, MCGenerationData* data) { return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCValAfterFreeReg, 1, 1); }
 
 static char* stringifyInt(int64_t x) {
     char out[25];
     int len = snprintf(out, 25, "%li", x);
-    char* ret = (char*)malloc(len + 1);
+    char* ret = (char*)allocAligned(&global_exec_alloc, len + 1);
     memcpy(ret, out, len + 1);
     return ret;
 }
@@ -338,7 +325,7 @@ static char* stringifyInt(int64_t x) {
 static char* stringifyFloat(double x) {
     char out[25];
     int len = snprintf(out, 25, "%lg", x);
-    char* ret = (char*)malloc(len + 1);
+    char* ret = (char*)allocAligned(&global_exec_alloc, len + 1);
     memcpy(ret, out, len + 1);
     return ret;
 }
@@ -370,28 +357,18 @@ static Value generateMCStrAfterFreeReg(AstUnary* ast, MCGenerationData* data) {
     }
 }
 
-static Value generateMCStr(AstUnary* ast, MCGenerationData* data) {
-    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCStrAfterFreeReg, 1, 1);
-}
+static Value generateMCStr(AstUnary* ast, MCGenerationData* data) { return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCStrAfterFreeReg, 1, 1); }
 
-static void printInt64(int64_t x) {
-    fprintf(stdout, "%li", x);
-}
+static void printInt64(int64_t x) { fprintf(stdout, "%li", x); }
 
-static void printFloat(double x) {
-    fprintf(stdout, "%lg", x);
-}
+static void printFloat(double x) { fprintf(stdout, "%lg", x); }
 
-static void printString(char* x) {
-    fprintf(stdout, "%s", x);
-}
+static void printString(char* x) { fprintf(stdout, "%s", x); }
 
-static void printLn() {
-    fprintf(stdout, "\n");
-}
+static void printLn() { fprintf(stdout, "\n"); }
 
 static Value generateMCPrintAfterFreeReg(AstVariable* ast, MCGenerationData* data) {
-    for(int i = 0; i < ast->count; i++) {
+    for (int i = 0; i < ast->count; i++) {
         Value a = generateMCForAst(ast->values[i], data);
         if (a.type == VALUE_ERROR) {
             return a;
@@ -403,7 +380,7 @@ static Value generateMCPrintAfterFreeReg(AstVariable* ast, MCGenerationData* dat
                 addInstFunctionCallUnaryNoRet(data->inst_mem, data->registers, a.reg, printInt64);
             } else if (a.type == VALUE_FLOAT) {
                 addInstFunctionCallUnaryNoRet(data->inst_mem, data->registers, a.reg, printFloat);
-            } else if(a.type == VALUE_STRING) {
+            } else if (a.type == VALUE_STRING) {
                 addInstFunctionCallUnaryNoRet(data->inst_mem, data->registers, a.reg, printString);
             } else {
                 Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
@@ -412,16 +389,14 @@ static Value generateMCPrintAfterFreeReg(AstVariable* ast, MCGenerationData* dat
             data->registers &= ~a.reg;
         }
     }
-    if(!ast->open_end) {
+    if (!ast->open_end) {
         addInstFunctionCallSimple(data->inst_mem, data->registers, printLn);
     }
     Value ret = {.type = VALUE_NONE};
     return ret;
 }
 
-static Value generateMCPrint(AstVariable* ast, MCGenerationData* data) {
-    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCPrintAfterFreeReg, 1, 1);
-}
+static Value generateMCPrint(AstVariable* ast, MCGenerationData* data) { return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCPrintAfterFreeReg, 1, 1); }
 
 static int64_t inputInt() {
     int64_t ret;
@@ -439,11 +414,11 @@ static char* inputString() {
     char tmp[2048];
     fgets(tmp, 2048, stdin);
     int len = strlen(tmp);
-    if(tmp[len - 1] == '\n') {
+    if (tmp[len - 1] == '\n') {
         len--;
         tmp[len] = 0;
     }
-    char* ret = (char*)malloc(len + 1);
+    char* ret = (char*)allocAligned(&global_exec_alloc, len + 1);
     memcpy(ret, tmp, len + 1);
     return ret;
 }
@@ -452,21 +427,17 @@ static Value generateMCInputArrayElementAfterFreeReg(AstIndex* ast, MCGeneration
     AstIndex* index = (AstIndex*)ast;
     AstVar* var = (AstVar*)index->name;
     Variable* variable = getVariable(data->variable_table, var->name);
-    if(variable != NULL) {
-        if(variable->type != VARIABLE_STRING_ARRAY && variable->type != VARIABLE_INT_ARRAY && variable->type != VARIABLE_FLOAT_ARRAY) {
+    if (variable != NULL) {
+        if (variable->type != VARIABLE_STRING_ARRAY && variable->type != VARIABLE_INT_ARRAY && variable->type != VARIABLE_FLOAT_ARRAY) {
             Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
             return ret;
         } else if (var->var_type != VAR_UNDEF) {
-            if ((variable->type == VARIABLE_INT_ARRAY && var->var_type != VAR_INT) || 
-                (variable->type == VARIABLE_FLOAT_ARRAY && var->var_type != VAR_FLOAT) ||
-                (variable->type == VARIABLE_STRING_ARRAY && var->var_type != VAR_STR)) {
+            if ((variable->type == VARIABLE_INT_ARRAY && var->var_type != VAR_INT) || (variable->type == VARIABLE_FLOAT_ARRAY && var->var_type != VAR_FLOAT) || (variable->type == VARIABLE_STRING_ARRAY && var->var_type != VAR_STR)) {
                 Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
                 return ret;
             }
         }
-        if ((variable->type == VARIABLE_INT_ARRAY && ((VariableIntArray*)variable)->dim_count != index->count) || 
-            (variable->type == VARIABLE_FLOAT_ARRAY && ((VariableIntArray*)variable)->dim_count != index->count) ||
-            (variable->type == VARIABLE_STRING_ARRAY && ((VariableIntArray*)variable)->dim_count != index->count)) {
+        if ((variable->type == VARIABLE_INT_ARRAY && ((VariableIntArray*)variable)->dim_count != index->count) || (variable->type == VARIABLE_FLOAT_ARRAY && ((VariableIntArray*)variable)->dim_count != index->count) || (variable->type == VARIABLE_STRING_ARRAY && ((VariableIntArray*)variable)->dim_count != index->count)) {
             Value ret = {.type = VALUE_ERROR, .error = ERROR_ARRAY_DIM_COUNT_MISMATCH};
             return ret;
         }
@@ -475,24 +446,24 @@ static Value generateMCInputArrayElementAfterFreeReg(AstIndex* ast, MCGeneration
         Register index_reg = getFreeRegister(data->registers);
         data->registers |= index_reg;
         size_t indexing_size;
-        if(variable->type == VARIABLE_INT_ARRAY) {
+        if (variable->type == VARIABLE_INT_ARRAY) {
             addInstMovImmToReg(data->inst_mem, data->registers, index_reg, (intptr_t)((VariableIntArray*)variable)->value, false);
             indexing_size = sizeof(int64_t);
-        } else if(variable->type == VARIABLE_FLOAT_ARRAY) {
+        } else if (variable->type == VARIABLE_FLOAT_ARRAY) {
             addInstMovImmToReg(data->inst_mem, data->registers, index_reg, (intptr_t)((VariableFloatArray*)variable)->value, false);
             indexing_size = sizeof(double);
-        } else if(variable->type == VARIABLE_STRING_ARRAY) {
+        } else if (variable->type == VARIABLE_STRING_ARRAY) {
             addInstMovImmToReg(data->inst_mem, data->registers, index_reg, (intptr_t)((VariableStringArray*)variable)->str, false);
             indexing_size = sizeof(char*);
         }
-        for(int i = 0; i < index->count; i++) {
+        for (int i = 0; i < index->count; i++) {
             Value ind = generateMCForAst(index->size[i], data);
-            if(ind.type == VALUE_ERROR) {
+            if (ind.type == VALUE_ERROR) {
                 return ind;
-            } else if(ind.type == VALUE_NONE) {
+            } else if (ind.type == VALUE_NONE) {
                 Value ret = {.type = VALUE_ERROR, .error = ERROR_SYNTAX};
                 return ret;
-            } else if(ind.type != VALUE_INT) {
+            } else if (ind.type != VALUE_INT) {
                 Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
                 return ret;
             } else {
@@ -501,11 +472,11 @@ static Value generateMCInputArrayElementAfterFreeReg(AstIndex* ast, MCGeneration
                 data->registers &= ~ind.reg;
                 addInstAdd(data->inst_mem, data->registers, index_reg, index_reg, imm_reg);
             }
-            if(variable->type == VARIABLE_INT_ARRAY) {
+            if (variable->type == VARIABLE_INT_ARRAY) {
                 indexing_size *= ((VariableIntArray*)variable)->size[i];
-            } else if(variable->type == VARIABLE_FLOAT_ARRAY) {
+            } else if (variable->type == VARIABLE_FLOAT_ARRAY) {
                 indexing_size *= ((VariableFloatArray*)variable)->size[i];
-            } else if(variable->type == VARIABLE_STRING_ARRAY) {
+            } else if (variable->type == VARIABLE_STRING_ARRAY) {
                 indexing_size *= ((VariableStringArray*)variable)->size[i];
             }
         }
@@ -533,7 +504,7 @@ static Value generateMCInputArrayElementAfterFreeReg(AstIndex* ast, MCGeneration
             return ret;
         }
         data->registers &= ~index_reg;
-        Value ret = {.type=VALUE_NONE};
+        Value ret = {.type = VALUE_NONE};
         return ret;
     } else {
         Value ret = {.type = VALUE_ERROR, .error = ERROR_ARRAY_NOT_DEF};
@@ -542,7 +513,7 @@ static Value generateMCInputArrayElementAfterFreeReg(AstIndex* ast, MCGeneration
 }
 
 static Value generateMCInputAfterFreeReg(AstVariable* ast, MCGenerationData* data) {
-    for(int i = 0; i < ast->count; i++) {
+    for (int i = 0; i < ast->count; i++) {
         if (ast->values[i]->type == AST_VAR) {
             AstVar* var = (AstVar*)ast->values[i];
             Variable* variable = getVariable(data->variable_table, var->name);
@@ -604,7 +575,7 @@ static Value generateMCInputAfterFreeReg(AstVariable* ast, MCGenerationData* dat
         } else if (ast->values[i]->type == AST_INDEX) {
             AstIndex* index = (AstIndex*)ast->values[i];
             Value ret = withFreeRegister((Ast*)index, data, (GenerateMCFunction)generateMCInputArrayElementAfterFreeReg, 3, 1);
-            if(ret.type == VALUE_ERROR) {
+            if (ret.type == VALUE_ERROR) {
                 return ret;
             }
         } else {
@@ -612,27 +583,24 @@ static Value generateMCInputAfterFreeReg(AstVariable* ast, MCGenerationData* dat
             return ret;
         }
     }
-    Value ret = {.type=VALUE_NONE};
+    Value ret = {.type = VALUE_NONE};
     return ret;
 }
 
-static Value generateMCInput(AstVariable* ast, MCGenerationData* data) {
-    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCInputAfterFreeReg, 1, 1);
-}
+static Value generateMCInput(AstVariable* ast, MCGenerationData* data) { return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCInputAfterFreeReg, 1, 1); }
 
-static double randomFloat() {
-    return rand() / (double)RAND_MAX;
-}
+static double randomFloat() { return rand() / (double)RAND_MAX; }
 
 static Value generateMCRan(Ast* ast, MCGenerationData* data) {
     Register freg = getFreeFRegister(data->registers);
+    data->registers |= freg;
     addInstFunctionCallRetOnly(data->inst_mem, data->registers, freg, randomFloat);
     Value ret = {.type = VALUE_FLOAT, .reg = freg};
     return ret;
 }
 
 static char* key() {
-    char* ret = (char*)malloc(2);
+    char* ret = (char*)allocAligned(&global_exec_alloc, 2);
     ret[0] = getc(stdin);
     ret[1] = 0;
     return ret;
@@ -640,18 +608,15 @@ static char* key() {
 
 static Value generateMCKey(Ast* ast, MCGenerationData* data) {
     Register reg = getFreeRegister(data->registers);
+    data->registers |= reg;
     addInstFunctionCallRetOnly(data->inst_mem, data->registers, reg, key);
     Value ret = {.type = VALUE_STRING, .reg = reg};
     return ret;
 }
 
-static void beep() {
-    fprintf(stderr, "\a");
-}
+static void beep() { fprintf(stderr, "\a"); }
 
-static void end() {
-    exit(0);
-}
+static void end() { exit(0); }
 
 static void stop() {
     fprintf(stderr, "Press [ENTER] to continue...");
@@ -659,7 +624,7 @@ static void stop() {
 }
 
 static Value generateMCSimpleCall(Ast* ast, MCGenerationData* data) {
-    switch(ast->type) {
+    switch (ast->type) {
     case AST_BEEP:
         addInstFunctionCallSimple(data->inst_mem, data->registers, beep);
         break;
@@ -677,8 +642,8 @@ static Value generateMCSimpleCall(Ast* ast, MCGenerationData* data) {
 }
 
 Value generateMCForFunctions(Ast* ast, MCGenerationData* data) {
-    Value value = { .type = VALUE_NONE };
-    if(ast != NULL) {
+    Value value = {.type = VALUE_NONE};
+    if (ast != NULL) {
         switch (ast->type) {
         case AST_POW:
             value = generateMCPowCall((AstBinary*)ast, data);
