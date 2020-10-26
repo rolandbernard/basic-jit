@@ -3,25 +3,35 @@
 #include <stdint.h>
 #include <sys/mman.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
 #include "exec/executil.h"
 
 typedef int (*JitFunction)();
 
 bool executeFunctionInMemory(void* mem, size_t len, int* ret) {
-    JitFunction entry = (JitFunction)mem;
-    size_t pagesize = sysconf(_SC_PAGESIZE);
-    uintptr_t start = (uintptr_t)mem;
-    uintptr_t end = start + len;
-    uintptr_t pagestart = start & -pagesize;
-    if(mprotect((void*)pagestart, end - pagestart, PROT_EXEC | PROT_READ | PROT_WRITE)) {
+    int pid = fork();
+    if(pid == -1) {
         return true;
-    } else {
-        int res = entry();
-        if(ret != NULL) {
-            *ret = res;
+    } else if(pid == 0) {
+        JitFunction entry = (JitFunction)mem;
+        size_t pagesize = sysconf(_SC_PAGESIZE);
+        uintptr_t start = (uintptr_t)mem;
+        uintptr_t end = start + len;
+        uintptr_t pagestart = start & -pagesize;
+        if (mprotect((void*)pagestart, end - pagestart, PROT_EXEC | PROT_READ | PROT_WRITE)) {
+            exit(1);
+        } else {
+            int res = entry();
+            if (ret != NULL) {
+                *ret = res;
+            }
+            exit(0);
         }
-        return false;
+    } else {
+        int stat;
+        waitpid(pid, &stat, 0);
+        return stat != 0;
     }
 }
 
