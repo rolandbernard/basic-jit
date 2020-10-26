@@ -78,6 +78,7 @@ typedef enum {
     AST_IF_THEN_ELSE,
     AST_FOR,
     AST_VAR,
+    AST_LINENUM,
     
     // switch
     AST_ON_GOTO,
@@ -91,6 +92,12 @@ typedef enum {
 typedef struct {
     AST_BASE
 } Ast;
+
+typedef struct {
+    AST_BASE
+    char* number;
+    Ast* line;
+} AstLineNum;
 
 typedef struct {
     AST_BASE
@@ -181,7 +188,5 @@ typedef struct {
     int count;
     Ast** size;
 } AstIndex;
-
-void freeAst(Ast* ast);
 
 #endif
