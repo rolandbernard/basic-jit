@@ -833,7 +833,7 @@ static Ast* parseIfThenElseStatement(Scanner* scanner, StackAllocator* mem) {
                 }
                 Ast* if_false = NULL;
                 if(acceptToken(scanner, TOKEN_ELSE)) {
-                    Ast* if_false = parseMultiple(scanner, mem);
+                    if_false = parseMultiple(scanner, mem);
                     if (if_false == NULL) {
                         int error_offset = getScannerOffset(scanner);
                         return (Ast*)createError(error_offset, mem);

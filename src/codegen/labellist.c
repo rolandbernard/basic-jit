@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "codegen/labellist.h"
+#include "codegen/instructions.h"
 
 void addLabelToList(UnhandeledLabelList* list, UnhandeledLabelEntry entry) {
     if(list->count == list->capacity) {
@@ -29,9 +30,9 @@ int fillUnhandledLabelLocations(UnhandeledLabelList* list, VariableTable* table,
             return i;
         } else {
             if(list->data[i].for_restore) {
-                *((int64_t*)(inst_mem->memory + list->data[i].position)) = label->data_pos;
+                update64BitValue(inst_mem, list->data[i].position, label->data_pos);
             } else {
-                *((int32_t*)(inst_mem->memory + list->data[i].position)) = label->pos - (list->data[i].position + 4);
+                update32BitValue(inst_mem, list->data[i].position, label->pos - (list->data[i].position + 4));
             }
         }
     }

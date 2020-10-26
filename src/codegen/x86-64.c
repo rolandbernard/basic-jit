@@ -250,6 +250,46 @@ void addJmpLE(StackAllocator* mem, int32_t rel) {
     ptr[5] = (rel >> 24) & 0xff;
 }
 
+void addJmpA(StackAllocator* mem, int32_t rel) {
+    uint8_t* ptr = (uint8_t*)allocUnaligned(mem, 6);
+    ptr[0] = 0x0f;
+    ptr[1] = 0x87;
+    ptr[2] = (rel) & 0xff;
+    ptr[3] = (rel >> 8) & 0xff;
+    ptr[4] = (rel >> 16) & 0xff;
+    ptr[5] = (rel >> 24) & 0xff;
+}
+
+void addJmpB(StackAllocator* mem, int32_t rel) {
+    uint8_t* ptr = (uint8_t*)allocUnaligned(mem, 6);
+    ptr[0] = 0x0f;
+    ptr[1] = 0x82;
+    ptr[2] = (rel) & 0xff;
+    ptr[3] = (rel >> 8) & 0xff;
+    ptr[4] = (rel >> 16) & 0xff;
+    ptr[5] = (rel >> 24) & 0xff;
+}
+
+void addJmpAE(StackAllocator* mem, int32_t rel) {
+    uint8_t* ptr = (uint8_t*)allocUnaligned(mem, 6);
+    ptr[0] = 0x0f;
+    ptr[1] = 0x83;
+    ptr[2] = (rel) & 0xff;
+    ptr[3] = (rel >> 8) & 0xff;
+    ptr[4] = (rel >> 16) & 0xff;
+    ptr[5] = (rel >> 24) & 0xff;
+}
+
+void addJmpBE(StackAllocator* mem, int32_t rel) {
+    uint8_t* ptr = (uint8_t*)allocUnaligned(mem, 6);
+    ptr[0] = 0x0f;
+    ptr[1] = 0x86;
+    ptr[2] = (rel) & 0xff;
+    ptr[3] = (rel >> 8) & 0xff;
+    ptr[4] = (rel >> 16) & 0xff;
+    ptr[5] = (rel >> 24) & 0xff;
+}
+
 void addMovFRegToReg(StackAllocator* mem, X86Register dest, X86Register fsrc) {
     uint8_t* ptr = (uint8_t*)allocUnaligned(mem, 5);
     ptr[0] = 0x66;

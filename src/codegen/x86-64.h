@@ -84,6 +84,14 @@ void addJmpGE(StackAllocator* mem, int32_t rel);
 
 void addJmpLE(StackAllocator* mem, int32_t rel);
 
+void addJmpA(StackAllocator* mem, int32_t rel);
+
+void addJmpB(StackAllocator* mem, int32_t rel);
+
+void addJmpAE(StackAllocator* mem, int32_t rel);
+
+void addJmpBE(StackAllocator* mem, int32_t rel);
+
 void addMovFRegToReg(StackAllocator* mem, X86Register dest, X86Register fsrc);
 
 void addMovRegToFReg(StackAllocator* mem, X86Register fdest, X86Register src);

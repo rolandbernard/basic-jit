@@ -114,39 +114,8 @@ void addInstPushCallerRegs(StackAllocator* mem, RegisterSet regs);
 
 void addInstPopCallerRegs(StackAllocator* mem, RegisterSet regs);
 
-#ifdef __x86_64__
+void update32BitValue(StackAllocator* mem, size_t pos, int32_t value);
 
-#define pop(R) \
-    asm ( \
-        "pop %0" \
-        : "=r" (R) \
-    );
-
-#define push(V) \
-    asm ( \
-        "push %0" \
-        : \
-        : "r" (V) \
-    );
-
-#define popF(R) { \
-    union { \
-        int64_t i; \
-        double d; \
-    } double_to_uint64; \
-    pop(double_to_uint64.i); \
-    R = double_to_uint64.d; \
-}
-
-#define pushF(V) { \
-    union { \
-        int64_t i; \
-        double d; \
-    } double_to_uint64; \
-    double_to_uint64.d = V; \
-    push(double_to_uint64.i); \
-}
-
-#endif
+void update64BitValue(StackAllocator* mem, size_t pos, int64_t value);
 
 #endif

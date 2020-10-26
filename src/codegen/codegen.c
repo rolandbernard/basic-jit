@@ -885,17 +885,17 @@ static Value generateMCIfThenElseAfterFreeReg(AstIfThenElse* ast, MCGenerationDa
                 return if_block;
             } else {
                 if(ast->if_false == NULL) {
-                    *((int32_t*)(data->inst_mem->memory + elsejmp)) = data->inst_mem->occupied - (elsejmp + 4);
+                    update32BitValue(data->inst_mem, elsejmp, data->inst_mem->occupied - (elsejmp + 4));
                     Value ret = {.type=VALUE_NONE};
                     return ret;
                 } else {
                     ifendjmp = addInstJmpRel(data->inst_mem, data->registers, 0);
-                    *((int32_t*)(data->inst_mem->memory + elsejmp)) = data->inst_mem->occupied - (elsejmp + 4);
+                    update32BitValue(data->inst_mem, elsejmp, data->inst_mem->occupied - (elsejmp + 4));
                     Value else_block = generateMCForAst(ast->if_false, data);
                     if(else_block.type == VALUE_ERROR) {
                         return else_block;
                     } else {
-                        *((int32_t*)(data->inst_mem->memory + ifendjmp)) = data->inst_mem->occupied - (ifendjmp + 4);
+                        update32BitValue(data->inst_mem, ifendjmp, data->inst_mem->occupied - (ifendjmp + 4));
                         Value ret = {.type=VALUE_NONE};
                         return ret;
                     }
@@ -1052,11 +1052,12 @@ static Value generateMCForAfterFreeReg(AstFor* ast, MCGenerationData* data) {
     }
     data->registers &= ~end.reg;
     addInstMovImmToReg(data->inst_mem, data->registers, ret_reg, 1, false);
-    *((int32_t*)(data->inst_mem->memory + jmp_to_ret)) = data->inst_mem->occupied - (jmp_to_ret + 4);
+    update32BitValue(data->inst_mem, jmp_to_ret, data->inst_mem->occupied - (jmp_to_ret + 4));
     addInstReturn(data->inst_mem, data->registers);
     // This is the end of the subroutine
     data->registers = tmp_regs;
-    *((int32_t*)(data->inst_mem->memory + jmp_after_cond)) = data->inst_mem->occupied - (jmp_after_cond + 4);
+    addInstReturn(data->inst_mem, data->registers);
+    update32BitValue(data->inst_mem, jmp_after_cond, data->inst_mem->occupied - (jmp_after_cond + 4));
     if(variable->type == VARIABLE_INT) {
         VariableFloat* varib = (VariableFloat*)varib;
         varib->for_jmp_loc = data->inst_mem->occupied;
@@ -1156,7 +1157,7 @@ static Value generateMCOnGoAfterFreeReg(AstSwitch* ast, MCGenerationData* data) 
             if(ast->type == AST_GOSUB) {
                 size_t skip_call = addInstCondJmpRel(data->inst_mem, data->registers, COND_NE, index.reg, imm_reg, 0);
                 pos = addInstCallRel(data->inst_mem, data->registers, 0);
-                *((int32_t*)(data->inst_mem->memory + skip_call)) = data->inst_mem->occupied - (skip_call + 4);
+                update32BitValue(data->inst_mem, skip_call, data->inst_mem->occupied - (skip_call + 4));
             } else {
                 pos = addInstCondJmpRel(data->inst_mem, data->registers, COND_EQ, index.reg, imm_reg, 0);
             }

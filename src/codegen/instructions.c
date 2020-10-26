@@ -373,28 +373,48 @@ void addInstRem(StackAllocator* mem, RegisterSet regs, Register dest, Register a
 size_t addInstCondJmpRel(StackAllocator* mem, RegisterSet regs, JmpCondistions cond, Register a, Register b, int32_t to) {
     if(a < (1 << REG_COUNT)) {
         addCmp(mem, a, b);
+        switch(cond) {
+            case COND_EQ:
+                addJmpEQ(mem, to);
+                break;
+            case COND_NE:
+                addJmpNE(mem, to);
+                break;
+            case COND_GT:
+                addJmpGT(mem, to);
+                break;
+            case COND_LT:
+                addJmpLT(mem, to);
+                break;
+            case COND_GE:
+                addJmpGE(mem, to);
+                break;
+            case COND_LE:
+                addJmpLE(mem, to);
+                break;
+        }
     } else {
         addFCom(mem, a, b);
-    }
-    switch(cond) {
-        case COND_EQ:
-            addJmpEQ(mem, to);
-            break;
-        case COND_NE:
-            addJmpNE(mem, to);
-            break;
-        case COND_GT:
-            addJmpGT(mem, to);
-            break;
-        case COND_LT:
-            addJmpLT(mem, to);
-            break;
-        case COND_GE:
-            addJmpGE(mem, to);
-            break;
-        case COND_LE:
-            addJmpLE(mem, to);
-            break;
+        switch(cond) {
+            case COND_EQ:
+                addJmpEQ(mem, to);
+                break;
+            case COND_NE:
+                addJmpNE(mem, to);
+                break;
+            case COND_GT:
+                addJmpA(mem, to);
+                break;
+            case COND_LT:
+                addJmpB(mem, to);
+                break;
+            case COND_GE:
+                addJmpAE(mem, to);
+                break;
+            case COND_LE:
+                addJmpBE(mem, to);
+                break;
+        }
     }
     return mem->occupied - 4;
 }
@@ -643,6 +663,24 @@ void addInstPopCallerRegs(StackAllocator* mem, RegisterSet regs) {
     addInstPop(mem, regs, REG_13);
     addInstPop(mem, regs, REG_12);
     addInstPop(mem, regs, REG_B);
+}
+
+void update32BitValue(StackAllocator* mem, size_t pos, int32_t value) {
+    ((uint8_t*)mem->memory)[pos] = value & 0xff;
+    ((uint8_t*)mem->memory)[pos + 1] = (value >> 8) & 0xff;
+    ((uint8_t*)mem->memory)[pos + 2] = (value >> 16) & 0xff;
+    ((uint8_t*)mem->memory)[pos + 3] = (value >> 24) & 0xff;
+}
+
+void update64BitValue(StackAllocator* mem, size_t pos, int64_t value) {
+    ((uint8_t*)mem->memory)[pos] = value & 0xff;
+    ((uint8_t*)mem->memory)[pos + 1] = (value >> 8) & 0xff;
+    ((uint8_t*)mem->memory)[pos + 2] = (value >> 16) & 0xff;
+    ((uint8_t*)mem->memory)[pos + 3] = (value >> 24) & 0xff;
+    ((uint8_t*)mem->memory)[pos + 4] = (value >> 32) & 0xff;
+    ((uint8_t*)mem->memory)[pos + 5] = (value >> 40) & 0xff;
+    ((uint8_t*)mem->memory)[pos + 6] = (value >> 48) & 0xff;
+    ((uint8_t*)mem->memory)[pos + 7] = (value >> 56) & 0xff;
 }
 
 #else

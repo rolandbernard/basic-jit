@@ -588,6 +588,10 @@ static Value generateMCInputAfterFreeReg(AstVariable* ast, MCGenerationData* dat
             if (ret.type == VALUE_ERROR) {
                 return ret;
             }
+        } else if(ast->values[i]->type == AST_STRING) {
+            Value a = generateMCForAst(ast->values[i], data);
+            addInstFunctionCallUnaryNoRet(data->inst_mem, data->registers, a.reg, printString);
+            data->registers &= ~a.reg;
         } else {
             Value ret = {.type = VALUE_ERROR, .error = ERROR_SYNTAX};
             return ret;
@@ -597,7 +601,9 @@ static Value generateMCInputAfterFreeReg(AstVariable* ast, MCGenerationData* dat
     return ret;
 }
 
-static Value generateMCInput(AstVariable* ast, MCGenerationData* data) { return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCInputAfterFreeReg, 1, 1); }
+static Value generateMCInput(AstVariable* ast, MCGenerationData* data) {
+    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCInputAfterFreeReg, 1, 1);
+}
 
 static double randomFloat() { return rand() / (double)RAND_MAX; }
 
@@ -624,9 +630,13 @@ static Value generateMCKey(Ast* ast, MCGenerationData* data) {
     return ret;
 }
 
-static void beep() { fprintf(stderr, "\a"); }
+static void beep() {
+    fprintf(stderr, "\a");
+}
 
-static void end() { exit(0); }
+static void end() {
+    exit(0);
+}
 
 static void stop() {
     fprintf(stderr, "Press [ENTER] to continue...");
