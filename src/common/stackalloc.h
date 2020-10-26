@@ -19,4 +19,6 @@ void* allocUnaligned(StackAllocator* mem, size_t size);
 
 void freeStack(StackAllocator* mem);
 
+void resetStack(StackAllocator* mem);
+
 #endif

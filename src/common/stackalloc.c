@@ -72,3 +72,10 @@ void freeStack(StackAllocator* mem) {
         free(mem->next);
     }
 }
+
+void resetStack(StackAllocator* mem) {
+    if(mem != NULL) {
+        mem->occupied = 0;
+        resetStack(mem->next);
+    }
+}
