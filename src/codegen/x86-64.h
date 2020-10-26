@@ -102,9 +102,9 @@ void addFMul(StackAllocator* mem, X86Register fdest, X86Register fsrc);
 
 void addFDiv(StackAllocator* mem, X86Register fdest, X86Register fsrc);
 
-void addFRegCvtToInt(StackAllocator* mem, X86Register fdest, X86Register fsrc);
+void addFRegCvtToReg(StackAllocator* mem, X86Register dest, X86Register fsrc);
 
-void addFRegCvtToFlt(StackAllocator* mem, X86Register fdest, X86Register fsrc);
+void addRegCvtToFReg(StackAllocator* mem, X86Register fdest, X86Register src);
 
 void addPxor(StackAllocator* mem, X86Register fdest, X86Register fsrc);
 

@@ -19,7 +19,6 @@ This implementation of the BASIC programming language has multiple limitations, 
     * There is no buffer overflow detection on `READ`
     * There is no type check on `READ`
     * There is no integer overflow detection
-* There are no substring operations
 * Arrays can't be used in a `FOR`-loop
 * Array dimentions must be constant
 * When loading files, lines will not be sorted by number

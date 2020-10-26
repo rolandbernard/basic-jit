@@ -156,31 +156,33 @@ static Value generateMCRestoreAfterFreeReg(AstUnary* ast, MCGenerationData* data
     size_t pos = addInstMovImmToReg(data->inst_mem, data->registers, reg, 0, true);
     addInstMovRegToMem(data->inst_mem, data->registers, reg, (void*)&data_index);
     data->registers &= ~reg;
-    if(ast->value->type == AST_INTEGER) {
-        char name[25]; 
-        AstInt* line = (AstInt*)ast->value;
-        int len = int64ToString(name, line->value);
-        char* sym = (char*)allocAligned(data->variable_mem, len + 1);
-        memcpy(sym, name, len + 1);
-        UnhandeledLabelEntry entry = {
-            .name = sym,
-            .line = data->line,
-            .position = pos,
-            .for_restore = true,
-        };
-        addLabelToList(data->label_list, entry);
-    } else {
-        AstVar* var = (AstVar*)ast->value;
-        int len = strlen(var->name);
-        char* sym = (char*)allocAligned(data->variable_mem, len + 1);
-        memcpy(sym, var->name, len + 1);
-        UnhandeledLabelEntry entry = {
-            .name = sym,
-            .line = data->line,
-            .position = pos,
-            .for_restore = true,
-        };
-        addLabelToList(data->label_list, entry);
+    if(ast->value != NULL) {
+        if (ast->value->type == AST_INTEGER) {
+            char name[25];
+            AstInt* line = (AstInt*)ast->value;
+            int len = int64ToString(name, line->value);
+            char* sym = (char*)allocAligned(data->variable_mem, len + 1);
+            memcpy(sym, name, len + 1);
+            UnhandeledLabelEntry entry = {
+                .name = sym,
+                .line = data->line,
+                .position = pos,
+                .for_restore = true,
+            };
+            addLabelToList(data->label_list, entry);
+        } else {
+            AstVar* var = (AstVar*)ast->value;
+            int len = strlen(var->name);
+            char* sym = (char*)allocAligned(data->variable_mem, len + 1);
+            memcpy(sym, var->name, len + 1);
+            UnhandeledLabelEntry entry = {
+                .name = sym,
+                .line = data->line,
+                .position = pos,
+                .for_restore = true,
+            };
+            addLabelToList(data->label_list, entry);
+        }
     }
     Value ret = {.type = VALUE_NONE};
     return ret;
@@ -569,7 +571,7 @@ static Value generateMCReadAfterFreeReg(AstVariable* ast, MCGenerationData* data
             Register data_reg = getFreeRegister(data->registers);
             data->registers |= data_reg;
             addInstMovMemToReg(data->inst_mem, data->registers, index_reg, (void*)&data_index);
-            addInstMovMemToReg(data->inst_mem, data->registers, data_reg, (void*)data->data_mem->data);
+            addInstMovMemToReg(data->inst_mem, data->registers, data_reg, (void*)&data->data_mem->data);
             addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, sizeof(DataElement), false);
             addInstMul(data->inst_mem, data->registers, imm_reg, imm_reg, index_reg);
             addInstAdd(data->inst_mem, data->registers, data_reg, data_reg, imm_reg);
@@ -1374,6 +1376,25 @@ static Value generateMCToIntConv(AstUnary* ast, MCGenerationData* data) {
     return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCToIntConvAfterFreeReg, 1, 1);
 }
 
+static Value generateMCLineNum(AstLineNum* ast, MCGenerationData* data) {
+    if(getVariable(data->label_table, ast->number) == NULL) {
+        VariableLabel* var = (VariableLabel*)allocAligned(data->variable_mem, sizeof(VariableLabel));
+        var->type = VARIABLE_LABEL;
+        var->pos = data->inst_mem->occupied;
+        var->data_pos = data->data_mem->count;
+        addVariable(data->label_table, ast->number, (Variable*)var, data->variable_mem);
+        if(ast->line != NULL) {
+            return generateMCForAst(ast->line, data);
+        } else {
+            Value ret = {.type = VALUE_NONE};
+            return ret;
+        }
+    } else {
+        Value ret = {.type = VALUE_ERROR,.reg = ERROR_DUBLICATE_LABEL};
+        return ret;
+    }
+}
+
 Value generateMCForAst(Ast* ast, MCGenerationData* data) {
     Value value = {.type = VALUE_NONE};
     switch (ast->type) {
@@ -1445,6 +1466,9 @@ Value generateMCForAst(Ast* ast, MCGenerationData* data) {
         break;
     case AST_INT:
         value = generateMCToIntConv((AstUnary*)ast, data);
+        break;
+    case AST_LINENUM:
+        value = generateMCLineNum((AstLineNum*)ast, data);
         break;
     default:
         value = generateMCForFunctions(ast, data);

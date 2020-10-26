@@ -4,6 +4,8 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+#include "codegen/variabletable.h"
+
 typedef struct {
     char* name;
     int line;
@@ -22,5 +24,7 @@ typedef struct {
 void addLabelToList(UnhandeledLabelList* list, UnhandeledLabelEntry entry);
 
 void freeLabelList(UnhandeledLabelList* list);
+
+void fillUnhandledLabelLocations(UnhandeledLabelList* list, VariableTable* table, StackAllocator* inst_mem);
 
 #endif

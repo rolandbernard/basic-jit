@@ -324,38 +324,36 @@ void addFDiv(StackAllocator* mem, X86Register fdest, X86Register fsrc) {
     ptr[3] = 0xC0 + (reg_to_opcodeno[fdest] * 8) + reg_to_opcodeno[fsrc];
 }
 
-void addFRegCvtToInt(StackAllocator* mem, X86Register fdest, X86Register fsrc) {
-    uint8_t* ptr = (uint8_t*)allocUnaligned(mem, 6);
-    ptr[0] = 0x62;
-    ptr[1] = 0xf1;
-    ptr[2] = 0xfd;
-    ptr[3] = 0x08;
-    ptr[4] = 0x7a;
-    ptr[5] = 0xC0 + (reg_to_opcodeno[fdest] * 8) + reg_to_opcodeno[fsrc];
-}
-
-void addFRegCvtToFlt(StackAllocator* mem, X86Register fdest, X86Register fsrc) {
-    uint8_t* ptr = (uint8_t*)allocUnaligned(mem, 6);
-    ptr[0] = 0x62;
-    ptr[1] = 0xf1;
-    ptr[2] = 0xfe;
-    ptr[3] = 0x08;
-    ptr[4] = 0xe6;
-    ptr[5] = 0xC0 + (reg_to_opcodeno[fdest] * 8) + reg_to_opcodeno[fsrc];
-}
-
 void addPxor(StackAllocator* mem, X86Register fdest, X86Register fsrc) {
     uint8_t* ptr = (uint8_t*)allocUnaligned(mem, 4);
     ptr[0] = 0x66;
-    ptr[3] = 0x0f;
-    ptr[4] = 0xef;
-    ptr[5] = 0xC0 + (reg_to_opcodeno[fdest] * 8) + reg_to_opcodeno[fsrc];
+    ptr[1] = 0x0f;
+    ptr[2] = 0xef;
+    ptr[3] = 0xC0 + (reg_to_opcodeno[fdest] * 8) + reg_to_opcodeno[fsrc];
 }
 
 void addFCom(StackAllocator* mem, X86Register fdest, X86Register fsrc) {
     uint8_t* ptr = (uint8_t*)allocUnaligned(mem, 4);
     ptr[0] = 0x66;
-    ptr[3] = 0x0f;
-    ptr[4] = 0x2f;
-    ptr[5] = 0xC0 + (reg_to_opcodeno[fdest] * 8) + reg_to_opcodeno[fsrc];
+    ptr[1] = 0x0f;
+    ptr[2] = 0x2f;
+    ptr[3] = 0xC0 + (reg_to_opcodeno[fdest] * 8) + reg_to_opcodeno[fsrc];
+}
+
+void addFRegCvtToReg(StackAllocator* mem, X86Register dest, X86Register fsrc) {
+    uint8_t* ptr = (uint8_t*)allocUnaligned(mem, 5);
+    ptr[0] = 0xF2;
+    ptr[1] = 0x48 + (dest >= REG_8 ? 4 : 0);
+    ptr[2] = 0x0F;
+    ptr[3] = 0x2A;
+    ptr[4] = 0xC0 + (reg_to_opcodeno[dest] * 8) + reg_to_opcodeno[fsrc];
+}
+
+void addRegCvtToFReg(StackAllocator* mem, X86Register fdest, X86Register src) {
+    uint8_t* ptr = (uint8_t*)allocUnaligned(mem, 5);
+    ptr[0] = 0xF2;
+    ptr[1] = 0x48 + (src >= REG_8 ? 1 : 0);
+    ptr[2] = 0x0F;
+    ptr[3] = 0x2A;
+    ptr[4] = 0xC0 + (reg_to_opcodeno[fdest] * 8) + reg_to_opcodeno[src];
 }

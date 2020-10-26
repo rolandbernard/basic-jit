@@ -172,26 +172,30 @@ void addInstPop(StackAllocator* mem, RegisterSet regs, Register reg) {
 
 void addInstPushAll(StackAllocator* mem, RegisterSet regs) {
     int push_cnt = 0;
+    Register double_pop = 0;
     for(int i = 0; i < REG_COUNT + FREG_COUNT; i++) {
         if((regs & (1 << i)) != 0) {
             push_cnt++;
+            double_pop = (1 << i); 
             addInstPush(mem, regs, (1 << i));
         }
     }
     if(push_cnt % 2 == 1) {
-        addPush(mem, REG_A);
+        addPush(mem, double_pop);
     }
 }
 
 void addInstPopAll(StackAllocator* mem, RegisterSet regs) {
     int pop_cnt = 0;
+    Register double_pop = 0;
     for(int i = REG_COUNT + FREG_COUNT - 1; i >= 0; i--) {
         if((regs & (1 << i)) != 0) {
             pop_cnt++;
+            double_pop = (1 << i); 
         }
     }
     if(pop_cnt % 2 == 1) {
-        addPop(mem, REG_A);
+        addPop(mem, double_pop);
     }
     for(int i = REG_COUNT + FREG_COUNT - 1; i >= 0; i--) {
         if((regs & (1 << i)) != 0) {
@@ -444,32 +448,6 @@ void addInstFDiv(StackAllocator* mem, RegisterSet regs, Register dest, Register 
     }
 }
 
-void addInstFFrac(StackAllocator* mem, RegisterSet regs, Register dest, Register src) {
-    int free_reg = getFreeFRegister(regs);
-    if(free_reg == 0) {
-        addPush(mem, FREG_0);
-        addFRegCvtToInt(mem, FREG_0, src);
-        addFRegCvtToInt(mem, FREG_0, FREG_0);
-        if(dest != src) {
-            addMovFRegToFReg(mem, dest, src);
-        }
-        addFSub(mem, dest, FREG_0);
-        addPop(mem, FREG_0);
-    } else {
-        addFRegCvtToInt(mem, free_reg, src);
-        addFRegCvtToInt(mem, free_reg, free_reg);
-        if(dest != src) {
-            addMovFRegToFReg(mem, dest, src);
-        }
-        addFSub(mem, dest, free_reg);
-    }
-}
-
-void addInstFTrunc(StackAllocator* mem, RegisterSet regs, Register dest, Register src) {
-    addFRegCvtToInt(mem, dest, src);
-    addFRegCvtToFlt(mem, dest, dest);
-}
-
 void addInstMovImmToFReg(StackAllocator* mem, RegisterSet regs, Register reg, double value) {
     union {
         int64_t i;
@@ -519,23 +497,11 @@ void addInstMovFRegToFReg(StackAllocator* mem, RegisterSet regs, Register dest, 
 }
 
 void addInstMovRegToFReg(StackAllocator* mem, RegisterSet regs, Register dest, Register src) {
-    addMovRegToFReg(mem, dest, src);
-    addFRegCvtToFlt(mem, dest, dest);
+    addRegCvtToFReg(mem, dest, src);
 }
 
 void addInstMovFRegToReg(StackAllocator* mem, RegisterSet regs, Register dest, Register src) {
-    int free_reg = getFreeFRegister(regs);
-    if(free_reg == 0) {
-        addPush(mem, FREG_0);
-        addMovFRegToFReg(mem, FREG_0, src);
-        addFRegCvtToInt(mem, FREG_0, FREG_0);
-        addMovFRegToReg(mem, dest, FREG_0);
-        addPop(mem, FREG_0);
-    } else {
-        addMovFRegToFReg(mem, free_reg, src);
-        addFRegCvtToInt(mem, free_reg, free_reg);
-        addMovFRegToReg(mem, dest, free_reg);
-    }
+    addFRegCvtToReg(mem, dest, src);
 }
 
 void addInstMovMemRegToFReg(StackAllocator* mem, RegisterSet regs, Register reg, Register addr) {

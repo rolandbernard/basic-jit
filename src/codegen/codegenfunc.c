@@ -651,6 +651,58 @@ static Value generateMCSimpleCall(Ast* ast, MCGenerationData* data) {
     return ret;
 }
 
+static char* left(char* str, int64_t num) {
+    char* ret = (char*)allocAligned(&global_exec_alloc, num + 1);
+    memcpy(ret, str, num);
+    ret[num] = 0;
+    return ret;
+}
+
+static char* right(char* str, int64_t num) {
+    char* ret = (char*)allocAligned(&global_exec_alloc, num + 1);
+    int len = strlen(str);
+    memcpy(ret, str + len - num, num);
+    ret[num] = 0;
+    return ret;
+}
+
+static Value generateMCLeftOrRight(AstBinary* ast, MCGenerationData* data) {
+    Value a = generateMCForAst(ast->first, data);
+    if (a.type == VALUE_ERROR) {
+        return a;
+    } else if (a.type == VALUE_NONE) {
+        Value ret = {.type = VALUE_ERROR, .error = ERROR_SYNTAX};
+        return ret;
+    } else if (a.type != VALUE_STRING) {
+        Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
+        return ret;
+    } else {
+        Value b = generateMCForAst(ast->second, data);
+        if (b.type == VALUE_ERROR) {
+            return b;
+        } else if (b.type == VALUE_NONE) {
+            Value ret = {.type = VALUE_ERROR, .error = ERROR_SYNTAX};
+            return ret;
+        } else if (b.type != VALUE_INT) {
+            Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
+            return ret;
+        } else {
+            switch (ast->type) {
+            case AST_LEFT:
+                addInstFunctionCallBinary(data->inst_mem, data->registers, a.reg, a.reg, b.reg, left);
+                break;
+            case AST_RIGHT:
+                addInstFunctionCallBinary(data->inst_mem, data->registers, a.reg, a.reg, b.reg, right);
+                break;
+            default:
+                break;
+            }
+            data->registers &= ~(b.reg);
+            return a;
+        }
+    }
+}
+
 Value generateMCForFunctions(Ast* ast, MCGenerationData* data) {
     Value value = {.type = VALUE_NONE};
     if (ast != NULL) {
@@ -704,6 +756,10 @@ Value generateMCForFunctions(Ast* ast, MCGenerationData* data) {
         case AST_END:
         case AST_STOP:
             value = generateMCSimpleCall(ast, data);
+            break;
+        case AST_LEFT:
+        case AST_RIGHT:
+            value = generateMCLeftOrRight((AstBinary*)ast, data);
             break;
         default:
             value.type = VALUE_ERROR;

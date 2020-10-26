@@ -84,10 +84,6 @@ void addInstFMul(StackAllocator* mem, RegisterSet regs, Register dest, Register 
 
 void addInstFDiv(StackAllocator* mem, RegisterSet regs, Register dest, Register a, Register b);
 
-void addInstFFrac(StackAllocator* mem, RegisterSet regs, Register dest, Register src);
-
-void addInstFTrunc(StackAllocator* mem, RegisterSet regs, Register dest, Register src);
-
 void addInstMovImmToFReg(StackAllocator* mem, RegisterSet regs, Register reg, double value);
 
 void addInstMovMemToFReg(StackAllocator* mem, RegisterSet regs, Register reg, void* addr);

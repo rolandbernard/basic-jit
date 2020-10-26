@@ -21,3 +21,7 @@ void freeLabelList(UnhandeledLabelList* list) {
         free(list->data);
     }
 }
+
+void fillUnhandledLabelLocations(UnhandeledLabelList* list, VariableTable* table, StackAllocator* inst_mem) {
+    
+}

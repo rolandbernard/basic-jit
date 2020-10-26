@@ -17,6 +17,8 @@ typedef enum {
     AST_RETURN,
     AST_RAN,
     AST_BEEP,
+    AST_RUN,
+    AST_NEW,
     
     // unary 
     AST_TAB,
@@ -44,6 +46,7 @@ typedef enum {
     AST_GOSUB,
     AST_NEXT,
     AST_RESTORE,
+    AST_LIST,
 
     // binary
     AST_ADD,
@@ -59,6 +62,8 @@ typedef enum {
     AST_LE,
     AST_GE,
     AST_NE,
+    AST_LEFT,
+    AST_RIGHT,
     
     // string
     AST_STRING,
