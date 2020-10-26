@@ -652,8 +652,8 @@ static Value generateMCLetOfArrayAccessAfterFreeReg(AstLet* ast, MCGenerationDat
             }
         }
         if ((variable->type == VARIABLE_INT_ARRAY && ((VariableIntArray*)variable)->dim_count != index->count) || 
-            (variable->type == VARIABLE_FLOAT_ARRAY && ((VariableIntArray*)variable)->dim_count != index->count) ||
-            (variable->type == VARIABLE_STRING_ARRAY && ((VariableIntArray*)variable)->dim_count != index->count)) {
+            (variable->type == VARIABLE_FLOAT_ARRAY && ((VariableFloatArray*)variable)->dim_count != index->count) ||
+            (variable->type == VARIABLE_STRING_ARRAY && ((VariableStringArray*)variable)->dim_count != index->count)) {
             Value ret = {.type = VALUE_ERROR, .error = ERROR_ARRAY_DIM_COUNT_MISMATCH};
             return ret;
         }
@@ -792,8 +792,7 @@ static Value generateMCLetAfterFreeReg(AstLet* ast, MCGenerationData* data) {
         Value ret = {.type=VALUE_NONE};
         return ret;
     } else if(ast->name->type == AST_INDEX) { 
-        AstIndex* index = (AstIndex*)ast->name;
-        Value ret = withFreeRegister((Ast*)index, data, (GenerateMCFunction)generateMCLetOfArrayAccessAfterFreeReg, 3, 1);
+        Value ret = withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCLetOfArrayAccessAfterFreeReg, 3, 1);
         return ret;
     } else {
         Value ret = {.type = VALUE_ERROR, .error = ERROR_SYNTAX};
@@ -1211,6 +1210,12 @@ static Value generateMCDim(AstIndex* ast, MCGenerationData* data) {
     if (var->var_type == VAR_UNDEF || var->var_type == VAR_FLOAT) {
         VariableFloatArray* varib = (VariableFloatArray*)allocAligned(data->variable_mem, sizeof(VariableFloatArray));
         varib->type = VARIABLE_FLOAT_ARRAY;
+        varib->dim_count = ast->count;
+        varib->size = (int64_t*)allocAligned(data->variable_mem, sizeof(int64_t) * size);
+        for(int i = 0; i < ast->count; i++) {
+            AstInt* ds = (AstInt*)ast->size[i];
+            varib->size[i] = ds->value;
+        }
         varib->value = (double*)allocAligned(data->variable_mem, sizeof(double) * size);
         for(int i = 0; i < size; i++) {
             varib->value[i] = 0;
@@ -1219,6 +1224,12 @@ static Value generateMCDim(AstIndex* ast, MCGenerationData* data) {
     } else if (var->var_type == VAR_INT) {
         VariableIntArray* varib = (VariableIntArray*)allocAligned(data->variable_mem, sizeof(VariableIntArray));
         varib->type = VARIABLE_INT_ARRAY;
+        varib->dim_count = ast->count;
+        varib->size = (int64_t*)allocAligned(data->variable_mem, sizeof(int64_t) * size);
+        for(int i = 0; i < ast->count; i++) {
+            AstInt* ds = (AstInt*)ast->size[i];
+            varib->size[i] = ds->value;
+        }
         varib->value = (int64_t*)allocAligned(data->variable_mem, sizeof(int64_t) * size);
         for(int i = 0; i < size; i++) {
             varib->value[i] = 0;
@@ -1227,6 +1238,12 @@ static Value generateMCDim(AstIndex* ast, MCGenerationData* data) {
     } else if (var->var_type == VAR_STR) {
         VariableStringArray* varib = (VariableStringArray*)allocAligned(data->variable_mem, sizeof(VariableStringArray));
         varib->type = VARIABLE_STRING_ARRAY;
+        varib->dim_count = ast->count;
+        varib->size = (int64_t*)allocAligned(data->variable_mem, sizeof(int64_t) * size);
+        for(int i = 0; i < ast->count; i++) {
+            AstInt* ds = (AstInt*)ast->size[i];
+            varib->size[i] = ds->value;
+        }
         varib->str = (char**)allocAligned(data->variable_mem, sizeof(char*) * size);
         for(int i = 0; i < size; i++) {
             varib->str[i] = NULL;

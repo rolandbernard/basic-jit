@@ -650,7 +650,7 @@ static Ast* parseLetStatmentOrLabel(Scanner* scanner, StackAllocator* mem) {
             return parseLetStatmentAfterName(scanner, mem, name);
         }
     } else if(consumeToken(scanner, TOKEN_IDENTIFIER, &name)) {
-        if(testToken(scanner, TOKEN_EQ)) {
+        if(testToken(scanner, TOKEN_EQ) || testToken(scanner, TOKEN_BRAC_OPEN)) {
             return parseLetStatmentAfterName(scanner, mem, name);
         } else if(testToken(scanner, TOKEN_COLON)) {
             AstString* ret = (AstString*)allocAligned(mem, sizeof(AstString));
