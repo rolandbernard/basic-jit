@@ -21,3 +21,7 @@ void freeDataList(DataList* list) {
         free(list->data);
     }
 }
+
+void resetDataList(DataList* list) {
+    list->count = 0;
+}

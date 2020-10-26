@@ -22,4 +22,6 @@ void addDataToList(DataList* list, DataElement entry);
 
 void freeDataList(DataList* list);
 
+void resetDataList(DataList* list);
+
 #endif

@@ -3,6 +3,6 @@
 
 #include <stdbool.h>
 
-void executeFile(const char* filename, bool print_mem);
+void executeFile(const char* filename);
 
 #endif

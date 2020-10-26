@@ -27,4 +27,6 @@ void freeLabelList(UnhandeledLabelList* list);
 
 int fillUnhandledLabelLocations(UnhandeledLabelList* list, VariableTable* table, StackAllocator* inst_mem);
 
+void resetLabelList(UnhandeledLabelList* list);
+
 #endif

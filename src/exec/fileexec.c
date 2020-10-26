@@ -13,9 +13,9 @@
 #include "exec/execalloc.h"
 
 #define MAX_LINE_BUFFER (1 << 20)
-char line_buffer[MAX_LINE_BUFFER];
+static char line_buffer[MAX_LINE_BUFFER];
 
-void executeFile(const char* filename, bool print_mem) {
+void executeFile(const char* filename) {
     FILE* file = fopen(filename, "r");
     if(file == NULL) {
         fprintf(stderr, "error: Failed to open the file '%s'\n", filename);
@@ -36,6 +36,10 @@ void executeFile(const char* filename, bool print_mem) {
             .data_mem = &data_list,
             .registers = 0,
             .line = 1,
+            .run_function = NULL,
+            .new_function = NULL,
+            .list_all_function = NULL,
+            .list_function = NULL,
         };
         addInstPushCallerRegs(data.inst_mem, data.registers);
         bool had_error = false;
@@ -81,9 +85,6 @@ void executeFile(const char* filename, bool print_mem) {
                 fprintf(stderr, "error: Unresolved label %s at line %i\n", label_list.data[err].name, label_list.data[err].line);
             } else {
                 int ret;
-                if(print_mem) {
-                    printMemoryContent(stderr, jit_memory.memory, jit_memory.occupied);
-                }
                 if(executeFunctionInMemory(jit_memory.memory, jit_memory.occupied, &ret)) {
                     perror("error: Failed to execute");
                 }

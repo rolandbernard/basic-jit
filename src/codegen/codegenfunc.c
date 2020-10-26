@@ -80,16 +80,22 @@ static Value generateMCPowCallAfterFreeReg(AstBinary* ast, MCGenerationData* dat
     }
 }
 
-static Value generateMCPowCall(AstBinary* ast, MCGenerationData* data) { return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCPowCallAfterFreeReg, 2, 2); }
+static Value generateMCPowCall(AstBinary* ast, MCGenerationData* data) {
+    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCPowCallAfterFreeReg, 2, 2);
+}
 
 static double frac(double x) {
     double integ;
     return modf(x, &integ);
 }
 
-static double toDeg(double x) { return x * 180.0 / PI; }
+static double toDeg(double x) {
+    return x * 180.0 / PI;
+}
 
-static double toRad(double x) { return x * PI / 180.0; }
+static double toRad(double x) {
+    return x * PI / 180.0;
+}
 
 static Value generateMCUnaryFloatCallAfterFreeReg(AstUnary* ast, MCGenerationData* data) {
     Value a = generateMCForAst(ast->value, data);
@@ -160,7 +166,9 @@ static Value generateMCUnaryFloatCallAfterFreeReg(AstUnary* ast, MCGenerationDat
     }
 }
 
-static Value generateMCUnaryFloatCall(AstUnary* ast, MCGenerationData* data) { return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCUnaryFloatCallAfterFreeReg, 1, 1); }
+static Value generateMCUnaryFloatCall(AstUnary* ast, MCGenerationData* data) {
+    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCUnaryFloatCallAfterFreeReg, 1, 1);
+}
 
 static char* tabFunction(int64_t x) {
     char out[25];
@@ -204,7 +212,9 @@ static Value generateMCUnaryIntToStringAfterFreeReg(AstUnary* ast, MCGenerationD
     }
 }
 
-static Value generateMCUnaryIntToString(AstUnary* ast, MCGenerationData* data) { return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCUnaryIntToStringAfterFreeReg, 1, 1); }
+static Value generateMCUnaryIntToString(AstUnary* ast, MCGenerationData* data) {
+    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCUnaryIntToStringAfterFreeReg, 1, 1);
+}
 
 static int64_t int64Sign(int64_t x) {
     if (x == 0) {
@@ -281,7 +291,9 @@ static Value generateMCUnaryIntOrFloatAfterFreeReg(AstUnary* ast, MCGenerationDa
     }
 }
 
-static Value generateMCUnaryIntOrFloat(AstUnary* ast, MCGenerationData* data) { return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCUnaryIntOrFloatAfterFreeReg, 1, 1); }
+static Value generateMCUnaryIntOrFloat(AstUnary* ast, MCGenerationData* data) {
+    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCUnaryIntOrFloatAfterFreeReg, 1, 1);
+}
 
 static double parseString(char* str) {
     double ret;
@@ -312,7 +324,9 @@ static Value generateMCValAfterFreeReg(AstUnary* ast, MCGenerationData* data) {
     }
 }
 
-static Value generateMCVal(AstUnary* ast, MCGenerationData* data) { return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCValAfterFreeReg, 1, 1); }
+static Value generateMCVal(AstUnary* ast, MCGenerationData* data) {
+    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCValAfterFreeReg, 1, 1);
+}
 
 static char* stringifyInt(int64_t x) {
     char out[25];
@@ -357,7 +371,9 @@ static Value generateMCStrAfterFreeReg(AstUnary* ast, MCGenerationData* data) {
     }
 }
 
-static Value generateMCStr(AstUnary* ast, MCGenerationData* data) { return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCStrAfterFreeReg, 1, 1); }
+static Value generateMCStr(AstUnary* ast, MCGenerationData* data) {
+    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCStrAfterFreeReg, 1, 1);
+}
 
 static void printInt64(int64_t x) {
     fprintf(stdout, "%li", x);
@@ -406,7 +422,9 @@ static Value generateMCPrintAfterFreeReg(AstVariable* ast, MCGenerationData* dat
     return ret;
 }
 
-static Value generateMCPrint(AstVariable* ast, MCGenerationData* data) { return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCPrintAfterFreeReg, 1, 1); }
+static Value generateMCPrint(AstVariable* ast, MCGenerationData* data) {
+    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCPrintAfterFreeReg, 1, 1);
+}
 
 static int64_t inputInt() {
     int64_t ret;
@@ -635,7 +653,7 @@ static void beep() {
 }
 
 static void end() {
-    exit(0);
+    exit(2);
 }
 
 static void stop() {
@@ -720,6 +738,64 @@ static Value generateMCLeftOrRight(AstBinary* ast, MCGenerationData* data) {
     }
 }
 
+static Value generateMCRunOrNew(Ast* ast, MCGenerationData* data) {
+    switch (ast->type) {
+    case AST_RUN:
+        if(data->run_function == NULL) {
+            Value ret = {.type = VALUE_ERROR, .error = ERROR_SYNTAX};
+            return ret;
+        } else {
+            addInstFunctionCallSimple(data->inst_mem, data->registers, data->run_function);
+        }
+        break;
+    case AST_NEW:
+        if(data->run_function == NULL) {
+            Value ret = {.type = VALUE_ERROR, .error = ERROR_SYNTAX};
+            return ret;
+        } else {
+            addInstFunctionCallSimple(data->inst_mem, data->registers, data->new_function);
+        }
+        break;
+    default:
+        break;
+    }
+    Value ret = {.type = VALUE_NONE};
+    return ret;
+}
+
+static Value generateMCList(AstUnary* ast, MCGenerationData* data) {
+    if(ast->value == NULL) {
+        if (data->list_all_function == NULL) {
+            Value ret = {.type = VALUE_ERROR, .error = ERROR_SYNTAX};
+            return ret;
+        } else {
+            addInstFunctionCallSimple(data->inst_mem, data->registers, data->list_all_function);
+        }
+    } else {
+        if (data->list_function == NULL) {
+            Value ret = {.type = VALUE_ERROR, .error = ERROR_SYNTAX};
+            return ret;
+        } else {
+            Value a = generateMCForAst(ast->value, data);
+            if (a.type == VALUE_ERROR) {
+                return a;
+            } else if (a.type == VALUE_NONE) {
+                Value ret = {.type = VALUE_ERROR, .error = ERROR_SYNTAX};
+                return ret;
+            } else if (a.type != VALUE_INT) {
+                Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
+                return ret;
+            } else {
+                addInstFunctionCallUnaryNoRet(data->inst_mem, data->registers, a.reg, data->run_function);
+                data->registers &= ~a.reg;
+            }
+        }
+    }
+    Value ret = {.type = VALUE_NONE};
+    return ret;
+}
+
+
 Value generateMCForFunctions(Ast* ast, MCGenerationData* data) {
     Value value = {.type = VALUE_NONE};
     if (ast != NULL) {
@@ -777,6 +853,13 @@ Value generateMCForFunctions(Ast* ast, MCGenerationData* data) {
         case AST_LEFT:
         case AST_RIGHT:
             value = generateMCLeftOrRight((AstBinary*)ast, data);
+            break;
+        case AST_RUN:
+        case AST_NEW:
+            value = generateMCRunOrNew((Ast*)ast, data);
+            break;
+        case AST_LIST:
+            value = generateMCList((AstUnary*)ast, data);
             break;
         default:
             value.type = VALUE_ERROR;

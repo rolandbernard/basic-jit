@@ -22,16 +22,11 @@ bool executeFunctionInMemory(void* mem, size_t len, int* ret) {
         if (mprotect((void*)pagestart, end - pagestart, PROT_EXEC | PROT_READ | PROT_WRITE)) {
             exit(1);
         } else {
-            int res = entry();
-            if (ret != NULL) {
-                *ret = res;
-            }
-            exit(0);
+            exit(entry());
         }
     } else {
-        int stat;
-        waitpid(pid, &stat, 0);
-        return stat != 0;
+        waitpid(pid, ret, 0);
+        return *ret == 1;
     }
 }
 

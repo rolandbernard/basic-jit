@@ -6,4 +6,6 @@
 
 Ast* parseLine(const char* line, StackAllocator* mem);
 
+Ast* parseExpressionLine(const char* line, StackAllocator* mem);
+
 #endif

@@ -83,3 +83,9 @@ void freeVariableTable(VariableTable* table) {
         free(table->data);
     }
 }
+
+void resetVariableTable(VariableTable* table) {
+    for(int i = 0; i < table->capacity; i++) {
+        table->data[i].key = NULL;
+    }
+}

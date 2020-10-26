@@ -39,3 +39,7 @@ int fillUnhandledLabelLocations(UnhandeledLabelList* list, VariableTable* table,
     list->count = 0;
     return -1;
 }
+
+void resetLabelList(UnhandeledLabelList* list) {
+    list->count = 0;
+}

@@ -86,4 +86,6 @@ Variable* getVariable(VariableTable* table, const char* name);
 
 void freeVariableTable(VariableTable* table);
 
+void resetVariableTable(VariableTable* table);
+
 #endif

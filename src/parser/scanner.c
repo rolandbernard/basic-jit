@@ -147,14 +147,9 @@ static Token getToken(const char* input) {
             }
             len++;
         }
-        if (input[len] == 0) {
-            ret.type = TOKEN_STRING;
-            ret.len = len;
-        } else {
-            len++;
-            ret.type = TOKEN_STRING;
-            ret.len = len;
-        }
+        len++;
+        ret.type = TOKEN_STRING;
+        ret.len = len;
     } else {
         switch (input[0]) {
         case '$':

@@ -17,6 +17,10 @@ typedef struct {
     DataList* data_mem;
     RegisterSet registers;
     int line;
+    void (*run_function)();
+    void (*new_function)();
+    void (*list_all_function)();
+    void (*list_function)(int64_t line);
 } MCGenerationData;
 
 typedef enum {
