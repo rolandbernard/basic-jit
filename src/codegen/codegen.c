@@ -25,15 +25,20 @@ const char* getErrorName(Error e) {
 
 static int int64ToString(char* str, int64_t v) {
     int len = 0;
-    while (v > 0) {
-        str[len] = '0' + (v % 10);
-        v /= 10;
+    if(v == 0) {
+        str[0] = '0';
         len++;
-    }
-    for(int i = 0; i < len / 2; i++) {
-        char tmp = str[i];
-        str[i] = str[len - i - 1];
-        str[len - i - 1] = tmp;
+    } else {
+        while (v > 0) {
+            str[len] = '0' + (v % 10);
+            v /= 10;
+            len++;
+        }
+        for (int i = 0; i < len / 2; i++) {
+            char tmp = str[i];
+            str[i] = str[len - i - 1];
+            str[len - i - 1] = tmp;
+        }
     }
     str[len] = 0;
     return len;
@@ -1377,12 +1382,16 @@ static Value generateMCToIntConv(AstUnary* ast, MCGenerationData* data) {
 }
 
 static Value generateMCLineNum(AstLineNum* ast, MCGenerationData* data) {
-    if(getVariable(data->label_table, ast->number) == NULL) {
+    char name[25]; 
+    int len = int64ToString(name, ast->number);
+    char* sym = (char*)allocAligned(data->variable_mem, len + 1);
+    memcpy(sym, name, len + 1);
+    if(getVariable(data->label_table, sym) == NULL) {
         VariableLabel* var = (VariableLabel*)allocAligned(data->variable_mem, sizeof(VariableLabel));
         var->type = VARIABLE_LABEL;
         var->pos = data->inst_mem->occupied;
         var->data_pos = data->data_mem->count;
-        addVariable(data->label_table, ast->number, (Variable*)var, data->variable_mem);
+        addVariable(data->label_table, sym, (Variable*)var, data->variable_mem);
         if(ast->line != NULL) {
             return generateMCForAst(ast->line, data);
         } else {

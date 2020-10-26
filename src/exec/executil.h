@@ -1,5 +1,5 @@
-#ifndef _EXECMEM_H_
-#define _EXECMEM_H_
+#ifndef _EXECUTIL_H_
+#define _EXECUTIL_H_
 
 #include <stdlib.h>
 #include <stdbool.h>

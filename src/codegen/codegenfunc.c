@@ -164,7 +164,7 @@ static Value generateMCUnaryFloatCall(AstUnary* ast, MCGenerationData* data) { r
 
 static char* tabFunction(int64_t x) {
     char out[25];
-    int len = snprintf(out, 25, "\e[%liG", x);
+    size_t len = snprintf(out, 25, "\e[%liG", x);
     char* ret = (char*)allocAligned(&global_exec_alloc, len + 1);
     memcpy(ret, out, len + 1);
     return ret;
@@ -316,7 +316,7 @@ static Value generateMCVal(AstUnary* ast, MCGenerationData* data) { return withF
 
 static char* stringifyInt(int64_t x) {
     char out[25];
-    int len = snprintf(out, 25, "%li", x);
+    size_t len = snprintf(out, 25, "%li", x);
     char* ret = (char*)allocAligned(&global_exec_alloc, len + 1);
     memcpy(ret, out, len + 1);
     return ret;
@@ -324,7 +324,7 @@ static char* stringifyInt(int64_t x) {
 
 static char* stringifyFloat(double x) {
     char out[25];
-    int len = snprintf(out, 25, "%lg", x);
+    size_t len = snprintf(out, 25, "%lg", x);
     char* ret = (char*)allocAligned(&global_exec_alloc, len + 1);
     memcpy(ret, out, len + 1);
     return ret;
@@ -423,7 +423,7 @@ static double inputFloat() {
 static char* inputString() {
     char tmp[2048];
     fgets(tmp, 2048, stdin);
-    int len = strlen(tmp);
+    size_t len = strlen(tmp);
     if (tmp[len - 1] == '\n') {
         len--;
         tmp[len] = 0;
@@ -652,6 +652,10 @@ static Value generateMCSimpleCall(Ast* ast, MCGenerationData* data) {
 }
 
 static char* left(char* str, int64_t num) {
+    size_t len = strlen(str);
+    if(len < num) {
+        num = len;
+    }
     char* ret = (char*)allocAligned(&global_exec_alloc, num + 1);
     memcpy(ret, str, num);
     ret[num] = 0;
@@ -659,8 +663,11 @@ static char* left(char* str, int64_t num) {
 }
 
 static char* right(char* str, int64_t num) {
+    size_t len = strlen(str);
+    if(len < num) {
+        num = len;
+    }
     char* ret = (char*)allocAligned(&global_exec_alloc, num + 1);
-    int len = strlen(str);
     memcpy(ret, str + len - num, num);
     ret[num] = 0;
     return ret;

@@ -25,6 +25,6 @@ void addLabelToList(UnhandeledLabelList* list, UnhandeledLabelEntry entry);
 
 void freeLabelList(UnhandeledLabelList* list);
 
-void fillUnhandledLabelLocations(UnhandeledLabelList* list, VariableTable* table, StackAllocator* inst_mem);
+int fillUnhandledLabelLocations(UnhandeledLabelList* list, VariableTable* table, StackAllocator* inst_mem);
 
 #endif

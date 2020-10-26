@@ -228,6 +228,7 @@ static char* copyEscapedString(const char* str, int len, StackAllocator* mem) {
 static char* copyIdentifier(const char* str, int len, StackAllocator* mem) {
     char* ret = (char*)allocAligned(mem, len + 1);
     memcpy(ret, str, len);
+    ret[len] = 0;
     return ret;
 }
 
@@ -844,7 +845,7 @@ static Ast* parseIfThenElseStatement(Scanner* scanner, StackAllocator* mem) {
                 ret->type = AST_IF_THEN_ELSE;
                 ret->condition = condition;
                 ret->if_true = if_true;
-                ret->if_true = if_false;
+                ret->if_false = if_false;
                 return (Ast*)ret;
             }
         }
@@ -1018,7 +1019,7 @@ static Ast* parseLineRoot(Scanner* scanner, StackAllocator* mem) {
         }
         AstLineNum* ret = (AstLineNum*)allocAligned(mem, sizeof(AstLineNum));
         ret->type = AST_LINENUM;
-        ret->number = copyIdentifier(scanner->input + number.start, number.len, mem);
+        ret->number = stringToInt(scanner->input + number.start, number.len);
         ret->line = line;
         return (Ast*)ret;
     } else {

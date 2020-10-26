@@ -22,6 +22,19 @@ void freeLabelList(UnhandeledLabelList* list) {
     }
 }
 
-void fillUnhandledLabelLocations(UnhandeledLabelList* list, VariableTable* table, StackAllocator* inst_mem) {
-    
+int fillUnhandledLabelLocations(UnhandeledLabelList* list, VariableTable* table, StackAllocator* inst_mem) {
+    for(size_t i = 0; i < list->count; i++) {
+        VariableLabel* label = (VariableLabel*)getVariable(table, list->data[i].name);
+        if(label == NULL || label->type != VARIABLE_LABEL) {
+            return i;
+        } else {
+            if(list->data[i].for_restore) {
+                *((int64_t*)(inst_mem->memory + list->data[i].position)) = label->data_pos;
+            } else {
+                *((int32_t*)(inst_mem->memory + list->data[i].position)) = label->pos - (list->data[i].position + 4);
+            }
+        }
+    }
+    list->count = 0;
+    return -1;
 }

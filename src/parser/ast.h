@@ -100,7 +100,7 @@ typedef struct {
 
 typedef struct {
     AST_BASE
-    char* number;
+    int64_t number;
     Ast* line;
 } AstLineNum;
 
