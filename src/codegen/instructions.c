@@ -285,6 +285,7 @@ void addInstDiv(StackAllocator* mem, RegisterSet regs, Register dest, Register a
             if(a != REG_A) {
                 addMovRegToReg(mem, REG_A, a);
             }
+            addXor(mem, REG_D, REG_D);
             addIDiv(mem, REG_B);
             if(dest != REG_A) {
                 addMovRegToReg(mem, dest, REG_A);
@@ -295,6 +296,7 @@ void addInstDiv(StackAllocator* mem, RegisterSet regs, Register dest, Register a
             if(a != REG_A) {
                 addMovRegToReg(mem, REG_A, a);
             }
+            addXor(mem, REG_D, REG_D);
             addIDiv(mem, free_reg);
             if(dest != REG_A) {
                 addMovRegToReg(mem, dest, REG_A);
@@ -304,6 +306,7 @@ void addInstDiv(StackAllocator* mem, RegisterSet regs, Register dest, Register a
         if(a != REG_A) {
             addMovRegToReg(mem, REG_A, a);
         }
+        addXor(mem, REG_D, REG_D);
         addIDiv(mem, b);
         if(dest != REG_A) {
             addMovRegToReg(mem, dest, REG_A);
@@ -332,6 +335,7 @@ void addInstRem(StackAllocator* mem, RegisterSet regs, Register dest, Register a
             if(a != REG_A) {
                 addMovRegToReg(mem, REG_A, a);
             }
+            addXor(mem, REG_D, REG_D);
             addIDiv(mem, REG_B);
             if(dest != REG_D) {
                 addMovRegToReg(mem, dest, REG_D);
@@ -342,6 +346,7 @@ void addInstRem(StackAllocator* mem, RegisterSet regs, Register dest, Register a
             if(a != REG_A) {
                 addMovRegToReg(mem, REG_A, a);
             }
+            addXor(mem, REG_D, REG_D);
             addIDiv(mem, free_reg);
             if(dest != REG_D) {
                 addMovRegToReg(mem, dest, REG_D);
@@ -351,6 +356,7 @@ void addInstRem(StackAllocator* mem, RegisterSet regs, Register dest, Register a
         if(a != REG_A) {
             addMovRegToReg(mem, REG_A, a);
         }
+        addXor(mem, REG_D, REG_D);
         addIDiv(mem, b);
         if(dest != REG_D) {
             addMovRegToReg(mem, dest, REG_D);
@@ -488,7 +494,7 @@ void addInstMovFRegToMem(StackAllocator* mem, RegisterSet regs, Register reg, vo
         addPop(mem, REG_A);
     } else {
         addMovImm64ToReg(mem, free_reg, (uint64_t)addr);
-        addMovFRegToMemReg(mem, REG_A, reg);
+        addMovFRegToMemReg(mem, free_reg, reg);
     }
 }
 
