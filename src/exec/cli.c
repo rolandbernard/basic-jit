@@ -269,8 +269,14 @@ void executeCli() {
                     addLine(line_buffer, line_num);
                 }
             } else {
-                if(executeLine(line_buffer)) {
-                    end = true;
+                if(line_buffer[i] == '>') {
+                    if(executeLine(line_buffer + i + 1)) {
+                        end = true;
+                    }
+                } else {
+                    if(executeLine(line_buffer)) {
+                        end = true;
+                    }
                 }
             }
         }
