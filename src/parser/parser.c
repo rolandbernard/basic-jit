@@ -1059,6 +1059,8 @@ Ast* parseExpressionLine(const char* line, StackAllocator* mem) {
         ret = (Ast*)prnt;
     } else if(exp == NULL) {
         ret = parseLineRoot(&scanner, mem);
+    } else {
+        ret = exp;
     }
     if (!acceptToken(&scanner, TOKEN_EOF)) {
         return (Ast*)createError(getScannerOffset(&scanner), mem);
