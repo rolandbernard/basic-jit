@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <signal.h>
+#include <time.h>
 
 #include "exec/executil.h"
 
@@ -27,6 +28,7 @@ bool executeFunctionInMemory(void* mem, size_t len, int* ret) {
             exit(entry());
         }
     } else {
+        for(int i = 0; i < rand() % 100; i++);
         waitpid(pid, ret, 0);
         *ret = WEXITSTATUS(*ret);
         return *ret == 123;
