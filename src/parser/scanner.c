@@ -74,6 +74,7 @@ static void skipWhitespace(Scanner* scanner) {
 static Token getToken(const char* input) {
     Token ret;
     ret.type = TOKEN_NONE;
+    ret.len = 1;
     if (input[0] == 0) {
         ret.type = TOKEN_EOF;
         ret.len = 0;
