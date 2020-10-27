@@ -1111,7 +1111,7 @@ static Value generateMCVarAfterFreeReg(AstVar* ast, MCGenerationData* data) {
         return ret;
     }
     Register imm_reg;
-    Value ret;
+    Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
     if(variable->type == VARIABLE_INT) {
         imm_reg = getFreeRegister(data->registers);
         data->registers |= imm_reg;
@@ -1316,7 +1316,7 @@ static Value generateMCIndexAfterFreeReg(AstIndex* ast, MCGenerationData* data) 
         }
         data->registers &= ~imm_reg;
         Register ret_reg;
-        Value ret;
+        Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
         if(variable->type == VARIABLE_INT_ARRAY) {
             ret_reg = getFreeRegister(data->registers);
             data->registers |= ret_reg;

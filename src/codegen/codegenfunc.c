@@ -181,7 +181,7 @@ static char* tabFunction(int64_t x) {
 static char* spcFunction(int64_t x) {
     char* ret = (char*)allocAligned(&global_exec_alloc, x + 1);
     memset(ret, ' ', x);
-    ret[x + 1] = 0;
+    ret[x] = 0;
     return ret;
 }
 
