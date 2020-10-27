@@ -1047,20 +1047,18 @@ Ast* parseExpressionLine(const char* line, StackAllocator* mem) {
         .offset = 0,
         .token_is_cached = false,
     };
-    Ast* ret = parseLineRoot(&scanner, mem);
-    if(ret == NULL) {
-        Ast* exp = parseExpression(&scanner, mem);
-        if(exp != NULL && exp->type != AST_ERROR) {
-            AstVariable* prnt = (AstVariable*)allocAligned(mem, sizeof(AstVariable));
-            prnt->type = AST_PRINT;
-            prnt->open_end = false;
-            prnt->count = 1;
-            prnt->values = (Ast**)allocAligned(mem, sizeof(Ast*));
-            prnt->values[0] = exp;
-            ret = (Ast*)prnt;
-        } else {
-            ret = exp;
-        }
+    Ast* ret;
+    Ast* exp = parseExpression(&scanner, mem);
+    if(exp != NULL && exp->type != AST_ERROR) {
+        AstVariable* prnt = (AstVariable*)allocAligned(mem, sizeof(AstVariable));
+        prnt->type = AST_PRINT;
+        prnt->open_end = false;
+        prnt->count = 1;
+        prnt->values = (Ast**)allocAligned(mem, sizeof(Ast*));
+        prnt->values[0] = exp;
+        ret = (Ast*)prnt;
+    } else if(exp == NULL) {
+        ret = parseLineRoot(&scanner, mem);
     }
     if (!acceptToken(&scanner, TOKEN_EOF)) {
         return (Ast*)createError(getScannerOffset(&scanner), mem);

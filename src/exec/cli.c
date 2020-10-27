@@ -185,7 +185,7 @@ static bool executeLine(const char* line) {
         .line = 1,
     };
     bool end = false;
-    Ast* ast = parseLine(line, &ast_memory);
+    Ast* ast = parseExpressionLine(line, &ast_memory);
     if(ast != NULL) {
         if(ast->type == AST_ERROR) {
             AstError* error = (AstError*)ast;
@@ -256,7 +256,7 @@ void executeCli() {
             }
             if (line_buffer[i] >= '0' && line_buffer[i] <= '9') {
                 int64_t line_num = 0;
-                for (i = 0; line_buffer[i] >= '0' && line_buffer[i] <= '9'; i++) {
+                for (; line_buffer[i] >= '0' && line_buffer[i] <= '9'; i++) {
                     line_num *= 10;
                     line_num += line_buffer[i] - '0';
                 }
