@@ -29,3 +29,4 @@ The classic "Hello world"-program for basic works just fine:
 10  Print "Hello world!"
 20  Goto 10
 ```
+![Hello world example](images/basic.gif)
