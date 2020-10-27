@@ -430,17 +430,16 @@ static Ast* parseUnaryExpression(Scanner* scanner, StackAllocator* mem) {
 }
 
 static Ast* parsePowExpression(Scanner* scanner, StackAllocator* mem) {
-    int error_offset = getScannerOffset(scanner);
     Ast* ret = parseUnaryExpression(scanner, mem);
     if(ret == NULL || ret->type == AST_ERROR) {
         return ret;
     }
     if (acceptToken(scanner, TOKEN_CARET)) {
         Ast* second = parsePowExpression(scanner, mem);
-        if (ret == NULL) {
-            return (Ast*)createError(error_offset, mem);
-        } else if (ret->type == AST_ERROR) {
-            return ret;
+        if (second == NULL) {
+            return (Ast*)createError(getScannerOffset(scanner), mem);
+        } else if (second->type == AST_ERROR) {
+            return second;
         }
         AstBinary* parent = (AstBinary*)allocAligned(mem, sizeof(AstBinary));
         parent->type = AST_POW;
@@ -452,7 +451,6 @@ static Ast* parsePowExpression(Scanner* scanner, StackAllocator* mem) {
 }
 
 static Ast* parseMultiplicativeExpression(Scanner* scanner, StackAllocator* mem) {
-    int error_offset = getScannerOffset(scanner);
     Ast* ret = parsePowExpression(scanner, mem);
     if (ret == NULL || ret->type == AST_ERROR) {
         return ret;
@@ -469,10 +467,10 @@ static Ast* parseMultiplicativeExpression(Scanner* scanner, StackAllocator* mem)
         }
         if (type != AST_NONE) {
             Ast* second = parsePowExpression(scanner, mem);
-            if (ret == NULL) {
-                return (Ast*)createError(error_offset, mem);
-            } else if (ret->type == AST_ERROR) {
-                return ret;
+            if (second == NULL) {
+                return (Ast*)createError(getScannerOffset(scanner), mem);
+            } else if (second->type == AST_ERROR) {
+                return second;
             }
             AstBinary* parent = (AstBinary*)allocAligned(mem, sizeof(AstBinary));
             parent->type = type;
@@ -485,7 +483,6 @@ static Ast* parseMultiplicativeExpression(Scanner* scanner, StackAllocator* mem)
 }
 
 static Ast* parseAdditiveExpression(Scanner* scanner, StackAllocator* mem) {
-    int error_offset = getScannerOffset(scanner);
     Ast* ret = parseMultiplicativeExpression(scanner, mem);
     if (ret == NULL || ret->type == AST_ERROR) {
         return ret;
@@ -500,10 +497,10 @@ static Ast* parseAdditiveExpression(Scanner* scanner, StackAllocator* mem) {
         }
         if (type != AST_NONE) {
             Ast* second = parseMultiplicativeExpression(scanner, mem);
-            if (ret == NULL) {
-                return (Ast*)createError(error_offset, mem);
-            } else if (ret->type == AST_ERROR) {
-                return ret;
+            if (second == NULL) {
+                return (Ast*)createError(getScannerOffset(scanner), mem);
+            } else if (second->type == AST_ERROR) {
+                return second;
             }
             AstBinary* parent = (AstBinary*)allocAligned(mem, sizeof(AstBinary));
             parent->type = type;
