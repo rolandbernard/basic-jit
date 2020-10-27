@@ -4,6 +4,7 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <signal.h>
 
 #include "exec/executil.h"
 
@@ -20,13 +21,15 @@ bool executeFunctionInMemory(void* mem, size_t len, int* ret) {
         uintptr_t end = start + len;
         uintptr_t pagestart = start & -pagesize;
         if (mprotect((void*)pagestart, end - pagestart, PROT_EXEC | PROT_READ | PROT_WRITE)) {
-            exit(1);
+            exit(123);
         } else {
+            signal(SIGINT, SIG_DFL);
             exit(entry());
         }
     } else {
         waitpid(pid, ret, 0);
-        return *ret == 1;
+        *ret = WEXITSTATUS(*ret);
+        return *ret == 123;
     }
 }
 

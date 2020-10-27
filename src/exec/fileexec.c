@@ -36,10 +36,6 @@ void executeFile(const char* filename) {
             .data_mem = &data_list,
             .registers = 0,
             .line = 1,
-            .run_function = NULL,
-            .new_function = NULL,
-            .list_all_function = NULL,
-            .list_function = NULL,
         };
         addInstPushCallerRegs(data.inst_mem, data.registers);
         bool had_error = false;

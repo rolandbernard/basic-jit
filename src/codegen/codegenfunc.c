@@ -653,7 +653,7 @@ static void beep() {
 }
 
 static void end() {
-    exit(2);
+    exit(42);
 }
 
 static void stop() {
@@ -738,64 +738,6 @@ static Value generateMCLeftOrRight(AstBinary* ast, MCGenerationData* data) {
     }
 }
 
-static Value generateMCRunOrNew(Ast* ast, MCGenerationData* data) {
-    switch (ast->type) {
-    case AST_RUN:
-        if(data->run_function == NULL) {
-            Value ret = {.type = VALUE_ERROR, .error = ERROR_SYNTAX};
-            return ret;
-        } else {
-            addInstFunctionCallSimple(data->inst_mem, data->registers, data->run_function);
-        }
-        break;
-    case AST_NEW:
-        if(data->run_function == NULL) {
-            Value ret = {.type = VALUE_ERROR, .error = ERROR_SYNTAX};
-            return ret;
-        } else {
-            addInstFunctionCallSimple(data->inst_mem, data->registers, data->new_function);
-        }
-        break;
-    default:
-        break;
-    }
-    Value ret = {.type = VALUE_NONE};
-    return ret;
-}
-
-static Value generateMCList(AstUnary* ast, MCGenerationData* data) {
-    if(ast->value == NULL) {
-        if (data->list_all_function == NULL) {
-            Value ret = {.type = VALUE_ERROR, .error = ERROR_SYNTAX};
-            return ret;
-        } else {
-            addInstFunctionCallSimple(data->inst_mem, data->registers, data->list_all_function);
-        }
-    } else {
-        if (data->list_function == NULL) {
-            Value ret = {.type = VALUE_ERROR, .error = ERROR_SYNTAX};
-            return ret;
-        } else {
-            Value a = generateMCForAst(ast->value, data);
-            if (a.type == VALUE_ERROR) {
-                return a;
-            } else if (a.type == VALUE_NONE) {
-                Value ret = {.type = VALUE_ERROR, .error = ERROR_SYNTAX};
-                return ret;
-            } else if (a.type != VALUE_INT) {
-                Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
-                return ret;
-            } else {
-                addInstFunctionCallUnaryNoRet(data->inst_mem, data->registers, a.reg, data->run_function);
-                data->registers &= ~a.reg;
-            }
-        }
-    }
-    Value ret = {.type = VALUE_NONE};
-    return ret;
-}
-
-
 Value generateMCForFunctions(Ast* ast, MCGenerationData* data) {
     Value value = {.type = VALUE_NONE};
     if (ast != NULL) {
@@ -853,13 +795,6 @@ Value generateMCForFunctions(Ast* ast, MCGenerationData* data) {
         case AST_LEFT:
         case AST_RIGHT:
             value = generateMCLeftOrRight((AstBinary*)ast, data);
-            break;
-        case AST_RUN:
-        case AST_NEW:
-            value = generateMCRunOrNew((Ast*)ast, data);
-            break;
-        case AST_LIST:
-            value = generateMCList((AstUnary*)ast, data);
             break;
         default:
             value.type = VALUE_ERROR;
