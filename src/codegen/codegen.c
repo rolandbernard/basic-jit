@@ -728,69 +728,69 @@ static Value generateMCLetOfArrayAccessAfterFreeReg(AstLet* ast, MCGenerationDat
 }
 
 static Value generateMCLetAfterFreeReg(AstLet* ast, MCGenerationData* data) {
-    if(ast->name->type == AST_VAR) {
-        AstVar* var = (AstVar*)ast->name;
-        Variable* variable = getVariable(data->variable_table, var->name);
-        if(variable == NULL) {
-            if (var->var_type == VAR_UNDEF || var->var_type == VAR_FLOAT) {
-                VariableFloat* varib = (VariableFloat*)allocAligned(data->variable_mem, sizeof(VariableFloat));
-                varib->type = VARIABLE_FLOAT;
-                varib->for_jmp_loc = ~0;
-                varib->for_call_loc = ~0;
-                varib->value = 0.0;
-                addVariable(data->variable_table, var->name, (Variable*)varib, data->variable_mem);
-                variable = (Variable*)varib;
-            } else if (var->var_type == VAR_INT) {
-                VariableInt* varib = (VariableInt*)allocAligned(data->variable_mem, sizeof(VariableInt));
-                varib->type = VARIABLE_INT;
-                varib->for_jmp_loc = ~0;
-                varib->for_call_loc = ~0;
-                varib->value = 0;
-                addVariable(data->variable_table, var->name, (Variable*)varib, data->variable_mem);
-                variable = (Variable*)varib;
-            } else if (var->var_type == VAR_STR) {
-                VariableString* varib = (VariableString*)allocAligned(data->variable_mem, sizeof(VariableString));
-                varib->type = VARIABLE_STRING;
-                varib->str = NULL;
-                addVariable(data->variable_table, var->name, (Variable*)varib, data->variable_mem);
-                variable = (Variable*)varib;
+    if (ast->name->type == AST_VAR) {
+        Value a = generateMCForAst(ast->value, data);
+        if (a.type == VALUE_ERROR) {
+            return a;
+        } else if (a.type == VALUE_NONE) {
+            Value ret = {.type = VALUE_ERROR, .error = ERROR_SYNTAX};
+            return ret;
+        } else {
+            AstVar* var = (AstVar*)ast->name;
+            Variable* variable = getVariable(data->variable_table, var->name);
+            if (variable == NULL) {
+                if ((var->var_type == VAR_UNDEF && a.type == VALUE_FLOAT) || var->var_type == VAR_FLOAT) {
+                    VariableFloat* varib = (VariableFloat*)allocAligned(data->variable_mem, sizeof(VariableFloat));
+                    varib->type = VARIABLE_FLOAT;
+                    varib->for_jmp_loc = ~0;
+                    varib->for_call_loc = ~0;
+                    varib->value = 0.0;
+                    addVariable(data->variable_table, var->name, (Variable*)varib, data->variable_mem);
+                    variable = (Variable*)varib;
+                } else if ((var->var_type == VAR_UNDEF && a.type == VALUE_INT) || var->var_type == VAR_INT) {
+                    VariableInt* varib = (VariableInt*)allocAligned(data->variable_mem, sizeof(VariableInt));
+                    varib->type = VARIABLE_INT;
+                    varib->for_jmp_loc = ~0;
+                    varib->for_call_loc = ~0;
+                    varib->value = 0;
+                    addVariable(data->variable_table, var->name, (Variable*)varib, data->variable_mem);
+                    variable = (Variable*)varib;
+                } else if ((var->var_type == VAR_UNDEF && a.type == VALUE_STRING) || var->var_type == VAR_STR) {
+                    VariableString* varib = (VariableString*)allocAligned(data->variable_mem, sizeof(VariableString));
+                    varib->type = VARIABLE_STRING;
+                    varib->str = NULL;
+                    addVariable(data->variable_table, var->name, (Variable*)varib, data->variable_mem);
+                    variable = (Variable*)varib;
+                }
+            } else if (var->var_type != VAR_UNDEF) {
+                if ((variable->type == VARIABLE_INT && var->var_type != VAR_INT) || (variable->type == VARIABLE_FLOAT && var->var_type != VAR_FLOAT) || (variable->type == VARIABLE_STRING && var->var_type != VAR_STR)) {
+                    Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
+                    return ret;
+                }
+            } else if (variable->type != VARIABLE_FLOAT && variable->type != VARIABLE_INT && variable->type != VARIABLE_STRING) {
+                Value ret = {.type = VALUE_ERROR, .error = ERROR_UNINDEXED_ARRAY};
+                return ret;
             }
-        } else if(var->var_type != VAR_UNDEF) {
-            if((variable->type == VARIABLE_INT && var->var_type != VAR_INT) ||
-               (variable->type == VARIABLE_FLOAT && var->var_type != VAR_FLOAT) ||
-               (variable->type == VARIABLE_STRING && var->var_type != VAR_STR)) {
+            if (variable->type == VARIABLE_INT && a.type == VALUE_INT) {
+                addInstMovRegToMem(data->inst_mem, data->registers, a.reg, &((VariableInt*)variable)->value);
+            } else if (variable->type == VARIABLE_FLOAT && a.type == VALUE_FLOAT) {
+                addInstMovFRegToMem(data->inst_mem, data->registers, a.reg, &((VariableFloat*)variable)->value);
+            } else if (variable->type == VARIABLE_STRING && a.type == VALUE_STRING) {
+                addInstMovRegToMem(data->inst_mem, data->registers, a.reg, &((VariableString*)variable)->str);
+            } else if (variable->type == VARIABLE_FLOAT && a.type == VALUE_INT) {
+                Register freg = getFreeFRegister(data->registers);
+                data->registers |= freg;
+                addInstMovRegToFReg(data->inst_mem, data->registers, freg, a.reg);
+                addInstMovFRegToMem(data->inst_mem, data->registers, freg, &((VariableFloat*)variable)->value);
+                data->registers &= ~freg;
+            } else {
                 Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
                 return ret;
             }
-        } else if (variable->type != VARIABLE_FLOAT && variable->type != VARIABLE_INT && variable->type != VARIABLE_STRING) {
-            Value ret = {.type = VALUE_ERROR, .error = ERROR_UNINDEXED_ARRAY};
+            data->registers &= ~a.reg;
+            Value ret = {.type = VALUE_NONE};
             return ret;
         }
-        Value a = generateMCForAst(ast->value, data);
-        if(a.type == VALUE_ERROR) {
-            return a;
-        } else if(a.type == VALUE_NONE) {
-            Value ret = {.type = VALUE_ERROR, .error = ERROR_SYNTAX};
-            return ret;
-        } else if(variable->type == VARIABLE_INT && a.type == VALUE_INT) {
-            addInstMovRegToMem(data->inst_mem, data->registers, a.reg, &((VariableInt*)variable)->value);
-        } else if(variable->type == VARIABLE_FLOAT && a.type == VALUE_FLOAT) {
-            addInstMovFRegToMem(data->inst_mem, data->registers, a.reg, &((VariableFloat*)variable)->value);
-        } else if(variable->type == VARIABLE_STRING && a.type == VALUE_STRING) {
-            addInstMovRegToMem(data->inst_mem, data->registers, a.reg, &((VariableString*)variable)->str);
-        } else if(variable->type == VARIABLE_FLOAT && a.type == VALUE_INT) {
-            Register freg = getFreeFRegister(data->registers);
-            data->registers |= freg;
-            addInstMovRegToFReg(data->inst_mem, data->registers, freg, a.reg);
-            addInstMovFRegToMem(data->inst_mem, data->registers, freg, &((VariableFloat*)variable)->value);
-            data->registers &= ~freg;
-        } else {
-            Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
-            return ret;
-        }
-        data->registers &= ~a.reg;
-        Value ret = {.type=VALUE_NONE};
-        return ret;
     } else if(ast->name->type == AST_INDEX) { 
         Value ret = withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCLetOfArrayAccessAfterFreeReg, 3, 1);
         return ret;
@@ -911,162 +911,162 @@ static Value generateMCIfThenElse(AstIfThenElse* ast, MCGenerationData* data) {
 }
 
 static Value generateMCForAfterFreeReg(AstFor* ast, MCGenerationData* data) {
-    AstVar* var = (AstVar*)ast->variable;
-    Variable* variable = getVariable(data->variable_table, var->name);
-    if(variable == NULL) {
-        if (var->var_type == VAR_UNDEF || var->var_type == VAR_FLOAT) {
-            VariableFloat* varib = (VariableFloat*)allocAligned(data->variable_mem, sizeof(VariableFloat));
-            varib->type = VARIABLE_FLOAT;
-            varib->for_jmp_loc = ~0;
-            varib->for_call_loc = ~0;
-            varib->value = 0.0;
-            addVariable(data->variable_table, var->name, (Variable*)varib, data->variable_mem);
-            variable = (Variable*)varib;
-        } else if (var->var_type == VAR_INT) {
-            VariableInt* varib = (VariableInt*)allocAligned(data->variable_mem, sizeof(VariableInt));
-            varib->type = VARIABLE_INT;
-            varib->for_jmp_loc = ~0;
-            varib->for_call_loc = ~0;
-            varib->value = 0;
-            addVariable(data->variable_table, var->name, (Variable*)varib, data->variable_mem);
-            variable = (Variable*)varib;
-        } else if (var->var_type == VAR_STR) {
-            Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
-            return ret;
-        }
-    } else if(var->var_type != VAR_UNDEF) {
-        if((variable->type == VARIABLE_INT && var->var_type != VAR_INT) ||
-           (variable->type == VARIABLE_FLOAT && var->var_type != VAR_FLOAT) ||
-           (variable->type == VARIABLE_STRING || var->var_type == VAR_STR)) {
-            Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
-            return ret;
-        }
-    } else if (variable->type != VARIABLE_FLOAT && variable->type != VARIABLE_INT) {
-        Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
-        return ret;
-    }
     Value initial = generateMCForAst(ast->start, data);
     if(initial.type == VALUE_ERROR) {
         return initial;
     } else if(initial.type == VALUE_NONE) {
         Value ret = {.type = VALUE_ERROR, .error = ERROR_SYNTAX};
         return ret;
-    } else if(variable->type == VARIABLE_INT && initial.type == VALUE_INT) {
-        addInstMovRegToMem(data->inst_mem, data->registers, initial.reg, &((VariableInt*)variable)->value);
-    } else if(variable->type == VARIABLE_FLOAT && initial.type == VALUE_FLOAT) {
-        addInstMovFRegToMem(data->inst_mem, data->registers, initial.reg, &((VariableFloat*)variable)->value);
-    } else if(variable->type == VARIABLE_FLOAT && initial.type == VALUE_INT) {
-        Register freg = getFreeFRegister(data->registers);
-        data->registers |= freg;
-        addInstMovRegToFReg(data->inst_mem, data->registers, freg, initial.reg);
-        addInstMovFRegToMem(data->inst_mem, data->registers, freg, &((VariableFloat*)variable)->value);
-        data->registers &= ~freg;
     } else {
-        Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
-        return ret;
-    }
-    data->registers &= ~initial.reg;
-    size_t jmp_after_cond = addInstJmpRel(data->inst_mem, data->registers, 0);
-    // This is the start of a subroutine
-    RegisterSet tmp_regs = data->registers;
-    data->registers = 0;
-    if(variable->type == VARIABLE_INT) {
-        VariableInt* varib = (VariableInt*)variable;
-        varib->for_call_loc = data->inst_mem->occupied;
-    } else if(variable->type == VARIABLE_FLOAT) {
-        VariableFloat* varib = (VariableFloat*)variable;
-        varib->for_call_loc = data->inst_mem->occupied;
-    }
-    Register ret_reg = getFirstRegister();
-    data->registers |= ret_reg;
-    addInstMovImmToReg(data->inst_mem, data->registers, ret_reg, 0, false);
-    Register vreg = 0;
-    if(variable->type == VARIABLE_INT) {
-        vreg = getFreeRegister(data->registers);
-        data->registers |= vreg;
-        addInstMovMemToReg(data->inst_mem, data->registers, vreg, &((VariableInt*)variable)->value);
-    } else if(variable->type == VARIABLE_FLOAT) {
-        vreg = getFreeFRegister(data->registers);
-        data->registers |= vreg;
-        addInstMovMemToFReg(data->inst_mem, data->registers, vreg, &((VariableFloat*)variable)->value);
-    }
-    if(ast->step) {
-        Value step = generateMCForAst(ast->step, data);
-        if (step.type == VALUE_ERROR) {
-            return step;
-        } else if (step.type == VALUE_NONE) {
-            Value ret = {.type = VALUE_ERROR, .error = ERROR_SYNTAX};
+        AstVar* var = (AstVar*)ast->variable;
+        Variable* variable = getVariable(data->variable_table, var->name);
+        if (variable == NULL) {
+            if ((var->var_type == VAR_UNDEF && initial.type == VALUE_FLOAT) || var->var_type == VAR_FLOAT) {
+                VariableFloat* varib = (VariableFloat*)allocAligned(data->variable_mem, sizeof(VariableFloat));
+                varib->type = VARIABLE_FLOAT;
+                varib->for_jmp_loc = ~0;
+                varib->for_call_loc = ~0;
+                varib->value = 0.0;
+                addVariable(data->variable_table, var->name, (Variable*)varib, data->variable_mem);
+                variable = (Variable*)varib;
+            } else if ((var->var_type == VAR_UNDEF && initial.type == VALUE_INT) || var->var_type == VAR_INT) {
+                VariableInt* varib = (VariableInt*)allocAligned(data->variable_mem, sizeof(VariableInt));
+                varib->type = VARIABLE_INT;
+                varib->for_jmp_loc = ~0;
+                varib->for_call_loc = ~0;
+                varib->value = 0;
+                addVariable(data->variable_table, var->name, (Variable*)varib, data->variable_mem);
+                variable = (Variable*)varib;
+            } else if ((var->var_type == VAR_UNDEF && initial.type == VALUE_STRING) || var->var_type == VAR_STR) {
+                Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
+                return ret;
+            }
+        } else if (var->var_type != VAR_UNDEF) {
+            if ((variable->type == VARIABLE_INT && var->var_type != VAR_INT) || (variable->type == VARIABLE_FLOAT && var->var_type != VAR_FLOAT) || (variable->type == VARIABLE_STRING || var->var_type == VAR_STR)) {
+                Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
+                return ret;
+            }
+        } else if (variable->type != VARIABLE_FLOAT && variable->type != VARIABLE_INT) {
+            Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
             return ret;
-        } else if (variable->type == VARIABLE_INT && step.type == VALUE_INT) {
-            addInstAdd(data->inst_mem, data->registers, vreg, vreg, step.reg);
-            addInstMovRegToMem(data->inst_mem, data->registers, vreg, &((VariableInt*)variable)->value);
-        } else if (variable->type == VARIABLE_FLOAT && step.type == VALUE_FLOAT) {
-            addInstFAdd(data->inst_mem, data->registers, vreg, vreg, step.reg);
-            addInstMovFRegToMem(data->inst_mem, data->registers, vreg, &((VariableFloat*)variable)->value);
-        } else if (variable->type == VARIABLE_FLOAT && step.type == VALUE_INT) {
+        }
+        if (variable->type == VARIABLE_INT && initial.type == VALUE_INT) {
+            addInstMovRegToMem(data->inst_mem, data->registers, initial.reg, &((VariableInt*)variable)->value);
+        } else if (variable->type == VARIABLE_FLOAT && initial.type == VALUE_FLOAT) {
+            addInstMovFRegToMem(data->inst_mem, data->registers, initial.reg, &((VariableFloat*)variable)->value);
+        } else if (variable->type == VARIABLE_FLOAT && initial.type == VALUE_INT) {
             Register freg = getFreeFRegister(data->registers);
             data->registers |= freg;
-            addInstMovRegToFReg(data->inst_mem, data->registers, freg, step.reg);
-            addInstFAdd(data->inst_mem, data->registers, vreg, vreg, freg);
+            addInstMovRegToFReg(data->inst_mem, data->registers, freg, initial.reg);
+            addInstMovFRegToMem(data->inst_mem, data->registers, freg, &((VariableFloat*)variable)->value);
             data->registers &= ~freg;
-            addInstMovFRegToMem(data->inst_mem, data->registers, vreg, &((VariableFloat*)variable)->value);
         } else {
             Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
             return ret;
         }
-        data->registers &= ~step.reg;
-    } else {
+        data->registers &= ~initial.reg;
+        size_t jmp_after_cond = addInstJmpRel(data->inst_mem, data->registers, 0);
+        // This is the start of a subroutine
+        RegisterSet tmp_regs = data->registers;
+        data->registers = 0;
         if (variable->type == VARIABLE_INT) {
-            Register reg = getFreeFRegister(data->registers);
-            data->registers |= reg;
-            addInstMovImmToReg(data->inst_mem, data->registers, reg, 1, false);
-            addInstAdd(data->inst_mem, data->registers, vreg, vreg, reg);
-            data->registers &= ~reg;
-            addInstMovRegToMem(data->inst_mem, data->registers, vreg, &((VariableInt*)variable)->value);
+            VariableInt* varib = (VariableInt*)variable;
+            varib->for_call_loc = data->inst_mem->occupied;
         } else if (variable->type == VARIABLE_FLOAT) {
+            VariableFloat* varib = (VariableFloat*)variable;
+            varib->for_call_loc = data->inst_mem->occupied;
+        }
+        Register ret_reg = getFirstRegister();
+        data->registers |= ret_reg;
+        addInstMovImmToReg(data->inst_mem, data->registers, ret_reg, 0, false);
+        Register vreg = 0;
+        if (variable->type == VARIABLE_INT) {
+            vreg = getFreeRegister(data->registers);
+            data->registers |= vreg;
+            addInstMovMemToReg(data->inst_mem, data->registers, vreg, &((VariableInt*)variable)->value);
+        } else if (variable->type == VARIABLE_FLOAT) {
+            vreg = getFreeFRegister(data->registers);
+            data->registers |= vreg;
+            addInstMovMemToFReg(data->inst_mem, data->registers, vreg, &((VariableFloat*)variable)->value);
+        }
+        if (ast->step) {
+            Value step = generateMCForAst(ast->step, data);
+            if (step.type == VALUE_ERROR) {
+                return step;
+            } else if (step.type == VALUE_NONE) {
+                Value ret = {.type = VALUE_ERROR, .error = ERROR_SYNTAX};
+                return ret;
+            } else if (variable->type == VARIABLE_INT && step.type == VALUE_INT) {
+                addInstAdd(data->inst_mem, data->registers, vreg, vreg, step.reg);
+                addInstMovRegToMem(data->inst_mem, data->registers, vreg, &((VariableInt*)variable)->value);
+            } else if (variable->type == VARIABLE_FLOAT && step.type == VALUE_FLOAT) {
+                addInstFAdd(data->inst_mem, data->registers, vreg, vreg, step.reg);
+                addInstMovFRegToMem(data->inst_mem, data->registers, vreg, &((VariableFloat*)variable)->value);
+            } else if (variable->type == VARIABLE_FLOAT && step.type == VALUE_INT) {
+                Register freg = getFreeFRegister(data->registers);
+                data->registers |= freg;
+                addInstMovRegToFReg(data->inst_mem, data->registers, freg, step.reg);
+                addInstFAdd(data->inst_mem, data->registers, vreg, vreg, freg);
+                data->registers &= ~freg;
+                addInstMovFRegToMem(data->inst_mem, data->registers, vreg, &((VariableFloat*)variable)->value);
+            } else {
+                Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
+                return ret;
+            }
+            data->registers &= ~step.reg;
+        } else {
+            if (variable->type == VARIABLE_INT) {
+                Register reg = getFreeFRegister(data->registers);
+                data->registers |= reg;
+                addInstMovImmToReg(data->inst_mem, data->registers, reg, 1, false);
+                addInstAdd(data->inst_mem, data->registers, vreg, vreg, reg);
+                data->registers &= ~reg;
+                addInstMovRegToMem(data->inst_mem, data->registers, vreg, &((VariableInt*)variable)->value);
+            } else if (variable->type == VARIABLE_FLOAT) {
+                Register freg = getFreeFRegister(data->registers);
+                data->registers |= freg;
+                addInstMovImmToFReg(data->inst_mem, data->registers, freg, 1.0);
+                addInstFAdd(data->inst_mem, data->registers, vreg, vreg, freg);
+                data->registers &= ~freg;
+                addInstMovFRegToMem(data->inst_mem, data->registers, vreg, &((VariableFloat*)variable)->value);
+            }
+        }
+        size_t jmp_to_ret;
+        Value end = generateMCForAst(ast->end, data);
+        if (end.type == VALUE_ERROR) {
+            return end;
+        } else if (end.type == VALUE_NONE) {
+            Value ret = {.type = VALUE_ERROR, .error = ERROR_SYNTAX};
+            return ret;
+        } else if ((variable->type == VARIABLE_INT && end.type == VALUE_INT) || (variable->type == VARIABLE_FLOAT && end.type == VALUE_FLOAT)) {
+            jmp_to_ret = addInstCondJmpRel(data->inst_mem, data->registers, COND_LE, vreg, end.reg, 0);
+        } else if (variable->type == VARIABLE_FLOAT && end.type == VALUE_INT) {
             Register freg = getFreeFRegister(data->registers);
             data->registers |= freg;
-            addInstMovImmToFReg(data->inst_mem, data->registers, freg, 1.0);
-            addInstFAdd(data->inst_mem, data->registers, vreg, vreg, freg);
+            addInstMovRegToFReg(data->inst_mem, data->registers, freg, end.reg);
+            jmp_to_ret = addInstCondJmpRel(data->inst_mem, data->registers, COND_LE, vreg, freg, 0);
             data->registers &= ~freg;
-            addInstMovFRegToMem(data->inst_mem, data->registers, vreg, &((VariableFloat*)variable)->value);
+        } else {
+            Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
+            return ret;
         }
-    }
-    size_t jmp_to_ret;
-    Value end = generateMCForAst(ast->end, data);
-    if (end.type == VALUE_ERROR) {
-        return end;
-    } else if (end.type == VALUE_NONE) {
-        Value ret = {.type = VALUE_ERROR, .error = ERROR_SYNTAX};
-        return ret;
-    } else if ((variable->type == VARIABLE_INT && end.type == VALUE_INT) || (variable->type == VARIABLE_FLOAT && end.type == VALUE_FLOAT)) {
-        jmp_to_ret = addInstCondJmpRel(data->inst_mem, data->registers, COND_LE, vreg, end.reg, 0);
-    } else if (variable->type == VARIABLE_FLOAT && end.type == VALUE_INT) {
-        Register freg = getFreeFRegister(data->registers);
-        data->registers |= freg;
-        addInstMovRegToFReg(data->inst_mem, data->registers, freg, end.reg);
-        jmp_to_ret = addInstCondJmpRel(data->inst_mem, data->registers, COND_LE, vreg, freg, 0);
-        data->registers &= ~freg;
-    } else {
-        Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
+        data->registers &= ~end.reg;
+        addInstMovImmToReg(data->inst_mem, data->registers, ret_reg, 1, false);
+        update32BitValue(data->inst_mem, jmp_to_ret, data->inst_mem->occupied - (jmp_to_ret + 4));
+        addInstReturn(data->inst_mem, data->registers);
+        // This is the end of the subroutine
+        data->registers = tmp_regs;
+        update32BitValue(data->inst_mem, jmp_after_cond, data->inst_mem->occupied - (jmp_after_cond + 4));
+        if (variable->type == VARIABLE_INT) {
+            VariableInt* varib = (VariableInt*)variable;
+            varib->for_jmp_loc = data->inst_mem->occupied;
+        } else if (variable->type == VARIABLE_FLOAT) {
+            VariableFloat* varib = (VariableFloat*)variable;
+            varib->for_jmp_loc = data->inst_mem->occupied;
+        }
+        Value ret = {.type = VALUE_NONE};
         return ret;
     }
-    data->registers &= ~end.reg;
-    addInstMovImmToReg(data->inst_mem, data->registers, ret_reg, 1, false);
-    update32BitValue(data->inst_mem, jmp_to_ret, data->inst_mem->occupied - (jmp_to_ret + 4));
-    addInstReturn(data->inst_mem, data->registers);
-    // This is the end of the subroutine
-    data->registers = tmp_regs;
-    update32BitValue(data->inst_mem, jmp_after_cond, data->inst_mem->occupied - (jmp_after_cond + 4));
-    if(variable->type == VARIABLE_INT) {
-        VariableInt* varib = (VariableInt*)variable;
-        varib->for_jmp_loc = data->inst_mem->occupied;
-    } else if(variable->type == VARIABLE_FLOAT) {
-        VariableFloat* varib = (VariableFloat*)variable;
-        varib->for_jmp_loc = data->inst_mem->occupied;
-    }
-    Value ret = {.type=VALUE_NONE};
-    return ret;
 }
 
 static Value generateMCFor(AstFor* ast, MCGenerationData* data) {
