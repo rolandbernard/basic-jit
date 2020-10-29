@@ -538,11 +538,15 @@ static Ast* parseUnaryStatement(Scanner* scanner, StackAllocator* mem) {
             }
         } else if (value->type == AST_ERROR) {
             return value;
-        } else if((value->type != AST_VAR || ((AstVar*)value)->var_type != VAR_UNDEF) && value->type != AST_INTEGER) {
+        } else if(value->type != AST_VAR && value->type != AST_INTEGER) {
             return (Ast*)createError(error_offset, mem);
         } else if(type == AST_LIST && value->type != AST_INTEGER) {
             return (Ast*)createError(error_offset, mem);
         } else if(value->type != AST_VAR && type == AST_NEXT) {
+            return (Ast*)createError(error_offset, mem);
+        } else if((type == AST_GOSUB || type == AST_GOTO || type == AST_RESTORE) &&
+            value->type == AST_VAR && ((AstVar*)value)->var_type != VAR_UNDEF)
+        {
             return (Ast*)createError(error_offset, mem);
         }
         AstUnary* ret = (AstUnary*)allocAligned(mem, sizeof(AstUnary));
