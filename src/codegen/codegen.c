@@ -231,16 +231,16 @@ static Value generateMCBinarayOperationAfterFreeReg(AstBinary* ast, MCGeneration
                     addInstMovRegToFReg(data->inst_mem, data->registers, freg, a.reg);
                     switch (ast->type) {
                     case AST_ADD:
-                        addInstFAdd(data->inst_mem, data->registers, b.reg, b.reg, freg);
+                        addInstFAdd(data->inst_mem, data->registers, b.reg, freg, b.reg);
                         break;
                     case AST_SUB:
-                        addInstFSub(data->inst_mem, data->registers, b.reg, b.reg, freg);
+                        addInstFSub(data->inst_mem, data->registers, b.reg, freg, b.reg);
                         break;
                     case AST_MUL:
-                        addInstFMul(data->inst_mem, data->registers, b.reg, b.reg, freg);
+                        addInstFMul(data->inst_mem, data->registers, b.reg, freg, b.reg);
                         break;
                     case AST_DIV:
-                        addInstFDiv(data->inst_mem, data->registers, b.reg, b.reg, freg);
+                        addInstFDiv(data->inst_mem, data->registers, b.reg, freg, b.reg);
                         break;
                     case AST_MOD: {
                         Value ret = { .type = VALUE_ERROR, .error = ERROR_TYPE };
@@ -366,7 +366,7 @@ static Value generateMCNegAfterFreeReg(AstUnary* ast, MCGenerationData* data) {
             Register freg = getFreeFRegister(data->registers);
             data->registers |= freg;
             addInstMovImmToFReg(data->inst_mem, data->registers, freg, 0);
-            addInstSub(data->inst_mem, data->registers, freg, freg, a.reg);
+            addInstFSub(data->inst_mem, data->registers, freg, freg, a.reg);
             data->registers &= ~a.reg;
             a.reg = freg;
         } else {

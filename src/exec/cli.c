@@ -127,8 +127,8 @@ static void runProgram() {
                 fprintf(stderr, "error: Syntax error at line %i:%i\n", data.line, error->offset + 1);
                 fprintf(stderr, " | %s\n", lines[i]);
                 fprintf(stderr, " | ");
-                for(size_t i = 0; i < error->offset; i++) {
-                    if(lines[i][i] == '\t') {
+                for(size_t j = 0; j < error->offset; j++) {
+                    if(lines[i][j] == '\t') {
                         fputc('\t', stderr);
                     } else {
                         fputc(' ', stderr);
@@ -226,6 +226,7 @@ static bool executeLine(const char* line) {
                     fprintf(stderr, "error: Unresolved label %s at line %i\n", label_list.data[err].name, label_list.data[err].line);
                 } else {
                     int ret;
+                    printMemoryContent(stderr, jit_memory.memory, jit_memory.occupied);
                     if(executeFunctionInMemory(jit_memory.memory, jit_memory.occupied, &ret)) {
                         perror("error: Failed to execute");
                     } else if(ret == 42) {
