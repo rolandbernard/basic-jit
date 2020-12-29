@@ -385,7 +385,7 @@ void addFRegCvtToReg(StackAllocator* mem, X86Register dest, X86Register fsrc) {
     ptr[0] = 0xF2;
     ptr[1] = 0x48 + (dest >= REG_8 ? 4 : 0);
     ptr[2] = 0x0F;
-    ptr[3] = 0x2A;
+    ptr[3] = 0x2C;
     ptr[4] = 0xC0 + (reg_to_opcodeno[dest] * 8) + reg_to_opcodeno[fsrc];
 }
 
