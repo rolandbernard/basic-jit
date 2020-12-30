@@ -146,7 +146,9 @@ static Token getToken(const char* input) {
             if (input[len] == '\\') {
                 len++;
             }
-            len++;
+            if (input[len] != 0) {
+                len++;
+            }
         }
         len++;
         ret.type = TOKEN_STRING;
