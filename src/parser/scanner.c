@@ -143,7 +143,7 @@ static Token getToken(const char* input) {
     } else if (input[0] == '\"') {
         int len = 1;
         while (input[len] != '\"' && input[len] != 0) {
-            if (input[len] == '\\' && input[len + 1] == '\"') {
+            if (input[len] == '\\') {
                 len++;
             }
             len++;
