@@ -2,6 +2,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "codegenfunc.h"
 #include "exec/execalloc.h"
@@ -738,6 +739,46 @@ static Value generateMCLeftOrRight(AstBinary* ast, MCGenerationData* data) {
     }
 }
 
+static void sleep_for(double sec) {
+    usleep((int)(sec * 1000000.0));
+}
+
+static Value generateMCUnaryFloatNoRetAfterFreeReg(AstUnary* ast, MCGenerationData* data) {
+    Value a = generateMCForAst(ast->value, data);
+    if (a.type == VALUE_ERROR) {
+        return a;
+    } else if (a.type == VALUE_NONE) {
+        Value ret = {.type = VALUE_ERROR, .error = ERROR_SYNTAX};
+        return ret;
+    } else {
+        if (a.type == VALUE_INT) {
+            Register freg = getFreeFRegister(data->registers);
+            data->registers |= freg;
+            addInstMovRegToFReg(data->inst_mem, data->registers, freg, a.reg);
+            data->registers &= ~a.reg;
+            a.type = VALUE_FLOAT;
+            a.reg = freg;
+        } else if (a.type != VALUE_FLOAT) {
+            Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
+            return ret;
+        }
+        switch (ast->type) {
+        case AST_SLEEP:
+            addInstFunctionCallUnaryNoRet(data->inst_mem, data->registers, a.reg, sleep_for);
+            break;
+        default:
+            break;
+        }
+        data->registers &= ~a.reg;
+        Value ret = {.type = VALUE_NONE };
+        return ret;
+    }
+}
+
+static Value generateMCUnaryFloatNoRet(AstUnary* ast, MCGenerationData* data) {
+    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCUnaryFloatNoRetAfterFreeReg, 1, 1);
+}
+
 Value generateMCForFunctions(Ast* ast, MCGenerationData* data) {
     Value value = {.type = VALUE_NONE};
     if (ast != NULL) {
@@ -795,6 +836,9 @@ Value generateMCForFunctions(Ast* ast, MCGenerationData* data) {
         case AST_LEFT:
         case AST_RIGHT:
             value = generateMCLeftOrRight((AstBinary*)ast, data);
+            break;
+        case AST_SLEEP:
+            value = generateMCUnaryFloatNoRet((AstUnary*)ast, data);
             break;
         default:
             value.type = VALUE_ERROR;

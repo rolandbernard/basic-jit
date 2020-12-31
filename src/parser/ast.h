@@ -47,6 +47,7 @@ typedef enum {
     AST_NEXT,
     AST_RESTORE,
     AST_LIST,
+    AST_SLEEP,
 
     // binary
     AST_ADD,
