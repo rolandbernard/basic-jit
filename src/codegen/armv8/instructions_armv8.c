@@ -1,29 +1,5 @@
-#ifndef _INSTRUCTIONS_H_
-#define _INSTRUCTIONS_H_
 
-#include <stdint.h>
-#include <stdbool.h>
-
-#include "common/stackalloc.h"
-
-#ifdef __x86_64__
-
-#else
-
-#error The target architecture is not supported
-
-#endif
-typedef enum {
-    COND_EQ,
-    COND_NE,
-    COND_LT,
-    COND_GT,
-    COND_LE,
-    COND_GE
-} JmpCondistions;
-
-typedef uint64_t RegisterSet;
-typedef uint64_t Register;
+#include "codegen/instructions.h"
 
 uint64_t getFreeRegister(RegisterSet regs);
 
@@ -125,4 +101,3 @@ void update32BitValue(StackAllocator* mem, size_t pos, int32_t value);
 
 void update64BitValue(StackAllocator* mem, size_t pos, int64_t value);
 
-#endif

@@ -1,5 +1,7 @@
 
-#include "codegen/x86-64.h"
+#ifdef __x86_64__
+
+#include "codegen/x86_64/x86_64.h"
     
 static int reg_to_opcodeno[] = {
     [REG_A] = 0,
@@ -397,3 +399,5 @@ void addRegCvtToFReg(StackAllocator* mem, X86Register fdest, X86Register src) {
     ptr[3] = 0x2A;
     ptr[4] = 0xC0 + (reg_to_opcodeno[fdest] * 8) + reg_to_opcodeno[src];
 }
+
+#endif

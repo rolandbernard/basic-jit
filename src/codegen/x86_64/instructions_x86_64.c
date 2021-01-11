@@ -1,9 +1,9 @@
 
-#include "codegen/instructions.h"
-
 #ifdef __x86_64__
 
-#include "codegen/x86-64.h"
+#include "codegen/instructions.h"
+
+#include "codegen/x86_64/x86_64.h"
 
 uint64_t getFreeRegister(RegisterSet regs) {
     for(int i = 0; i < REG_COUNT; i++) {
@@ -682,9 +682,5 @@ void update64BitValue(StackAllocator* mem, size_t pos, int64_t value) {
     ((uint8_t*)mem->memory)[pos + 6] = (value >> 48) & 0xff;
     ((uint8_t*)mem->memory)[pos + 7] = (value >> 56) & 0xff;
 }
-
-#else
-
-#error The target architecture is not supported
 
 #endif
