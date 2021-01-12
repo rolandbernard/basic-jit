@@ -73,19 +73,9 @@ void addInstMovRegToReg(StackAllocator* mem, RegisterSet regs, Register dest, Re
     addMovRegToReg(mem, dest, src);
 }
 
-size_t addInstMovImmToReg(StackAllocator* mem, RegisterSet regs, Register reg, int64_t value, bool force64) {
-    if((value >> 32 == 0 || value >> 32 == -1) && !force64) {
-        if(value == 0) {
-            addXor(mem, reg, reg);
-            return -1;
-        } else {
-            addMovImm32ToReg(mem, reg, value);
-            return mem->occupied - 4;
-        }
-    } else {
-        addMovImm64ToReg(mem, reg, value);
-        return mem->occupied - 8;
-    }
+size_t addInstMovImmToReg(StackAllocator* mem, RegisterSet regs, Register reg, int64_t value) {
+    addMovImm64ToReg(mem, reg, value);
+    return mem->occupied - 8;
 }
 
 void addInstMovMemToReg(StackAllocator* mem, RegisterSet regs, Register reg, void* addr) {
@@ -131,8 +121,9 @@ void addInstJmp(StackAllocator* mem, RegisterSet regs, void* to) {
     }
 }
 
-size_t addInstJmpRel(StackAllocator* mem, RegisterSet regs, int32_t to) {
-    addJmpRelative32(mem, to);
+size_t addInstJmpRel(StackAllocator* mem, RegisterSet regs, size_t to) {
+    uint32_t rel = to - (mem->occupied + 5);
+    addJmpRelative32(mem, rel);
     return mem->occupied - 4;
 }
 
@@ -204,8 +195,9 @@ void addInstPopAll(StackAllocator* mem, RegisterSet regs) {
     }
 }
 
-size_t addInstCallRel(StackAllocator* mem, RegisterSet regs, int32_t func) {
-    addCallRel(mem, func);
+size_t addInstCallRel(StackAllocator* mem, RegisterSet regs, size_t to) {
+    uint32_t rel = to - (mem->occupied + 5);
+    addCallRel(mem, rel);
     return mem->occupied - 4;
 }
 
@@ -370,49 +362,51 @@ void addInstRem(StackAllocator* mem, RegisterSet regs, Register dest, Register a
     }
 }
 
-size_t addInstCondJmpRel(StackAllocator* mem, RegisterSet regs, JmpCondistions cond, Register a, Register b, int32_t to) {
+size_t addInstCondJmpRel(StackAllocator* mem, RegisterSet regs, JmpCondistions cond, Register a, Register b, size_t to) {
     if(a < (1 << REG_COUNT)) {
         addCmp(mem, a, b);
+        uint32_t rel = to - (mem->occupied + 6);
         switch(cond) {
             case COND_EQ:
-                addJmpEQ(mem, to);
+                addJmpEQ(mem, rel);
                 break;
             case COND_NE:
-                addJmpNE(mem, to);
+                addJmpNE(mem, rel);
                 break;
             case COND_GT:
-                addJmpGT(mem, to);
+                addJmpGT(mem, rel);
                 break;
             case COND_LT:
-                addJmpLT(mem, to);
+                addJmpLT(mem, rel);
                 break;
             case COND_GE:
-                addJmpGE(mem, to);
+                addJmpGE(mem, rel);
                 break;
             case COND_LE:
-                addJmpLE(mem, to);
+                addJmpLE(mem, rel);
                 break;
         }
     } else {
         addFCom(mem, a, b);
+        uint32_t rel = to - (mem->occupied + 6);
         switch(cond) {
             case COND_EQ:
-                addJmpEQ(mem, to);
+                addJmpEQ(mem, rel);
                 break;
             case COND_NE:
-                addJmpNE(mem, to);
+                addJmpNE(mem, rel);
                 break;
             case COND_GT:
-                addJmpA(mem, to);
+                addJmpA(mem, rel);
                 break;
             case COND_LT:
-                addJmpB(mem, to);
+                addJmpB(mem, rel);
                 break;
             case COND_GE:
-                addJmpAE(mem, to);
+                addJmpAE(mem, rel);
                 break;
             case COND_LE:
-                addJmpBE(mem, to);
+                addJmpBE(mem, rel);
                 break;
         }
     }
@@ -665,14 +659,15 @@ void addInstPopCallerRegs(StackAllocator* mem, RegisterSet regs) {
     addInstPop(mem, regs, REG_B);
 }
 
-void update32BitValue(StackAllocator* mem, size_t pos, int32_t value) {
-    ((uint8_t*)mem->memory)[pos] = value & 0xff;
-    ((uint8_t*)mem->memory)[pos + 1] = (value >> 8) & 0xff;
-    ((uint8_t*)mem->memory)[pos + 2] = (value >> 16) & 0xff;
-    ((uint8_t*)mem->memory)[pos + 3] = (value >> 24) & 0xff;
+void updateRelativeJumpTarget(StackAllocator* mem, size_t pos, size_t to) {
+    uint32_t rel = to - (pos + 4);
+    ((uint8_t*)mem->memory)[pos] = rel & 0xff;
+    ((uint8_t*)mem->memory)[pos + 1] = (rel >> 8) & 0xff;
+    ((uint8_t*)mem->memory)[pos + 2] = (rel >> 16) & 0xff;
+    ((uint8_t*)mem->memory)[pos + 3] = (rel >> 24) & 0xff;
 }
 
-void update64BitValue(StackAllocator* mem, size_t pos, int64_t value) {
+void updateImmediateValue(StackAllocator* mem, size_t pos, int64_t value) {
     ((uint8_t*)mem->memory)[pos] = value & 0xff;
     ((uint8_t*)mem->memory)[pos + 1] = (value >> 8) & 0xff;
     ((uint8_t*)mem->memory)[pos + 2] = (value >> 16) & 0xff;

@@ -145,12 +145,12 @@ static Value generateMCNext(AstUnary* ast, MCGenerationData* data) {
     Register ret_reg = getFirstRegister();
     data->registers |= ret_reg;
     size_t pos = addInstCallRel(data->inst_mem, data->registers, 0);
-    update32BitValue(data->inst_mem, pos, jmp_for_cond - (pos + 4));
+    updateRelativeJumpTarget(data->inst_mem, pos, jmp_for_cond);
     Register cmp_reg = getFreeRegister(data->registers);
     data->registers |= cmp_reg;
-    addInstMovImmToReg(data->inst_mem, data->registers, cmp_reg, 0, false);
+    addInstMovImmToReg(data->inst_mem, data->registers, cmp_reg, 0);
     pos = addInstCondJmpRel(data->inst_mem, data->registers, COND_EQ, ret_reg, cmp_reg, 0);
-    update32BitValue(data->inst_mem, pos, jmp_for_pos - (pos + 4));
+    updateRelativeJumpTarget(data->inst_mem, pos, jmp_for_pos);
     data->registers = tmp_regs;
     addInstPopAll(data->inst_mem, data->registers);
     Value ret = {.type=VALUE_NONE};
@@ -160,7 +160,7 @@ static Value generateMCNext(AstUnary* ast, MCGenerationData* data) {
 static Value generateMCRestoreAfterFreeReg(AstUnary* ast, MCGenerationData* data) {
     Register reg = getFreeRegister(data->registers);
     data->registers |= reg;
-    size_t pos = addInstMovImmToReg(data->inst_mem, data->registers, reg, 0, true);
+    size_t pos = addInstMovImmToReg(data->inst_mem, data->registers, reg, 0);
     addInstMovRegToMem(data->inst_mem, data->registers, reg, (void*)&data_index);
     data->registers &= ~reg;
     if(ast->value != NULL) {
@@ -358,7 +358,7 @@ static Value generateMCNegAfterFreeReg(AstUnary* ast, MCGenerationData* data) {
         if (a.type == VALUE_INT) {
             Register reg = getFreeRegister(data->registers);
             data->registers |= reg;
-            addInstMovImmToReg(data->inst_mem, data->registers, reg, 0, false);
+            addInstMovImmToReg(data->inst_mem, data->registers, reg, 0);
             addInstSub(data->inst_mem, data->registers, reg, reg, a.reg);
             data->registers &= ~a.reg;
             a.reg = reg;
@@ -387,7 +387,7 @@ static Value generateMCString(AstString* ast, MCGenerationData* data) {
     memcpy(value, ast->str, len + 1);
     Register reg = getFreeRegister(data->registers);
     data->registers |= reg;
-    addInstMovImmToReg(data->inst_mem, data->registers, reg, (intptr_t)value, true);
+    addInstMovImmToReg(data->inst_mem, data->registers, reg, (intptr_t)value);
     Value ret = {
         .type = VALUE_STRING,
         .reg = reg,
@@ -463,30 +463,30 @@ static Value generateMCReadOfArrayAccessAfterFreeReg(AstIndex* ast, MCGeneration
         data->registers |= data_reg;
         addInstMovMemToReg(data->inst_mem, data->registers, index_reg, (void*)&data_index);
         addInstMovMemToReg(data->inst_mem, data->registers, data_reg, (void*)data->data_mem->data);
-        addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, sizeof(DataElement), false);
+        addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, sizeof(DataElement));
         addInstMul(data->inst_mem, data->registers, imm_reg, imm_reg, index_reg);
         addInstAdd(data->inst_mem, data->registers, data_reg, data_reg, imm_reg);
-        addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, 1, false);
+        addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, 1);
         addInstAdd(data->inst_mem, data->registers, index_reg, index_reg, imm_reg);
         addInstMovRegToMem(data->inst_mem, data->registers, index_reg, (void*)&data_index);
         if(variable->type == VARIABLE_INT_ARRAY) {
-            addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, offsetof(DataElement, integer), false);
+            addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, offsetof(DataElement, integer));
         } else if(variable->type == VARIABLE_FLOAT_ARRAY) {
-            addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, offsetof(DataElement, real), false);
+            addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, offsetof(DataElement, real));
         } else if(variable->type == VARIABLE_STRING_ARRAY) {
-            addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, offsetof(DataElement, string), false);
+            addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, offsetof(DataElement, string));
         }
         addInstAdd(data->inst_mem, data->registers, data_reg, data_reg, imm_reg);
         addInstMovMemRegToReg(data->inst_mem, data->registers, data_reg, data_reg);
         size_t indexing_size;
         if(variable->type == VARIABLE_INT_ARRAY) {
-            addInstMovImmToReg(data->inst_mem, data->registers, index_reg, (intptr_t)((VariableIntArray*)variable)->value, false);
+            addInstMovImmToReg(data->inst_mem, data->registers, index_reg, (intptr_t)((VariableIntArray*)variable)->value);
             indexing_size = sizeof(int64_t);
         } else if(variable->type == VARIABLE_FLOAT_ARRAY) {
-            addInstMovImmToReg(data->inst_mem, data->registers, index_reg, (intptr_t)((VariableFloatArray*)variable)->value, false);
+            addInstMovImmToReg(data->inst_mem, data->registers, index_reg, (intptr_t)((VariableFloatArray*)variable)->value);
             indexing_size = sizeof(double);
         } else if(variable->type == VARIABLE_STRING_ARRAY) {
-            addInstMovImmToReg(data->inst_mem, data->registers, index_reg, (intptr_t)((VariableStringArray*)variable)->str, false);
+            addInstMovImmToReg(data->inst_mem, data->registers, index_reg, (intptr_t)((VariableStringArray*)variable)->str);
             indexing_size = sizeof(char*);
         }
         for(int i = 0; i < ast->count; i++) {
@@ -500,7 +500,7 @@ static Value generateMCReadOfArrayAccessAfterFreeReg(AstIndex* ast, MCGeneration
                 Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
                 return ret;
             } else {
-                addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, indexing_size, false);
+                addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, indexing_size);
                 addInstMul(data->inst_mem, data->registers, imm_reg, imm_reg, index.reg);
                 data->registers &= ~index.reg;
                 addInstAdd(data->inst_mem, data->registers, index_reg, index_reg, imm_reg);
@@ -579,19 +579,19 @@ static Value generateMCReadAfterFreeReg(AstVariable* ast, MCGenerationData* data
             data->registers |= data_reg;
             addInstMovMemToReg(data->inst_mem, data->registers, index_reg, (void*)&data_index);
             addInstMovMemToReg(data->inst_mem, data->registers, data_reg, (void*)&data->data_mem->data);
-            addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, sizeof(DataElement), false);
+            addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, sizeof(DataElement));
             addInstMul(data->inst_mem, data->registers, imm_reg, imm_reg, index_reg);
             addInstAdd(data->inst_mem, data->registers, data_reg, data_reg, imm_reg);
-            addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, 1, false);
+            addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, 1);
             addInstAdd(data->inst_mem, data->registers, index_reg, index_reg, imm_reg);
             addInstMovRegToMem(data->inst_mem, data->registers, index_reg, (void*)&data_index);
             data->registers &= ~index_reg;
             if(variable->type == VARIABLE_INT) {
-                addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, offsetof(DataElement, integer), false);
+                addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, offsetof(DataElement, integer));
             } else if(variable->type == VARIABLE_FLOAT) {
-                addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, offsetof(DataElement, real), false);
+                addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, offsetof(DataElement, real));
             } else if(variable->type == VARIABLE_STRING) {
-                addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, offsetof(DataElement, string), false);
+                addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, offsetof(DataElement, string));
             }
             addInstAdd(data->inst_mem, data->registers, data_reg, data_reg, imm_reg);
             data->registers &= ~imm_reg;
@@ -663,13 +663,13 @@ static Value generateMCLetOfArrayAccessAfterFreeReg(AstLet* ast, MCGenerationDat
         data->registers |= index_reg;
         size_t indexing_size;
         if(variable->type == VARIABLE_INT_ARRAY) {
-            addInstMovImmToReg(data->inst_mem, data->registers, index_reg, (intptr_t)((VariableIntArray*)variable)->value, false);
+            addInstMovImmToReg(data->inst_mem, data->registers, index_reg, (intptr_t)((VariableIntArray*)variable)->value);
             indexing_size = sizeof(int64_t);
         } else if(variable->type == VARIABLE_FLOAT_ARRAY) {
-            addInstMovImmToReg(data->inst_mem, data->registers, index_reg, (intptr_t)((VariableFloatArray*)variable)->value, false);
+            addInstMovImmToReg(data->inst_mem, data->registers, index_reg, (intptr_t)((VariableFloatArray*)variable)->value);
             indexing_size = sizeof(double);
         } else if(variable->type == VARIABLE_STRING_ARRAY) {
-            addInstMovImmToReg(data->inst_mem, data->registers, index_reg, (intptr_t)((VariableStringArray*)variable)->str, false);
+            addInstMovImmToReg(data->inst_mem, data->registers, index_reg, (intptr_t)((VariableStringArray*)variable)->str);
             indexing_size = sizeof(char*);
         }
         for(int i = 0; i < index->count; i++) {
@@ -683,7 +683,7 @@ static Value generateMCLetOfArrayAccessAfterFreeReg(AstLet* ast, MCGenerationDat
                 Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
                 return ret;
             } else {
-                addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, indexing_size, false);
+                addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, indexing_size);
                 addInstMul(data->inst_mem, data->registers, imm_reg, imm_reg, ind.reg);
                 data->registers &= ~ind.reg;
                 addInstAdd(data->inst_mem, data->registers, index_reg, index_reg, imm_reg);
@@ -850,7 +850,7 @@ static Value generateMCIfThenElseAfterFreeReg(AstIfThenElse* ast, MCGenerationDa
                 if (a.type == VALUE_STRING) {
                     addInstFunctionCallBinary(data->inst_mem, data->registers, a.reg, a.reg, b.reg, compareStrings);
                     a.type = VALUE_INT;
-                    addInstMovImmToReg(data->inst_mem, data->registers, b.reg, 0, false);
+                    addInstMovImmToReg(data->inst_mem, data->registers, b.reg, 0);
                     b.type = VALUE_INT;
                 }
                 switch (condition->type) {
@@ -886,17 +886,17 @@ static Value generateMCIfThenElseAfterFreeReg(AstIfThenElse* ast, MCGenerationDa
                 return if_block;
             } else {
                 if(ast->if_false == NULL) {
-                    update32BitValue(data->inst_mem, elsejmp, data->inst_mem->occupied - (elsejmp + 4));
+                    updateRelativeJumpTarget(data->inst_mem, elsejmp, data->inst_mem->occupied);
                     Value ret = {.type=VALUE_NONE};
                     return ret;
                 } else {
                     ifendjmp = addInstJmpRel(data->inst_mem, data->registers, 0);
-                    update32BitValue(data->inst_mem, elsejmp, data->inst_mem->occupied - (elsejmp + 4));
+                    updateRelativeJumpTarget(data->inst_mem, elsejmp, data->inst_mem->occupied);
                     Value else_block = generateMCForAst(ast->if_false, data);
                     if(else_block.type == VALUE_ERROR) {
                         return else_block;
                     } else {
-                        update32BitValue(data->inst_mem, ifendjmp, data->inst_mem->occupied - (ifendjmp + 4));
+                        updateRelativeJumpTarget(data->inst_mem, ifendjmp, data->inst_mem->occupied);
                         Value ret = {.type=VALUE_NONE};
                         return ret;
                     }
@@ -978,7 +978,7 @@ static Value generateMCForAfterFreeReg(AstFor* ast, MCGenerationData* data) {
         }
         Register ret_reg = getFirstRegister();
         data->registers |= ret_reg;
-        addInstMovImmToReg(data->inst_mem, data->registers, ret_reg, 0, false);
+        addInstMovImmToReg(data->inst_mem, data->registers, ret_reg, 0);
         Register vreg = 0;
         if (variable->type == VARIABLE_INT) {
             vreg = getFreeRegister(data->registers);
@@ -1018,7 +1018,7 @@ static Value generateMCForAfterFreeReg(AstFor* ast, MCGenerationData* data) {
             if (variable->type == VARIABLE_INT) {
                 Register reg = getFreeFRegister(data->registers);
                 data->registers |= reg;
-                addInstMovImmToReg(data->inst_mem, data->registers, reg, 1, false);
+                addInstMovImmToReg(data->inst_mem, data->registers, reg, 1);
                 addInstAdd(data->inst_mem, data->registers, vreg, vreg, reg);
                 data->registers &= ~reg;
                 addInstMovRegToMem(data->inst_mem, data->registers, vreg, &((VariableInt*)variable)->value);
@@ -1051,12 +1051,12 @@ static Value generateMCForAfterFreeReg(AstFor* ast, MCGenerationData* data) {
             return ret;
         }
         data->registers &= ~end.reg;
-        addInstMovImmToReg(data->inst_mem, data->registers, ret_reg, 1, false);
-        update32BitValue(data->inst_mem, jmp_to_ret, data->inst_mem->occupied - (jmp_to_ret + 4));
+        addInstMovImmToReg(data->inst_mem, data->registers, ret_reg, 1);
+        updateRelativeJumpTarget(data->inst_mem, jmp_to_ret, data->inst_mem->occupied);
         addInstReturn(data->inst_mem, data->registers);
         // This is the end of the subroutine
         data->registers = tmp_regs;
-        update32BitValue(data->inst_mem, jmp_after_cond, data->inst_mem->occupied - (jmp_after_cond + 4));
+        updateRelativeJumpTarget(data->inst_mem, jmp_after_cond, data->inst_mem->occupied);
         if (variable->type == VARIABLE_INT) {
             VariableInt* varib = (VariableInt*)variable;
             varib->for_jmp_loc = data->inst_mem->occupied;
@@ -1152,14 +1152,14 @@ static Value generateMCOnGoAfterFreeReg(AstSwitch* ast, MCGenerationData* data) 
         Register imm_reg = getFreeRegister(data->registers);
         data->registers |= imm_reg;
         for(int i = 0; i < ast->count; i++) {
-            addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, i, false); 
+            addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, i); 
             size_t pos;
             if(ast->type == AST_ON_GOSUB) {
                 size_t skip_call = addInstCondJmpRel(data->inst_mem, data->registers, COND_NE, index.reg, imm_reg, 0);
                 addInstPush(data->inst_mem, data->registers, index.reg);
                 pos = addInstCallRel(data->inst_mem, data->registers, 0);
                 addInstPop(data->inst_mem, data->registers, index.reg);
-                update32BitValue(data->inst_mem, skip_call, data->inst_mem->occupied - (skip_call + 4));
+                updateRelativeJumpTarget(data->inst_mem, skip_call, data->inst_mem->occupied);
             } else {
                 pos = addInstCondJmpRel(data->inst_mem, data->registers, COND_EQ, index.reg, imm_reg, 0);
             }
@@ -1281,13 +1281,13 @@ static Value generateMCIndexAfterFreeReg(AstIndex* ast, MCGenerationData* data) 
         data->registers |= index_reg;
         size_t indexing_size;
         if(variable->type == VARIABLE_INT_ARRAY) {
-            addInstMovImmToReg(data->inst_mem, data->registers, index_reg, (intptr_t)((VariableIntArray*)variable)->value, false);
+            addInstMovImmToReg(data->inst_mem, data->registers, index_reg, (intptr_t)((VariableIntArray*)variable)->value);
             indexing_size = sizeof(int64_t);
         } else if(variable->type == VARIABLE_FLOAT_ARRAY) {
-            addInstMovImmToReg(data->inst_mem, data->registers, index_reg, (intptr_t)((VariableFloatArray*)variable)->value, false);
+            addInstMovImmToReg(data->inst_mem, data->registers, index_reg, (intptr_t)((VariableFloatArray*)variable)->value);
             indexing_size = sizeof(double);
         } else if(variable->type == VARIABLE_STRING_ARRAY) {
-            addInstMovImmToReg(data->inst_mem, data->registers, index_reg, (intptr_t)((VariableStringArray*)variable)->str, false);
+            addInstMovImmToReg(data->inst_mem, data->registers, index_reg, (intptr_t)((VariableStringArray*)variable)->str);
             indexing_size = sizeof(char*);
         }
         for(int i = 0; i < ast->count; i++) {
@@ -1301,7 +1301,7 @@ static Value generateMCIndexAfterFreeReg(AstIndex* ast, MCGenerationData* data) 
                 Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
                 return ret;
             } else {
-                addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, indexing_size, false);
+                addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, indexing_size);
                 addInstMul(data->inst_mem, data->registers, imm_reg, imm_reg, ind.reg);
                 data->registers &= ~ind.reg;
                 addInstAdd(data->inst_mem, data->registers, index_reg, index_reg, imm_reg);
@@ -1357,7 +1357,7 @@ static Value generateMCReturn(Ast* ast, MCGenerationData* data) {
 static Value generateMCInteger(AstInt* ast, MCGenerationData* data) {
     Register reg = getFreeRegister(data->registers);
     data->registers |= reg;
-    addInstMovImmToReg(data->inst_mem, data->registers, reg, ast->value, false);
+    addInstMovImmToReg(data->inst_mem, data->registers, reg, ast->value);
     Value ret = {
         .type = VALUE_INT,
         .reg = reg,

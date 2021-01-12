@@ -9,7 +9,7 @@ LINK=gcc
 DFLAGS=-g -O0 -fsanitize=address,undefined
 RFLAGS=-O3
 CFLAGS=-I$(IDIR) -Wall $(DFLAGS)
-LIBS=
+LIBS=-lm
 
 _SRC=$(shell find $(SDIR) -type f -name '*.c')
 OBJ=$(patsubst $(SDIR)/%.c,$(ODIR)/%.o,$(_SRC))

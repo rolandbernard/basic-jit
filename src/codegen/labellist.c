@@ -30,9 +30,9 @@ int fillUnhandledLabelLocations(UnhandeledLabelList* list, VariableTable* table,
             return i;
         } else {
             if(list->data[i].for_restore) {
-                update64BitValue(inst_mem, list->data[i].position, label->data_pos);
+                updateImmediateValue(inst_mem, list->data[i].position, label->data_pos);
             } else {
-                update32BitValue(inst_mem, list->data[i].position, label->pos - (list->data[i].position + 4));
+                updateRelativeJumpTarget(inst_mem, list->data[i].position, label->pos);
             }
         }
     }
