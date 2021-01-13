@@ -35,6 +35,38 @@
 
 #define COND_BRANCH_IMM_PAD0 0b0101010
 
+#define EXCEPTION_PAD0 0b11010100
+
+#define HINTS_PAD0 0b11010101000000110010
+#define HINTS_PAD1 0b11111
+
+#define BARRIERS_PAD0 0b11010101000000110011
+
+#define PSTATE_PAD0 0b1101010100000
+#define PSTATE_PAD1 0b0100
+
+#define SYSTEM_INSTR_PAD0 0b1101010100
+#define SYSTEM_INSTR_PAD1 0b01
+
+#define SYSTEM_MOVE_PAD0 0b1101010100
+#define SYSTEM_MOVE_PAD1 0b1
+
+#define UNCOND_BRANCH_REG_PAD0 0b1101011
+
+#define UNCOND_BRANCH_REG_OPC_BR  0b0000
+#define UNCOND_BRANCH_REG_OPC_BLR 0b0001
+#define UNCOND_BRANCH_REG_OPC_RET 0b0010
+
+#define UNCOND_BRANCH_REG_OP2_BR_BLR_RET 0b11111
+#define UNCOND_BRANCH_REG_OP3_BR_BLR_RET 0b000000
+#define UNCOND_BRANCH_REG_OP4_BR_BLR_RET 0b00000
+
+#define UNCOND_BRANCH_IMM_PAD0 0b00101
+
+#define UNCOND_BRANCH_IMM_OP_B  0b0
+#define UNCOND_BRANCH_IMM_OP_BL 0b1
+
+
 typedef union {
     struct {
         uint32_t pad1 : 25;
@@ -135,6 +167,67 @@ typedef union {
         uint32_t o1 : 1;
         uint32_t pad0 : 7;
     } cond_branch_imm;
+    struct {
+        uint32_t ll : 2;
+        uint32_t op2 : 3;
+        uint32_t imm16 : 16;
+        uint32_t opc : 3;
+        uint32_t pad0 : 8;
+    } exception;
+    struct {
+        uint32_t pad1 : 5;
+        uint32_t op2 : 3;
+        uint32_t crm : 4;
+        uint32_t pad0 : 20;
+    } hints;
+    struct {
+        uint32_t rt : 5;
+        uint32_t op2 : 3;
+        uint32_t crm : 4;
+        uint32_t pad0 : 20;
+    } barriers;
+    struct {
+        uint32_t rt : 5;
+        uint32_t op2 : 3;
+        uint32_t crm : 4;
+        uint32_t pad1 : 4;
+        uint32_t op1 : 3;
+        uint32_t pad0 : 13;
+    } pstate;
+    struct {
+        uint32_t rt : 5;
+        uint32_t op2 : 3;
+        uint32_t crm : 4;
+        uint32_t crn : 4;
+        uint32_t op1 : 3;
+        uint32_t pad1 : 2;
+        uint32_t l : 1;
+        uint32_t pad0 : 10;
+    } system_instr;
+    struct {
+        uint32_t rt : 5;
+        uint32_t op2 : 3;
+        uint32_t crm : 4;
+        uint32_t crn : 4;
+        uint32_t op1 : 3;
+        uint32_t o0 : 1;
+        uint32_t pad1 : 1;
+        uint32_t l : 1;
+        uint32_t pad0 : 10;
+    } system_move;
+    struct {
+        uint32_t op4 : 5;
+        uint32_t rn : 5;
+        uint32_t op3 : 6;
+        uint32_t op2 : 5;
+        uint32_t opc : 4;
+        uint32_t pad0 : 7;
+    } uncond_branch_reg;
+    struct {
+        uint32_t imm26 : 26;
+        uint32_t pad0 : 5;
+        uint32_t op : 1;
+    } uncond_branch_imm;
     uint32_t instruction;
 } Aarch64Instruction;
 
