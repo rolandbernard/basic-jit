@@ -1,5 +1,5 @@
 
-// #ifdef __aarch64__
+#ifdef __aarch64__
 
 #include "codegen/aarch64/aarch64.h"
 
@@ -30,4 +30,4 @@ Aarch64Instruction getInstruction(StackAllocator* mem, size_t pos) {
     return instr;
 }
 
-// #endif
+#endif
