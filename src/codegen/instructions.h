@@ -46,7 +46,7 @@ size_t addInstMovImmToReg(StackAllocator* mem, RegisterSet regs, Register reg, i
 
 void addInstMovMemToReg(StackAllocator* mem, RegisterSet regs, Register reg, void* addr);
 
-size_t addInstMovRegToMem(StackAllocator* mem, RegisterSet regs, Register reg, void* addr);
+void addInstMovRegToMem(StackAllocator* mem, RegisterSet regs, Register reg, void* addr);
 
 void addInstMovMemRegToReg(StackAllocator* mem, RegisterSet regs, Register reg, Register addr);
 

@@ -83,21 +83,17 @@ void addInstMovMemToReg(StackAllocator* mem, RegisterSet regs, Register reg, voi
     addMovMemRegToReg(mem, reg, reg);
 }
 
-size_t addInstMovRegToMem(StackAllocator* mem, RegisterSet regs, Register reg, void* addr) {
-    size_t ret = 0;
+void addInstMovRegToMem(StackAllocator* mem, RegisterSet regs, Register reg, void* addr) {
     int free_reg = getFreeRegister(regs);
     if(free_reg == 0) {
         addPush(mem, REG_A);
         addMovImm64ToReg(mem, REG_A, (uint64_t)addr);
-        ret = mem->occupied - 8;
         addMovRegToMemReg(mem, reg, reg);
         addPop(mem, REG_A);
     } else {
         addMovImm64ToReg(mem, free_reg, (uint64_t)addr);
-        ret = mem->occupied - 8;
         addMovRegToMemReg(mem, free_reg, reg);
     }
-    return ret;
 }
 
 void addInstMovMemRegToReg(StackAllocator* mem, RegisterSet regs, Register reg, Register addr) {
