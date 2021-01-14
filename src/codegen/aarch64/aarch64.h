@@ -161,6 +161,125 @@
 #define ADD_SHIFT_REG_OP_ADD 0b0
 #define ADD_SHIFT_REG_OP_SUB 0b1
 
+#define ADD_EXT_REG_CNST0 0b01011
+#define ADD_EXT_REG_CNST1 0b1
+
+#define ADD_EXT_REG_OP_ADD 0b0
+#define ADD_EXT_REG_OP_SUB 0b1
+
+#define ADD_CARRY_CNST0 0b11010000
+#define ADD_CARRY_CNST1 0b000000
+
+#define ADD_CARRY_OP_ADC 0b0
+#define ADD_CARRY_OP_SBC 0b1
+
+#define PROC_REG_THREE_SOURCE_CNST0 0b11011
+
+#define CNVT_FP_FIXED_CNST0 0b0
+#define CNVT_FP_FIXED_CNST1 0b11110
+#define CNVT_FP_FIXED_CNST2 0b0
+
+#define CNVT_FP_FIXED_OPCODE_S2F 0b010
+#define CNVT_FP_FIXED_OPCODE_U2F 0b011
+#define CNVT_FP_FIXED_OPCODE_F2S 0b000
+#define CNVT_FP_FIXED_OPCODE_F2U 0b001
+
+#define CNVT_FP_FIXED_PTYPE_SINGLE 0b00
+#define CNVT_FP_FIXED_PTYPE_DOUBLE 0b01
+#define CNVT_FP_FIXED_PTYPE_HALF   0b11
+
+#define CNVT_FP_FIXED_RMODE_FPCR 0b00
+#define CNVT_FP_FIXED_RMODE_ZERO 0b11
+
+#define CNVT_FP_INT_CNST0 0b0
+#define CNVT_FP_INT_CNST1 0b11110
+#define CNVT_FP_INT_CNST2 0b1
+#define CNVT_FP_INT_CNST3 0b000000
+
+#define CNVT_FP_INT_OPCODE_F2S   0b000
+#define CNVT_FP_INT_OPCODE_F2U   0b001
+#define CNVT_FP_INT_OPCODE_S2F   0b010
+#define CNVT_FP_INT_OPCODE_U2F   0b011
+#define CNVT_FP_INT_OPCODE_MOV2R 0b110
+#define CNVT_FP_INT_OPCODE_MOV2F 0b111
+
+#define CNVT_FP_FIXED_PTYPE_SINGLE 0b00
+#define CNVT_FP_FIXED_PTYPE_DOUBLE 0b01
+#define CNVT_FP_FIXED_PTYPE_HALF   0b11
+
+#define CNVT_FP_FIXED_RMODE_NEAR 0b00
+#define CNVT_FP_FIXED_RMODE_NEG  0b10
+#define CNVT_FP_FIXED_RMODE_POS  0b01
+#define CNVT_FP_FIXED_RMODE_ZERO 0b11
+
+#define PROC_FP_ONE_SOURCE_CNST0 0b0
+#define PROC_FP_ONE_SOURCE_CNST1 0b11110
+#define PROC_FP_ONE_SOURCE_CNST2 0b1
+#define PROC_FP_ONE_SOURCE_CNST3 0b10000
+
+#define PROC_FP_ONE_SOURCE_OPCODE_FMOV 0b000000
+#define PROC_FP_ONE_SOURCE_OPCODE_FABS 0b000001
+#define PROC_FP_ONE_SOURCE_OPCODE_FNEG 0b000010
+#define PROC_FP_ONE_SOURCE_OPCODE_FSQRT 0b000011
+#define PROC_FP_ONE_SOURCE_OPCODE_FTOS 0b000100
+#define PROC_FP_ONE_SOURCE_OPCODE_FTOD 0b000101
+#define PROC_FP_ONE_SOURCE_OPCODE_FTOH 0b000111
+
+#define FP_CMP_CNST0 0b0
+#define FP_CMP_CNST1 0b11110
+#define FP_CMP_CNST2 0b1
+#define FP_CMP_CNST3 0b1000
+
+#define FP_CMP_OPCODE2_FCMP   0b00000
+#define FP_CMP_OPCODE2_FCMPZ  0b01000
+#define FP_CMP_OPCODE2_FCMPE  0b10000
+#define FP_CMP_OPCODE2_FCMPZE 0b11000
+
+#define FP_CMP_PTYPE_SINGLE 0b00
+#define FP_CMP_PTYPE_DOUBLE 0b01
+#define FP_CMP_PTYPE_HALF   0b11
+
+#define FP_IMM_CNST0 0b0
+#define FP_IMM_CNST1 0b11110
+#define FP_IMM_CNST2 0b1
+#define FP_IMM_CNST3 0b100
+
+#define FP_IMM_PTYPE_SINGLE 0b00
+#define FP_IMM_PTYPE_DOUBLE 0b01
+#define FP_IMM_PTYPE_HALF   0b11
+
+#define PROC_FP_TWO_SOURCE_CNST0 0b0
+#define PROC_FP_TWO_SOURCE_CNST1 0b11110
+#define PROC_FP_TWO_SOURCE_CNST2 0b1
+#define PROC_FP_TWO_SOURCE_CNST3 0b10
+
+#define PROC_FP_TWO_SOURCE_OPCODE_FMUL   0b0000
+#define PROC_FP_TWO_SOURCE_OPCODE_FDIV   0b0001
+#define PROC_FP_TWO_SOURCE_OPCODE_FADD   0b0010
+#define PROC_FP_TWO_SOURCE_OPCODE_FSUB   0b0011
+#define PROC_FP_TWO_SOURCE_OPCODE_FMAX   0b0100
+#define PROC_FP_TWO_SOURCE_OPCODE_FMIN   0b0101
+#define PROC_FP_TWO_SOURCE_OPCODE_FMAXNM 0b0110
+#define PROC_FP_TWO_SOURCE_OPCODE_FMINNM 0b0111
+#define PROC_FP_TWO_SOURCE_OPCODE_FNMUL  0b0111
+
+#define PROC_FP_TWO_SOURCE_PTYPE_SINGLE 0b00
+#define PROC_FP_TWO_SOURCE_PTYPE_DOUBLE 0b01
+#define PROC_FP_TWO_SOURCE_PTYPE_HALF   0b11
+
+#define PROC_FP_THREE_SOURCE_CNST0 0b0
+#define PROC_FP_THREE_SOURCE_CNST1 0b11111
+
+#define PROC_FP_THREE_SOURCE_PTYPE_SINGLE 0b00
+#define PROC_FP_THREE_SOURCE_PTYPE_DOUBLE 0b01
+#define PROC_FP_THREE_SOURCE_PTYPE_HALF   0b11
+
+#define PROC_FP_THREE_SOURCE_O0_FMADD 0b0
+#define PROC_FP_THREE_SOURCE_O0_FMSUB 0b1
+
+#define PROC_FP_THREE_SOURCE_O0 0b0110
+#define PROC_FP_THREE_SOURCE_O0 0b0111
+
 typedef union {
     struct {
         uint32_t pad1 : 25;
@@ -467,10 +586,141 @@ typedef union {
         uint32_t cnst1 : 1;
         uint32_t shift : 2;
         uint32_t cnst0 : 5;
-        uint32_t 1 : 1;
+        uint32_t s : 1;
         uint32_t op : 1;
         uint32_t sf : 1;
     } add_shift_reg;
+    struct {
+        uint32_t rd : 5;
+        uint32_t rn : 5;
+        uint32_t imm3 : 3;
+        uint32_t option : 3;
+        uint32_t rm : 5;
+        uint32_t cnst1 : 1;
+        uint32_t opt : 2;
+        uint32_t cnst0 : 5;
+        uint32_t s : 1;
+        uint32_t op : 1;
+        uint32_t sf : 1;
+    } add_ext_reg;
+    struct {
+        uint32_t rd : 5;
+        uint32_t rn : 5;
+        uint32_t cnst1 : 6;
+        uint32_t rm : 5;
+        uint32_t cnst0 : 8;
+        uint32_t s : 1;
+        uint32_t op : 1;
+        uint32_t sf : 1;
+    } add_carry;
+    struct {
+        uint32_t rd : 5;
+        uint32_t rn : 5;
+        uint32_t ra : 5;
+        uint32_t o0 : 1;
+        uint32_t rm : 5;
+        uint32_t op31 : 3;
+        uint32_t cnst0 : 5;
+        uint32_t op54 : 2;
+        uint32_t sf : 1;
+    } proc_reg_three_source;
+    struct {
+        uint32_t pad0 : 10;
+        uint32_t op3 : 9;
+        uint32_t op2 : 4;
+        uint32_t op1 : 2;
+        uint32_t cnst0 : 3;
+        uint32_t op0 : 4;
+    } proc_fp;
+    struct {
+        uint32_t rd : 5;
+        uint32_t rn : 5;
+        uint32_t scale : 6;
+        uint32_t opcode : 3;
+        uint32_t rmode : 2;
+        uint32_t cnst2 : 1;
+        uint32_t ptyoe : 2;
+        uint32_t cnst1 : 5;
+        uint32_t s : 1;
+        uint32_t cnst0 : 1;
+        uint32_t sf : 1;
+    } cnvt_fp_fixed;
+    struct {
+        uint32_t rd : 5;
+        uint32_t rn : 5;
+        uint32_t cnst3 : 6;
+        uint32_t opcode : 3;
+        uint32_t rmode : 2;
+        uint32_t cnst2 : 1;
+        uint32_t ptyoe : 2;
+        uint32_t cnst1 : 5;
+        uint32_t s : 1;
+        uint32_t cnst0 : 1;
+        uint32_t sf : 1;
+    } cnvt_fp_int;
+    struct {
+        uint32_t rd : 5;
+        uint32_t rn : 5;
+        uint32_t cnst3 : 5;
+        uint32_t opcode : 6;
+        uint32_t cnst2 : 1;
+        uint32_t ptype : 2;
+        uint32_t cnst1 : 5;
+        uint32_t s : 1;
+        uint32_t cnst0 : 1;
+        uint32_t m : 1;
+    } proc_fp_one_source;
+    struct {
+        uint32_t opcode2 : 5;
+        uint32_t rn : 5;
+        uint32_t cnst3 : 4;
+        uint32_t op : 2;
+        uint32_t rm : 5;
+        uint32_t cnst2 : 1;
+        uint32_t ptype : 2;
+        uint32_t cnst1 : 5;
+        uint32_t s : 1;
+        uint32_t cnst0 : 1;
+        uint32_t m : 1;
+    } fp_cmp;
+    struct {
+        uint32_t rd : 5;
+        uint32_t imm5 : 5;
+        uint32_t cnst3 : 3;
+        uint32_t imm8 : 8;
+        uint32_t cnst2 : 1;
+        uint32_t ptype : 2;
+        uint32_t cnst1 : 5;
+        uint32_t s : 1;
+        uint32_t cnst0 : 1;
+        uint32_t m : 1;
+    } fp_imm;
+    struct {
+        uint32_t rd : 5;
+        uint32_t rn : 5;
+        uint32_t cnst3 : 2;
+        uint32_t opcode : 4;
+        uint32_t rm : 5;
+        uint32_t cnst2 : 1;
+        uint32_t ptype : 2;
+        uint32_t cnst1 : 5;
+        uint32_t s : 1;
+        uint32_t cnst0 : 1;
+        uint32_t m : 1;
+    } proc_fp_two_source;
+    struct {
+        uint32_t rd : 5;
+        uint32_t rn : 5;
+        uint32_t ra : 5;
+        uint32_t o0 : 1;
+        uint32_t rm : 5;
+        uint32_t o1 : 1;
+        uint32_t ptype : 2;
+        uint32_t cnst1 : 5;
+        uint32_t s : 1;
+        uint32_t cnst0 : 1;
+        uint32_t m : 1;
+    } proc_fp_three_source;
     uint32_t instruction;
 } Aarch64Instruction;
 
