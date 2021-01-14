@@ -7,6 +7,10 @@
 #define REG_COUNT 29
 #define FREG_COUNT 32
 
+#define REG_X(X) (1 << X)
+
+#define REG_D(X) (1 << (REG_COUNT + X))
+
 #define REG_SPECIAL 31
 #define REG_LINK 30
 
@@ -245,9 +249,9 @@
 #define CNVT_FP_INT_OPCODE_MOV2R 0b110
 #define CNVT_FP_INT_OPCODE_MOV2F 0b111
 
-#define CNVT_FP_FIXED_PTYPE_SINGLE 0b00
-#define CNVT_FP_FIXED_PTYPE_DOUBLE 0b01
-#define CNVT_FP_FIXED_PTYPE_HALF   0b11
+#define CNVT_FP_INT_PTYPE_SINGLE 0b00
+#define CNVT_FP_INT_PTYPE_DOUBLE 0b01
+#define CNVT_FP_INT_PTYPE_HALF   0b11
 
 #define CNVT_FP_FIXED_RMODE_NEAR 0b00
 #define CNVT_FP_FIXED_RMODE_NEG  0b10
@@ -266,6 +270,10 @@
 #define PROC_FP_ONE_SOURCE_OPCODE_FTOS 0b000100
 #define PROC_FP_ONE_SOURCE_OPCODE_FTOD 0b000101
 #define PROC_FP_ONE_SOURCE_OPCODE_FTOH 0b000111
+
+#define PROC_FP_ONE_SOURCE_PTYPE_SINGLE 0b00
+#define PROC_FP_ONE_SOURCE_PTYPE_DOUBLE 0b01
+#define PROC_FP_ONE_SOURCE_PTYPE_HALF   0b11
 
 #define FP_CMP_CNST0 0b0
 #define FP_CMP_CNST1 0b11110
@@ -691,7 +699,7 @@ typedef union {
         uint32_t opcode : 3;
         uint32_t rmode : 2;
         uint32_t cnst2 : 1;
-        uint32_t ptyoe : 2;
+        uint32_t ptype : 2;
         uint32_t cnst1 : 5;
         uint32_t s : 1;
         uint32_t cnst0 : 1;
