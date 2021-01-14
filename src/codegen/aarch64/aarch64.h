@@ -79,6 +79,88 @@
 #define LOAD_REG_LIT_CNST0 0b011
 #define LOAD_REG_LIT_CNST1 0b00
 
+#define LOAD_STORE_REG_UNSC_IMM_CNST0 0b111
+#define LOAD_STORE_REG_UNSC_IMM_CNST1 0b00
+#define LOAD_STORE_REG_UNSC_IMM_CNST2 0b0
+#define LOAD_STORE_REG_UNSC_IMM_CNST3 0b00
+
+#define LOAD_STORE_REG_UNSC_IMM_OPC_STUR  0b00
+#define LOAD_STORE_REG_UNSC_IMM_OPC_LDUR  0b01
+#define LOAD_STORE_REG_UNSC_IMM_OPC_LDURS 0b10
+
+#define LOAD_STORE_REG_UNSC_IMM_SIZE_BYTE   0b00
+#define LOAD_STORE_REG_UNSC_IMM_SIZE_HALF   0b01
+#define LOAD_STORE_REG_UNSC_IMM_SIZE_WORD   0b10
+#define LOAD_STORE_REG_UNSC_IMM_SIZE_DOUBLE 0b11
+
+#define LOAD_STORE_REG_IMM_POST_CNST0 0b111
+#define LOAD_STORE_REG_IMM_POST_CNST1 0b00
+#define LOAD_STORE_REG_IMM_POST_CNST2 0b0
+#define LOAD_STORE_REG_IMM_POST_CNST3 0b01
+
+#define LOAD_STORE_REG_IMM_POST_OPC_STR  0b00
+#define LOAD_STORE_REG_IMM_POST_OPC_LDR  0b01
+#define LOAD_STORE_REG_IMM_POST_OPC_LDRS 0b10
+
+#define LOAD_STORE_REG_IMM_POST_SIZE_BYTE   0b00
+#define LOAD_STORE_REG_IMM_POST_SIZE_HALF   0b01
+#define LOAD_STORE_REG_IMM_POST_SIZE_WORD   0b10
+#define LOAD_STORE_REG_IMM_POST_SIZE_DOUBLE 0b11
+
+#define LOAD_STORE_REG_IMM_PRE_CNST0 0b111
+#define LOAD_STORE_REG_IMM_PRE_CNST1 0b00
+#define LOAD_STORE_REG_IMM_PRE_CNST2 0b0
+#define LOAD_STORE_REG_IMM_PRE_CNST3 0b11
+
+#define LOAD_STORE_REG_IMM_PRE_OPC_STR  0b00
+#define LOAD_STORE_REG_IMM_PRE_OPC_LDR  0b01
+#define LOAD_STORE_REG_IMM_PRE_OPC_LDRS 0b10
+
+#define LOAD_STORE_REG_IMM_PRE_SIZE_BYTE   0b00
+#define LOAD_STORE_REG_IMM_PRE_SIZE_HALF   0b01
+#define LOAD_STORE_REG_IMM_PRE_SIZE_WORD   0b10
+#define LOAD_STORE_REG_IMM_PRE_SIZE_DOUBLE 0b11
+
+#define LOAD_STORE_REG_REG_CNST0 0b111
+#define LOAD_STORE_REG_REG_CNST1 0b00
+#define LOAD_STORE_REG_REG_CNST2 0b1
+#define LOAD_STORE_REG_REG_CNST3 0b10
+
+#define LOAD_STORE_REG_REG_OPC_STR  0b00
+#define LOAD_STORE_REG_REG_OPC_LDR  0b01
+#define LOAD_STORE_REG_REG_OPC_LDRS 0b10
+
+#define LOAD_STORE_REG_REG_SIZE_BYTE   0b00
+#define LOAD_STORE_REG_REG_SIZE_HALF   0b01
+#define LOAD_STORE_REG_REG_SIZE_WORD   0b10
+#define LOAD_STORE_REG_REG_SIZE_DOUBLE 0b11
+
+#define PROC_REG_TWO_SOURCE_CNST0 0b0
+#define PROC_REG_TWO_SOURCE_CNST1 0b11010110
+
+#define PROC_REG_TWO_SOURCE_OPCODE_UDIV 0b000010
+#define PROC_REG_TWO_SOURCE_OPCODE_SDIV 0b000011
+#define PROC_REG_TWO_SOURCE_OPCODE_LSLV 0b001000
+#define PROC_REG_TWO_SOURCE_OPCODE_LSRV 0b001001
+#define PROC_REG_TWO_SOURCE_OPCODE_ASRV 0b001010
+#define PROC_REG_TWO_SOURCE_OPCODE_RORV 0b001011
+
+#define PROC_REG_ONE_SOURCE_CNST0 0b1
+#define PROC_REG_ONE_SOURCE_CNST1 0b11010110
+
+#define LOGICAL_SHIFT_REG_CNST0 0b01010
+
+#define LOGICAL_SHIFT_REG_OPC_AND 0b00
+#define LOGICAL_SHIFT_REG_OPC_ORR 0b01
+#define LOGICAL_SHIFT_REG_OPC_EOR 0b10
+#define LOGICAL_SHIFT_REG_OPC_ANDS 0b10
+
+#define ADD_SHIFT_REG_CNST0 0b01011
+#define ADD_SHIFT_REG_CNST1 0b0
+
+#define ADD_SHIFT_REG_OP_ADD 0b0
+#define ADD_SHIFT_REG_OP_SUB 0b1
+
 typedef union {
     struct {
         uint32_t pad1 : 25;
@@ -275,6 +357,120 @@ typedef union {
         uint32_t cnst0 : 3;
         uint32_t opc : 2;
     } load_reg_lit;
+    struct {
+        uint32_t rt : 5;
+        uint32_t rn : 5;
+        uint32_t cnst3 : 2;
+        uint32_t imm9 : 9;
+        uint32_t cnst2 : 1;
+        uint32_t opc : 2;
+        uint32_t cnst1 : 2;
+        uint32_t v : 1;
+        uint32_t cnst0 : 3;
+        uint32_t size : 2;
+    } load_store_reg_unsc_imm;
+    struct {
+        uint32_t rt : 5;
+        uint32_t rn : 5;
+        uint32_t cnst3 : 2;
+        uint32_t imm9 : 9;
+        uint32_t cnst2 : 1;
+        uint32_t opc : 2;
+        uint32_t cnst1 : 2;
+        uint32_t v : 1;
+        uint32_t cnst0 : 3;
+        uint32_t size : 2;
+    } load_store_reg_imm_post;
+    struct {
+        uint32_t rt : 5;
+        uint32_t rn : 5;
+        uint32_t cnst3 : 2;
+        uint32_t imm9 : 9;
+        uint32_t cnst2 : 1;
+        uint32_t opc : 2;
+        uint32_t cnst1 : 2;
+        uint32_t v : 1;
+        uint32_t cnst0 : 3;
+        uint32_t size : 2;
+    } load_store_reg_imm_pre;
+    struct {
+        uint32_t rt : 5;
+        uint32_t rn : 5;
+        uint32_t cnst3 : 2;
+        uint32_t s : 1;
+        uint32_t option : 3;
+        uint32_t rm : 5;
+        uint32_t cnst2 : 1;
+        uint32_t opc : 2;
+        uint32_t cnst1 : 2;
+        uint32_t v : 1;
+        uint32_t cnst0 : 3;
+        uint32_t size : 2;
+    } load_store_reg_reg;
+    struct {
+        uint32_t rt : 5;
+        uint32_t rn : 5;
+        uint32_t imm12 : 12;
+        uint32_t opc : 2;
+        uint32_t cnst1 : 2;
+        uint32_t v : 1;
+        uint32_t cnst0 : 3;
+        uint32_t size : 2;
+    } load_store_reg_unsi_imm;
+    struct {
+        uint32_t pad3 : 10;
+        uint32_t op3 : 6;
+        uint32_t pad2 : 5;
+        uint32_t op2 : 4;
+        uint32_t cnst0 : 3;
+        uint32_t op1 : 1;
+        uint32_t pad1 : 1;
+        uint32_t op0 : 1;
+        uint32_t pad0 : 1;
+    } proc_reg;
+    struct {
+        uint32_t rd : 5;
+        uint32_t rn : 5;
+        uint32_t opcode : 6;
+        uint32_t rm : 5;
+        uint32_t cnst1 : 8;
+        uint32_t s : 1;
+        uint32_t cnst0 : 1;
+        uint32_t sf : 1;
+    } proc_reg_two_source;
+    struct {
+        uint32_t rd : 5;
+        uint32_t rn : 5;
+        uint32_t opcode : 6;
+        uint32_t opcode2 : 6;
+        uint32_t cnst1 : 8;
+        uint32_t s : 1;
+        uint32_t cnst0 : 1;
+        uint32_t sf : 1;
+    } proc_reg_one_source;
+    struct {
+        uint32_t rd : 5;
+        uint32_t rn : 5;
+        uint32_t imm6 : 6;
+        uint32_t rm : 5;
+        uint32_t n : 1;
+        uint32_t shift : 2;
+        uint32_t cnst0 : 5;
+        uint32_t opc : 2;
+        uint32_t sf : 1;
+    } logical_shift_reg;
+    struct {
+        uint32_t rd : 5;
+        uint32_t rn : 5;
+        uint32_t imm6 : 6;
+        uint32_t rm : 5;
+        uint32_t cnst1 : 1;
+        uint32_t shift : 2;
+        uint32_t cnst0 : 5;
+        uint32_t 1 : 1;
+        uint32_t op : 1;
+        uint32_t sf : 1;
+    } add_shift_reg;
     uint32_t instruction;
 } Aarch64Instruction;
 
