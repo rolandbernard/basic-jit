@@ -6,9 +6,9 @@ SDIR=./src
 
 CC=gcc
 LINK=gcc
-DFLAGS=-g -O0 -fsanitize=address,undefined
+DFLAGS=-g -O0 -fsanitize=address,undefined -DDEBUG
 RFLAGS=-O3
-CFLAGS=-I$(IDIR) -Wall $(DFLAGS)
+CFLAGS=-I$(IDIR) -Wall $(RFLAGS)
 LIBS=-lm
 
 _SRC=$(shell find $(SDIR) -type f -name '*.c')
