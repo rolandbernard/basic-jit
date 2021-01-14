@@ -2,6 +2,10 @@
 #define _AARCH64_H_
 
 #include <stdint.h>
+#include "common/stackalloc.h"
+
+#define REG_COUNT 29
+#define FREG_COUNT 31
 
 #define PC_REL_CNST0 0b10000
 
@@ -134,6 +138,18 @@
 #define LOAD_STORE_REG_REG_SIZE_HALF   0b01
 #define LOAD_STORE_REG_REG_SIZE_WORD   0b10
 #define LOAD_STORE_REG_REG_SIZE_DOUBLE 0b11
+
+#define LOAD_STORE_REG_UNSI_IMM_CNST0 0b111
+#define LOAD_STORE_REG_UNSI_IMM_CNST1 0b01
+
+#define LOAD_STORE_REG_UNSI_IMM_OPC_STR  0b00
+#define LOAD_STORE_REG_UNSI_IMM_OPC_LDR  0b01
+#define LOAD_STORE_REG_UNSI_IMM_OPC_LDRS 0b10
+
+#define LOAD_STORE_REG_UNSI_IMM_SIZE_BYTE   0b00
+#define LOAD_STORE_REG_UNSI_IMM_SIZE_HALF   0b01
+#define LOAD_STORE_REG_UNSI_IMM_SIZE_WORD   0b10
+#define LOAD_STORE_REG_UNSI_IMM_SIZE_DOUBLE 0b11
 
 #define PROC_REG_TWO_SOURCE_CNST0 0b0
 #define PROC_REG_TWO_SOURCE_CNST1 0b11010110
@@ -723,5 +739,11 @@ typedef union {
     } proc_fp_three_source;
     uint32_t instruction;
 } Aarch64Instruction;
+
+void addInstruction(StackAllocator* mem, Aarch64Instruction instr);
+
+void updateInstruction(StackAllocator* mem, size_t pos, Aarch64Instruction instr);
+
+Aarch64Instruction getInstruction(StackAllocator* mem, size_t pos);
 
 #endif
