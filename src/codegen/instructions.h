@@ -6,6 +6,12 @@
 
 #include "common/stackalloc.h"
 
+#if !defined(__x86_64__) && !defined(__aarch64__)
+
+#error The target architecture is not supported
+
+#endif
+
 typedef enum {
     COND_EQ,
     COND_NE,
@@ -36,11 +42,11 @@ uint64_t getFirstFRegister();
 
 void addInstMovRegToReg(StackAllocator* mem, RegisterSet regs, Register dest, Register src);
 
-size_t addInstMovImmToReg(StackAllocator* mem, RegisterSet regs, Register reg, int64_t value, bool force64bit);
+size_t addInstMovImmToReg(StackAllocator* mem, RegisterSet regs, Register reg, int64_t value);
 
 void addInstMovMemToReg(StackAllocator* mem, RegisterSet regs, Register reg, void* addr);
 
-size_t addInstMovRegToMem(StackAllocator* mem, RegisterSet regs, Register reg, void* addr);
+void addInstMovRegToMem(StackAllocator* mem, RegisterSet regs, Register reg, void* addr);
 
 void addInstMovMemRegToReg(StackAllocator* mem, RegisterSet regs, Register reg, Register addr);
 
@@ -48,7 +54,7 @@ void addInstMovRegToMemReg(StackAllocator* mem, RegisterSet regs, Register addr,
 
 void addInstJmp(StackAllocator* mem, RegisterSet regs, void* to);
 
-size_t addInstJmpRel(StackAllocator* mem, RegisterSet regs, int32_t to);
+size_t addInstJmpRel(StackAllocator* mem, RegisterSet regs, size_t to);
 
 void addInstPush(StackAllocator* mem, RegisterSet regs, Register reg);
 
@@ -60,7 +66,7 @@ void addInstPopAll(StackAllocator* mem, RegisterSet regs);
 
 void addInstCall(StackAllocator* mem, RegisterSet regs, void* func);
 
-size_t addInstCallRel(StackAllocator* mem, RegisterSet regs, int32_t func);
+size_t addInstCallRel(StackAllocator* mem, RegisterSet regs, size_t to);
 
 void addInstReturn(StackAllocator* mem, RegisterSet regs);
 
@@ -74,7 +80,7 @@ void addInstDiv(StackAllocator* mem, RegisterSet regs, Register dest, Register a
 
 void addInstRem(StackAllocator* mem, RegisterSet regs, Register dest, Register a, Register b);
 
-size_t addInstCondJmpRel(StackAllocator* mem, RegisterSet regs, JmpCondistions cond, Register a, Register b, int32_t to);
+size_t addInstCondJmpRel(StackAllocator* mem, RegisterSet regs, JmpCondistions cond, Register a, Register b, size_t to);
 
 void addInstFAdd(StackAllocator* mem, RegisterSet regs, Register dest, Register a, Register b);
 
@@ -114,8 +120,8 @@ void addInstPushCallerRegs(StackAllocator* mem, RegisterSet regs);
 
 void addInstPopCallerRegs(StackAllocator* mem, RegisterSet regs);
 
-void update32BitValue(StackAllocator* mem, size_t pos, int32_t value);
+void updateRelativeJumpTarget(StackAllocator* mem, size_t pos, size_t value);
 
-void update64BitValue(StackAllocator* mem, size_t pos, int64_t value);
+void updateImmediateValue(StackAllocator* mem, size_t pos, int64_t value);
 
 #endif

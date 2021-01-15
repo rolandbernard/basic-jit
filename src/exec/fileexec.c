@@ -81,6 +81,9 @@ void executeFile(const char* filename) {
                 fprintf(stderr, "error: Unresolved label %s at line %i\n", label_list.data[err].name, label_list.data[err].line);
             } else {
                 int ret;
+#ifdef DEBUG
+                printMemoryContent(stderr, jit_memory.memory, jit_memory.occupied);
+#endif
                 if(executeFunctionInMemory(jit_memory.memory, jit_memory.occupied, &ret)) {
                     perror("error: Failed to execute");
                 }

@@ -476,13 +476,13 @@ static Value generateMCInputArrayElementAfterFreeReg(AstIndex* ast, MCGeneration
         data->registers |= index_reg;
         size_t indexing_size;
         if (variable->type == VARIABLE_INT_ARRAY) {
-            addInstMovImmToReg(data->inst_mem, data->registers, index_reg, (intptr_t)((VariableIntArray*)variable)->value, false);
+            addInstMovImmToReg(data->inst_mem, data->registers, index_reg, (intptr_t)((VariableIntArray*)variable)->value);
             indexing_size = sizeof(int64_t);
         } else if (variable->type == VARIABLE_FLOAT_ARRAY) {
-            addInstMovImmToReg(data->inst_mem, data->registers, index_reg, (intptr_t)((VariableFloatArray*)variable)->value, false);
+            addInstMovImmToReg(data->inst_mem, data->registers, index_reg, (intptr_t)((VariableFloatArray*)variable)->value);
             indexing_size = sizeof(double);
         } else if (variable->type == VARIABLE_STRING_ARRAY) {
-            addInstMovImmToReg(data->inst_mem, data->registers, index_reg, (intptr_t)((VariableStringArray*)variable)->str, false);
+            addInstMovImmToReg(data->inst_mem, data->registers, index_reg, (intptr_t)((VariableStringArray*)variable)->str);
             indexing_size = sizeof(char*);
         }
         for (int i = 0; i < index->count; i++) {
@@ -496,7 +496,7 @@ static Value generateMCInputArrayElementAfterFreeReg(AstIndex* ast, MCGeneration
                 Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
                 return ret;
             } else {
-                addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, indexing_size, false);
+                addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, indexing_size);
                 addInstMul(data->inst_mem, data->registers, imm_reg, imm_reg, ind.reg);
                 data->registers &= ~ind.reg;
                 addInstAdd(data->inst_mem, data->registers, index_reg, index_reg, imm_reg);

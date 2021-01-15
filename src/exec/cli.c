@@ -157,6 +157,9 @@ static void runProgram() {
         } else {
             int ret;
             signal(SIGINT, intHandler);
+#ifdef DEBUG
+            printMemoryContent(stderr, jit_memory.memory, jit_memory.occupied);
+#endif
             if(executeFunctionInMemory(jit_memory.memory, jit_memory.occupied, &ret)) {
                 perror("error: Failed to execute");
             }
@@ -226,7 +229,9 @@ static bool executeLine(const char* line) {
                     fprintf(stderr, "error: Unresolved label %s at line %i\n", label_list.data[err].name, label_list.data[err].line);
                 } else {
                     int ret;
-                    // printMemoryContent(stderr, jit_memory.memory, jit_memory.occupied);
+#ifdef DEBUG
+                    printMemoryContent(stderr, jit_memory.memory, jit_memory.occupied);
+#endif
                     if(executeFunctionInMemory(jit_memory.memory, jit_memory.occupied, &ret)) {
                         perror("error: Failed to execute");
                     } else if(ret == 42) {

@@ -5,16 +5,16 @@ IDIR=./src
 SDIR=./src
 
 CC=gcc
-LINK=g++
-DFLAGS=-g -O0 -fsanitize=address,undefined
+LINK=gcc
+DFLAGS=-g -O0 -fsanitize=address,undefined -DDEBUG
 RFLAGS=-O3
-CFLAGS=-I$(IDIR) -Wall $(DFLAGS)
-LIBS=
+CFLAGS=-I$(IDIR) -Wall $(RFLAGS)
+LIBS=-lm
 
-_SRC=$(wildcard $(SDIR)/*/*.c) $(wildcard $(SDIR)/*.c)
+_SRC=$(shell find $(SDIR) -type f -name '*.c')
 OBJ=$(patsubst $(SDIR)/%.c,$(ODIR)/%.o,$(_SRC))
 
-DEPS=$(wildcard $(IDIR)/*/*.h) $(wildcard $(IDIR)/*.h)
+DEPS=$(shell find $(IDIR) -type f -name '*.h')
 
 _BIN=basicjit
 BIN=$(patsubst %,$(BDIR)/%,$(_BIN))
