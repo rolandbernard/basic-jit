@@ -86,6 +86,7 @@ void addInstMovMemToReg(StackAllocator* mem, RegisterSet regs, Register reg, voi
 void addInstMovRegToMem(StackAllocator* mem, RegisterSet regs, Register reg, void* addr) {
     int free_reg = getFreeRegister(regs);
     if(free_reg == 0) {
+        // TODO: this causes a bug, when reg == REG_A
         addPush(mem, REG_A);
         addMovImm64ToReg(mem, REG_A, (uint64_t)addr);
         addMovRegToMemReg(mem, reg, reg);
@@ -127,6 +128,7 @@ void addInstPush(StackAllocator* mem, RegisterSet regs, Register reg) {
     if(reg >= (1 << REG_COUNT)) {
         int free_reg = getFreeRegister(regs);
         if(free_reg == 0) {
+            // TODO: this makes no sense
             addPush(mem, REG_A);
             addMovFRegToReg(mem, REG_A, reg);
             addPush(mem, REG_A);
@@ -144,6 +146,7 @@ void addInstPop(StackAllocator* mem, RegisterSet regs, Register reg) {
     if(reg >= (1 << REG_COUNT)) {
         int free_reg = getFreeRegister(regs);
         if(free_reg == 0) {
+            // TODO: this makes no sense
             addPush(mem, REG_A);
             addPop(mem, REG_A);
             addMovRegToFReg(mem, reg, REG_A);
@@ -231,6 +234,7 @@ void addInstSub(StackAllocator* mem, RegisterSet regs, Register dest, Register a
     } else if(b == dest) {
         int free_reg = getFreeRegister(regs);
         if (free_reg == 0) {
+            // TODO: this causes a bug, when a == REG_A || b == REG_A || dest == REG_A
             addPush(mem, REG_A);
             addMovRegToReg(mem, REG_A, b);
             addMovRegToReg(mem, dest, a);
