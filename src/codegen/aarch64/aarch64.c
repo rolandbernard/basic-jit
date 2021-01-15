@@ -23,10 +23,10 @@ Aarch64Instruction getInstruction(StackAllocator* mem, size_t pos) {
     uint8_t* ptr = mem->memory + pos;
     Aarch64Instruction instr;
     instr.instruction = 0;
-    instr.instruction |= ptr[0];
-    instr.instruction |= ptr[1] << 8;
-    instr.instruction |= ptr[2] << 16;
-    instr.instruction |= ptr[3] << 24;
+    instr.instruction |= ((uint32_t)ptr[0]);
+    instr.instruction |= ((uint32_t)ptr[1]) << 8UL;
+    instr.instruction |= ((uint32_t)ptr[2]) << 16UL;
+    instr.instruction |= ((uint32_t)ptr[3]) << 24UL;
     return instr;
 }
 

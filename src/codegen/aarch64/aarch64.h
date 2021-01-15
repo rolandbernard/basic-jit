@@ -4,12 +4,13 @@
 #include <stdint.h>
 #include "common/stackalloc.h"
 
-#define REG_COUNT 29
+#define REG_COUNT 32
+#define USER_REG_COUNT 32
 #define FREG_COUNT 32
 
-#define REG_X(X) (1 << X)
+#define REG_X(X) (1UL << X)
 
-#define REG_D(X) (1 << (REG_COUNT + X))
+#define REG_D(X) (1UL << (REG_COUNT + X))
 
 #define REG_SPECIAL 31
 #define REG_LINK 30
@@ -253,10 +254,10 @@
 #define CNVT_FP_INT_PTYPE_DOUBLE 0b01
 #define CNVT_FP_INT_PTYPE_HALF   0b11
 
-#define CNVT_FP_FIXED_RMODE_NEAR 0b00
-#define CNVT_FP_FIXED_RMODE_NEG  0b10
-#define CNVT_FP_FIXED_RMODE_POS  0b01
-#define CNVT_FP_FIXED_RMODE_ZERO 0b11
+#define CNVT_FP_INT_RMODE_NEAR 0b00
+#define CNVT_FP_INT_RMODE_NEG  0b10
+#define CNVT_FP_INT_RMODE_POS  0b01
+#define CNVT_FP_INT_RMODE_ZERO 0b11
 
 #define PROC_FP_ONE_SOURCE_CNST0 0b0
 #define PROC_FP_ONE_SOURCE_CNST1 0b11110

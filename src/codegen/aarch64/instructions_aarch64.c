@@ -1,4 +1,6 @@
 
+
+// #define __aarch64__
 #ifdef __aarch64__
 
 #include "codegen/instructions.h"
@@ -6,31 +8,31 @@
 
 static int regToNo(Register reg) {
     for(int i = 0; i < REG_COUNT; i++) {
-        if((reg & (1 << i)) != 0) {
+        if((reg & REG_X(i)) != 0) {
             return i;
         }
     }
-    for(int i = REG_COUNT; i < REG_COUNT + FREG_COUNT; i++) {
-        if((reg & (1 << i)) != 0) {
-            return i - REG_COUNT;
+    for(int i = 0; i < FREG_COUNT; i++) {
+        if((reg & REG_D(i)) != 0) {
+            return i;
         }
     }
     return 31;
 }
 
 uint64_t getFreeRegister(RegisterSet regs) {
-    for(int i = 0; i < REG_COUNT; i++) {
-        if((regs & (1 << i)) == 0) {
-            return 1 << i;
+    for(int i = 0; i < USER_REG_COUNT; i++) {
+        if((regs & REG_X(i)) == 0) {
+            return REG_X(i);
         }
     }
     return 0;
 }
 
 uint64_t getFreeFRegister(RegisterSet regs) {
-    for(int i = REG_COUNT; i < REG_COUNT + FREG_COUNT; i++) {
-        if((regs & (1 << i)) == 0) {
-            return 1 << i;
+    for(int i = 0; i < FREG_COUNT; i++) {
+        if((regs & REG_D(i)) == 0) {
+            return REG_D(i);
         }
     }
     return 0;
@@ -38,17 +40,17 @@ uint64_t getFreeFRegister(RegisterSet regs) {
 
 uint64_t getUsedRegister(RegisterSet regs) {
     for(int i = 0; i < REG_COUNT; i++) {
-        if((regs & (1 << i)) != 0) {
-            return 1 << i;
+        if((regs & REG_X(i)) != 0) {
+            return REG_X(i);
         }
     }
     return 0;
 }
 
 uint64_t getUsedFRegister(RegisterSet regs) {
-    for(int i = REG_COUNT; i < REG_COUNT + FREG_COUNT; i++) {
-        if((regs & (1 << i)) != 0) {
-            return 1 << i;
+    for(int i = 0; i < FREG_COUNT; i++) {
+        if((regs & REG_D(i)) != 0) {
+            return REG_D(i);
         }
     }
     return 0;
@@ -57,7 +59,7 @@ uint64_t getUsedFRegister(RegisterSet regs) {
 int countFreeRegister(RegisterSet regs) {
     int ret = 0;
     for(int i = 0; i < REG_COUNT; i++) {
-        if((regs & (1 << i)) == 0) {
+        if((regs & REG_X(i)) == 0) {
             ret++;
         }
     }
@@ -66,8 +68,8 @@ int countFreeRegister(RegisterSet regs) {
 
 int countFreeFRegister(RegisterSet regs) {
     int ret = 0;
-    for(int i = REG_COUNT; i < REG_COUNT + FREG_COUNT; i++) {
-        if((regs & (1 << i)) == 0) {
+    for(int i = 0; i < FREG_COUNT; i++) {
+        if((regs & REG_D(i)) == 0) {
             ret++;
         }
     }
@@ -75,11 +77,11 @@ int countFreeFRegister(RegisterSet regs) {
 }
 
 uint64_t getFirstRegister() {
-    return 1;
+    return REG_X(0);
 }
 
 uint64_t getFirstFRegister() {
-    return 1 << REG_COUNT;
+    return REG_D(0);
 }
 
 void addInstMovRegToReg(StackAllocator* mem, RegisterSet regs, Register dest, Register src) {
@@ -102,7 +104,7 @@ size_t addInstMovImmToReg(StackAllocator* mem, RegisterSet regs, Register reg, i
         instr.move_imm.sf = 1;
         instr.move_imm.hw = i;
         instr.move_imm.rd = regToNo(reg);
-        instr.move_imm.imm16 = value >> (16 * i);
+        instr.move_imm.imm16 = (value >> (16 * i)) & 0xffff;
         addInstruction(mem, instr);
     }
     return ret;
@@ -114,11 +116,24 @@ void addInstMovMemToReg(StackAllocator* mem, RegisterSet regs, Register reg, voi
 }
 
 void addInstMovRegToMem(StackAllocator* mem, RegisterSet regs, Register reg, void* addr) {
-    addInstMovImmToReg(mem, regs, reg, (int64_t)addr);
-    addInstMovRegToMemReg(mem, regs, reg, reg);
+    int free_reg = getFreeRegister(regs);
+    if(free_reg == 0) {
+        if (reg == REG_X(0)) {
+            free_reg = REG_X(1);
+        } else {
+            free_reg = REG_X(0);
+        }
+        addInstPush(mem, regs, free_reg);
+        addInstMovImmToReg(mem, regs, free_reg, (int64_t)addr);
+        addInstMovRegToMemReg(mem, regs, free_reg, reg);
+        addInstPop(mem, regs, free_reg);
+    } else {
+        addInstMovImmToReg(mem, regs, free_reg, (int64_t)addr);
+        addInstMovRegToMemReg(mem, regs, free_reg, reg);
+    }
 }
 
-void addInstMovMemRegToReg(StackAllocator* mem, RegisterSet regs, Register reg, Register addr) {
+void addInstMovMemRegToReg(StackAllocator* mem, RegisterSet regs, Register addr, Register reg) {
     Aarch64Instruction instr = { .instruction = 0, };
     instr.load_store_reg_unsi_imm.cnst0 = LOAD_STORE_REG_UNSI_IMM_CNST0;
     instr.load_store_reg_unsi_imm.cnst1 = LOAD_STORE_REG_UNSI_IMM_CNST1;
@@ -146,7 +161,7 @@ void addInstMovRegToMemReg(StackAllocator* mem, RegisterSet regs, Register addr,
 
 void addInstJmpReg(StackAllocator* mem, RegisterSet regs, Register reg) {
     Aarch64Instruction instr = { .instruction = 0, };
-    instr.uncond_branch_reg.cnst0 = UNCOND_BRANCH_IMM_CNST0;
+    instr.uncond_branch_reg.cnst0 = UNCOND_BRANCH_REG_CNST0;
     instr.uncond_branch_reg.op2 = UNCOND_BRANCH_REG_OP2_BR_BLR_RET;
     instr.uncond_branch_reg.op3 = UNCOND_BRANCH_REG_OP3_BR_BLR_RET;
     instr.uncond_branch_reg.op4 = UNCOND_BRANCH_REG_OP4_BR_BLR_RET;
@@ -171,7 +186,7 @@ void addInstJmp(StackAllocator* mem, RegisterSet regs, void* to) {
 
 size_t addInstJmpRel(StackAllocator* mem, RegisterSet regs, size_t to) {
     size_t ret = mem->occupied;
-    uint32_t rel = to - (mem->occupied + 4);
+    uint32_t rel = to - mem->occupied;
     Aarch64Instruction instr = { .instruction = 0, };
     instr.uncond_branch_imm.cnst0 = UNCOND_BRANCH_IMM_CNST0;
     instr.uncond_branch_imm.op = UNCOND_BRANCH_IMM_OP_B;
@@ -190,12 +205,12 @@ void addInstPush(StackAllocator* mem, RegisterSet regs, Register reg) {
     instr.load_store_reg_imm_pre.size = LOAD_STORE_REG_IMM_PRE_SIZE_DOUBLE;
     instr.load_store_reg_imm_pre.rn = REG_SPECIAL;
     instr.load_store_reg_imm_pre.rt = regToNo(reg);
-    if(reg >= (1 << REG_COUNT)) {
+    if(reg >= REG_D(0)) {
         instr.load_store_reg_imm_post.v = 1;
     } else {
         instr.load_store_reg_imm_post.v = 0;
     }
-    instr.load_store_reg_imm_pre.imm9 = -8;
+    instr.load_store_reg_imm_pre.imm9 = -16;
     addInstruction(mem, instr);
 }
 
@@ -209,42 +224,52 @@ void addInstPop(StackAllocator* mem, RegisterSet regs, Register reg) {
     instr.load_store_reg_imm_post.size = LOAD_STORE_REG_IMM_POST_SIZE_DOUBLE;
     instr.load_store_reg_imm_post.rn = REG_SPECIAL;
     instr.load_store_reg_imm_post.rt = regToNo(reg);
-    if(reg >= (1 << REG_COUNT)) {
+    if(reg >= REG_D(0)) {
         instr.load_store_reg_imm_post.v = 1;
     } else {
         instr.load_store_reg_imm_post.v = 0;
     }
-    instr.load_store_reg_imm_post.imm9 = 8;
+    instr.load_store_reg_imm_post.imm9 = 16;
     addInstruction(mem, instr);
 }
 
 void addInstPushAll(StackAllocator* mem, RegisterSet regs) {
-    for(int i = 0; i < REG_COUNT + FREG_COUNT; i++) {
-        if((regs & (1 << i)) != 0) {
-            addInstPush(mem, regs, (1 << i));
+    for(int i = 0; i < REG_COUNT; i++) {
+        if((regs & REG_X(i)) != 0) {
+            addInstPush(mem, regs, REG_X(i));
+        }
+    }
+    for(int i = 0; i < FREG_COUNT; i++) {
+        if((regs & REG_D(i)) != 0) {
+            addInstPush(mem, regs, REG_D(i));
         }
     }
 }
 
 void addInstPopAll(StackAllocator* mem, RegisterSet regs) {
-    for(int i = REG_COUNT + FREG_COUNT - 1; i >= 0; i--) {
-        if((regs & (1 << i)) != 0) {
-            addInstPop(mem, regs, (1 << i));
+    for(int i = FREG_COUNT - 1; i >= 0; i--) {
+        if((regs & REG_D(i)) != 0) {
+            addInstPop(mem, regs, REG_D(i));
+        }
+    }
+    for(int i = REG_COUNT - 1; i >= 0; i--) {
+        if((regs & REG_X(i)) != 0) {
+            addInstPop(mem, regs, REG_X(i));
         }
     }
 }
 
 void addInstCallReg(StackAllocator* mem, RegisterSet regs, Register reg) {
-    addInstPush(mem, regs, (1 << REG_LINK));
+    addInstPush(mem, regs, REG_X(REG_LINK));
     Aarch64Instruction instr = { .instruction = 0, };
-    instr.uncond_branch_reg.cnst0 = UNCOND_BRANCH_IMM_CNST0;
+    instr.uncond_branch_reg.cnst0 = UNCOND_BRANCH_REG_CNST0;
     instr.uncond_branch_reg.op2 = UNCOND_BRANCH_REG_OP2_BR_BLR_RET;
     instr.uncond_branch_reg.op3 = UNCOND_BRANCH_REG_OP3_BR_BLR_RET;
     instr.uncond_branch_reg.op4 = UNCOND_BRANCH_REG_OP4_BR_BLR_RET;
     instr.uncond_branch_reg.opc = UNCOND_BRANCH_REG_OPC_BLR;
     instr.uncond_branch_reg.rn = regToNo(reg);
     addInstruction(mem, instr);
-    addInstPop(mem, regs, (1 << REG_LINK));
+    addInstPop(mem, regs, REG_X(REG_LINK));
 }
 
 void addInstCall(StackAllocator* mem, RegisterSet regs, void* func) {
@@ -262,19 +287,21 @@ void addInstCall(StackAllocator* mem, RegisterSet regs, void* func) {
 }
 
 size_t addInstCallRel(StackAllocator* mem, RegisterSet regs, size_t to) {
+    addInstPush(mem, regs, REG_X(REG_LINK));
     size_t ret = mem->occupied;
-    uint32_t rel = to - (mem->occupied + 4);
+    uint32_t rel = to - mem->occupied;
     Aarch64Instruction instr = { .instruction = 0, };
     instr.uncond_branch_imm.cnst0 = UNCOND_BRANCH_IMM_CNST0;
     instr.uncond_branch_imm.op = UNCOND_BRANCH_IMM_OP_BL;
     instr.uncond_branch_imm.imm26 = rel >> 2;
     addInstruction(mem, instr);
+    addInstPop(mem, regs, REG_X(REG_LINK));
     return ret;
 }
 
 void addInstReturn(StackAllocator* mem, RegisterSet regs) {
     Aarch64Instruction instr = { .instruction = 0, };
-    instr.uncond_branch_reg.cnst0 = UNCOND_BRANCH_IMM_CNST0;
+    instr.uncond_branch_reg.cnst0 = UNCOND_BRANCH_REG_CNST0;
     instr.uncond_branch_reg.op2 = UNCOND_BRANCH_REG_OP2_BR_BLR_RET;
     instr.uncond_branch_reg.op3 = UNCOND_BRANCH_REG_OP3_BR_BLR_RET;
     instr.uncond_branch_reg.op4 = UNCOND_BRANCH_REG_OP4_BR_BLR_RET;
@@ -336,7 +363,7 @@ void addInstDiv(StackAllocator* mem, RegisterSet regs, Register dest, Register a
     instr.proc_reg_two_source.s = 0;
     instr.proc_reg_two_source.rd = regToNo(dest);
     instr.proc_reg_two_source.rn = regToNo(a);
-    instr.proc_reg_two_source.rn = regToNo(b);
+    instr.proc_reg_two_source.rm = regToNo(b);
     addInstruction(mem, instr);
 }
 
@@ -355,8 +382,25 @@ void addInstMSub(StackAllocator* mem, RegisterSet regs, Register dest, Register 
 }
 
 void addInstRem(StackAllocator* mem, RegisterSet regs, Register dest, Register a, Register b) {
-    addInstDiv(mem, regs, dest, a, b);
-    addInstMSub(mem, regs, dest, dest, b, a);
+    int free_reg = getFreeRegister(regs);
+    if(free_reg == 0) {
+        if (a != REG_X(3) && b != REG_X(3) && dest != REG_X(3)) {
+            free_reg = REG_X(3);
+        } else if (a != REG_X(2) && b != REG_X(2) && dest != REG_X(2)) {
+            free_reg = REG_X(2);
+        } else if (a != REG_X(1) && b != REG_X(1) && dest != REG_X(1)) {
+            free_reg = REG_X(1);
+        } else {
+            free_reg = REG_X(0);
+        }
+        addInstPush(mem, regs, free_reg);
+        addInstDiv(mem, regs, free_reg, a, b);
+        addInstMSub(mem, regs, dest, free_reg, b, a);
+        addInstPop(mem, regs, free_reg);
+    } else {
+        addInstDiv(mem, regs, free_reg, a, b);
+        addInstMSub(mem, regs, dest, free_reg, b, a);
+    }
 }
 
 
@@ -392,13 +436,13 @@ void addInstFCmp(StackAllocator* mem, RegisterSet regs, Register a, Register b) 
 }
 
 size_t addInstCondJmpRel(StackAllocator* mem, RegisterSet regs, JmpCondistions cond, Register a, Register b, size_t to) {
-    if(a < (1 << REG_COUNT)) {
+    if(a < REG_D(0)) {
         addInstCmp(mem, regs, a, b);
     } else {
         addInstFCmp(mem, regs, a, b);
     }
     size_t ret = mem->occupied;
-    uint32_t rel = to - (mem->occupied + 4);
+    uint32_t rel = to - mem->occupied;
     Aarch64Instruction instr = { .instruction = 0, };
     instr.cond_branch_imm.cnst0 = COND_BRANCH_IMM_CNST0;
     instr.cond_branch_imm.o0 = 0;
@@ -516,11 +560,15 @@ void addInstMovImmToFReg(StackAllocator* mem, RegisterSet regs, Register reg, do
     double_to_int64.d = value;
     int free_reg = getFreeRegister(regs);
     if(free_reg == 0) {
-        free_reg = getFirstRegister(regs);
-        addPush(mem, free_reg);
+        if (reg == REG_X(0)) {
+            free_reg = REG_X(1);
+        } else {
+            free_reg = REG_X(0);
+        }
+        addInstPush(mem, regs, free_reg);
         addInstMovImmToReg(mem, regs, free_reg, double_to_int64.i);
         addInstMovDirectRegToFReg(mem, regs, reg, free_reg);
-        addPop(mem, free_reg);
+        addInstPop(mem, regs, free_reg);
     } else {
         addInstMovImmToReg(mem, regs, free_reg, double_to_int64.i);
         addInstMovDirectRegToFReg(mem, regs, reg, free_reg);
@@ -530,11 +578,15 @@ void addInstMovImmToFReg(StackAllocator* mem, RegisterSet regs, Register reg, do
 void addInstMovMemToFReg(StackAllocator* mem, RegisterSet regs, Register reg, void* addr) {
     int free_reg = getFreeRegister(regs);
     if(free_reg == 0) {
-        free_reg = getFirstRegister(regs);
-        addPush(mem, free_reg);
+        if (reg == REG_X(0)) {
+            free_reg = REG_X(1);
+        } else {
+            free_reg = REG_X(0);
+        }
+        addInstPush(mem, regs, free_reg);
         addInstMovImmToReg(mem, regs, free_reg, (int64_t)addr);
         addInstMovMemRegToFReg(mem, regs, reg, free_reg);
-        addPop(mem, free_reg);
+        addInstPop(mem, regs, free_reg);
     } else {
         addInstMovImmToReg(mem, regs, free_reg, (int64_t)addr);
         addInstMovMemRegToFReg(mem, regs, reg, free_reg);
@@ -545,13 +597,13 @@ void addInstMovFRegToMem(StackAllocator* mem, RegisterSet regs, Register reg, vo
     int free_reg = getFreeRegister(regs);
     if(free_reg == 0) {
         free_reg = getFirstRegister(regs);
-        addPush(mem, free_reg);
+        addInstPush(mem, regs, free_reg);
         addInstMovImmToReg(mem, regs, free_reg, (int64_t)addr);
-        addInstMovFRegToMemReg(mem, regs, reg, free_reg);
-        addPop(mem, free_reg);
+        addInstMovFRegToMemReg(mem, regs, free_reg, reg);
+        addInstPop(mem, regs, free_reg);
     } else {
         addInstMovImmToReg(mem, regs, free_reg, (int64_t)addr);
-        addInstMovFRegToMemReg(mem, regs, reg, free_reg);
+        addInstMovFRegToMemReg(mem, regs, free_reg, reg);
     }
 }
 
@@ -594,7 +646,7 @@ void addInstMovFRegToReg(StackAllocator* mem, RegisterSet regs, Register dest, R
     instr.cnvt_fp_int.cnst3 = CNVT_FP_INT_CNST3;
     instr.cnvt_fp_int.ptype = CNVT_FP_INT_PTYPE_DOUBLE;
     instr.cnvt_fp_int.opcode = CNVT_FP_INT_OPCODE_F2S;
-    instr.cnvt_fp_int.rmode = 0;
+    instr.cnvt_fp_int.rmode = CNVT_FP_INT_RMODE_ZERO;
     instr.cnvt_fp_int.s = 0;
     instr.cnvt_fp_int.sf = 1;
     instr.cnvt_fp_int.rd = regToNo(dest);
@@ -632,21 +684,21 @@ void addInstFunctionCallUnary(StackAllocator* mem, RegisterSet regs, Register re
     addInstPushAll(mem, regs & ~ret);
     if(a >= REG_D(0)) {
         if(a != REG_D(0)) {
-            addMovFRegToFReg(mem, REG_D(0), a);
+            addInstMovFRegToFReg(mem, regs, REG_D(0), a);
         }
     } else {
         if(a != REG_X(0)) {
-            addMovRegToReg(mem, REG_X(0), a);
+            addInstMovRegToReg(mem, regs, REG_X(0), a);
         }
     }
     addInstCall(mem, regs, func);
     if(ret >= REG_D(0)) {
         if(ret != REG_D(0)) {
-            addMovFRegToFReg(mem, ret, REG_D(0));
+            addInstMovFRegToFReg(mem, regs, ret, REG_D(0));
         }
     } else {
         if(ret != REG_X(0)) {
-            addMovRegToReg(mem, ret, REG_X(0));
+            addInstMovRegToReg(mem, regs, ret, REG_X(0));
         }
     }
     addInstPopAll(mem, regs & ~ret);
@@ -658,46 +710,46 @@ void addInstFunctionCallBinary(StackAllocator* mem, RegisterSet regs, Register r
         if(a != REG_D(0)) {
             if(b == REG_D(0)) {
                 if(a == REG_D(1)) {
-                    addMovFRegToFReg(mem, REG_D(2), b);
+                    addInstMovFRegToFReg(mem, regs, REG_D(2), b);
                     b = REG_D(2);
                 } else {
-                    addMovFRegToFReg(mem, REG_D(1), b);
+                    addInstMovFRegToFReg(mem, regs, REG_D(1), b);
                     b = REG_D(1);
                 }
             }
-            addMovFRegToFReg(mem, REG_D(0), a);
+            addInstMovFRegToFReg(mem, regs, REG_D(0), a);
         }
     } else {
         if(a != REG_X(0)) {
             if(b == REG_X(0)) {
                 if(a == REG_X(1)) {
-                    addMovFRegToFReg(mem, REG_X(2), b);
+                    addInstMovFRegToFReg(mem, regs, REG_X(2), b);
                     b = REG_X(2);
                 } else {
-                    addMovFRegToFReg(mem, REG_X(1), b);
+                    addInstMovFRegToFReg(mem, regs, REG_X(1), b);
                     b = REG_X(1);
                 }
             }
-            addMovRegToReg(mem, REG_X(0), a);
+            addInstMovRegToReg(mem, regs, REG_X(0), a);
         }
     }
     if(b >= REG_D(0)) {
         if(b != REG_D(1)) {
-            addMovFRegToFReg(mem, REG_D(1), b);
+            addInstMovFRegToFReg(mem, regs, REG_D(1), b);
         }
     } else {
         if(b != REG_X(1)) {
-            addMovRegToReg(mem, REG_X(1), b);
+            addInstMovRegToReg(mem, regs, REG_X(1), b);
         }
     }
     addInstCall(mem, regs, func);
     if(ret >= REG_D(0)) {
         if(ret != REG_D(0)) {
-            addMovFRegToFReg(mem, ret, REG_D(0));
+            addInstMovFRegToFReg(mem, regs, ret, REG_D(0));
         }
     } else {
         if(ret != REG_X(0)) {
-            addMovRegToReg(mem, ret, REG_X(0));
+            addInstMovRegToReg(mem, regs, ret, REG_X(0));
         }
     }
     addInstPopAll(mem, regs & ~ret);
@@ -707,11 +759,11 @@ void addInstFunctionCallUnaryNoRet(StackAllocator* mem, RegisterSet regs, Regist
     addInstPushAll(mem, regs);
     if(a >= REG_D(0)) {
         if(a != REG_D(0)) {
-            addMovFRegToFReg(mem, REG_D(0), a);
+            addInstMovFRegToFReg(mem, regs, REG_D(0), a);
         }
     } else {
         if(a != REG_X(0)) {
-            addMovRegToReg(mem, REG_X(0), a);
+            addInstMovRegToReg(mem, regs, REG_X(0), a);
         }
     }
     addInstCall(mem, regs, func);
@@ -723,11 +775,11 @@ void addInstFunctionCallRetOnly(StackAllocator* mem, RegisterSet regs, Register 
     addInstCall(mem, regs, func);
     if(ret >= REG_D(0)) {
         if(ret != REG_D(0)) {
-            addMovFRegToFReg(mem, ret, REG_D(0));
+            addInstMovFRegToFReg(mem, regs, ret, REG_D(0));
         }
     } else {
         if(ret != REG_X(0)) {
-            addMovRegToReg(mem, ret, REG_X(0));
+            addInstMovRegToReg(mem, regs, ret, REG_X(0));
         }
     }
     addInstPopAll(mem, regs & ~ret);
@@ -740,31 +792,32 @@ void addInstFunctionCallSimple(StackAllocator* mem, RegisterSet regs, void* func
 }
 
 void addInstPushCallerRegs(StackAllocator* mem, RegisterSet regs) {
-    for (int i = 19; i <= 29; i++) {
-        addInstPush(mem, regs, (1 << i));
+    for (int i = 19; i <= 28; i++) {
+        addInstPush(mem, regs, REG_X(i));
     }
     for (int i = 8; i <= 15; i++) {
-        addInstPush(mem, regs, (1 << (i + REG_COUNT)));
+        addInstPush(mem, regs, REG_D(i));
     }
 }
 
 void addInstPopCallerRegs(StackAllocator* mem, RegisterSet regs) {
     for (int i = 15; i >= 8; i--) {
-        addInstPush(mem, regs, (1 << (i + REG_COUNT)));
+        addInstPop(mem, regs, REG_D(i));
     }
-    for (int i = 29; i >= 19; i--) {
-        addInstPush(mem, regs, (1 << i));
+    for (int i = 28; i >= 19; i--) {
+        addInstPop(mem, regs, REG_X(i));
     }
 }
 
 void updateRelativeJumpTarget(StackAllocator* mem, size_t pos, size_t to) {
-    uint32_t rel = to - (mem->occupied + 4);
+    uint32_t rel = to - pos;
     Aarch64Instruction instr = getInstruction(mem, pos);
     if (instr.uncond_branch_imm.cnst0 == UNCOND_BRANCH_IMM_CNST0) {
         instr.uncond_branch_imm.imm26 = rel >> 2;
     } else if (instr.cond_branch_imm.cnst0 == COND_BRANCH_IMM_CNST0) {
         instr.cond_branch_imm.imm19 = rel >> 2;
     }
+    updateInstruction(mem, pos, instr);
 }
 
 void updateImmediateValue(StackAllocator* mem, size_t pos, int64_t value) {
