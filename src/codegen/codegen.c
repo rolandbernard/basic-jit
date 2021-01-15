@@ -1016,7 +1016,7 @@ static Value generateMCForAfterFreeReg(AstFor* ast, MCGenerationData* data) {
             data->registers &= ~step.reg;
         } else {
             if (variable->type == VARIABLE_INT) {
-                Register reg = getFreeFRegister(data->registers);
+                Register reg = getFreeRegister(data->registers);
                 data->registers |= reg;
                 addInstMovImmToReg(data->inst_mem, data->registers, reg, 1);
                 addInstAdd(data->inst_mem, data->registers, vreg, vreg, reg);
