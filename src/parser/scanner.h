@@ -59,6 +59,7 @@ typedef enum {
     TOKEN_LEFT,
     TOKEN_RIGHT,
     TOKEN_SLEEP,
+    TOKEN_ASSERT,
     TOKEN_KEYWORDS_END,
     
     TOKEN_PLUS,

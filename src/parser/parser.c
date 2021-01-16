@@ -885,6 +885,24 @@ static Ast* parseIfThenElseStatement(Scanner* scanner, StackAllocator* mem) {
     }
 }
 
+static Ast* parseAssertStatement(Scanner* scanner, StackAllocator* mem) {
+    if (acceptToken(scanner, TOKEN_ASSERT)) {
+        Ast* condition = parseCondition(scanner, mem);
+        if (condition == NULL) {
+            return (Ast*)createError(getScannerOffset(scanner), mem);
+        } else if (condition->type == AST_ERROR) {
+            return condition;
+        } else {
+            AstUnary* ret = (AstUnary*)allocAligned(mem, sizeof(AstUnary));
+            ret->type = AST_ASSERT;
+            ret->value = condition;
+            return (Ast*)ret;
+        }
+    } else {
+        return NULL;
+    }
+}
+
 static Ast* parseForStatement(Scanner* scanner, StackAllocator* mem) {
     if(acceptToken(scanner, TOKEN_FOR)) {
         int error_offset = getScannerOffset(scanner);
@@ -995,6 +1013,7 @@ static Ast* parseSingleOperation(Scanner* scanner, StackAllocator* mem) {
     Ast* ret = NULL;
     if((ret = parseSimpleStatement(scanner, mem)) != NULL ||
        (ret = parseUnaryStatement(scanner, mem)) != NULL ||
+       (ret = parseAssertStatement(scanner, mem)) != NULL ||
        (ret = parseEndStatement(scanner, mem)) != NULL ||
        (ret = parseSleepStatement(scanner, mem)) != NULL ||
        (ret = parseSwitchStatement(scanner, mem)) != NULL ||
