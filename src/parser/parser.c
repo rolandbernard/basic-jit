@@ -135,7 +135,7 @@ static long stringToInt(const char* str, int len) {
             str += 2;
             len -= 2;
         } else if (str[1] == 'b') {
-            base = 1;
+            base = 2;
             str += 2;
             len -= 2;
         }
