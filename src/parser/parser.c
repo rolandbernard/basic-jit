@@ -534,6 +534,22 @@ static Ast* parseSleepStatement(Scanner* scanner, StackAllocator* mem) {
     }
 }
 
+static Ast* parseEndStatement(Scanner* scanner, StackAllocator* mem) {
+    if (acceptToken(scanner, TOKEN_END)) {
+        Ast* value = parseExpression(scanner, mem);
+        if (value != NULL && value->type == AST_ERROR) {
+            return value;
+        } else {
+            AstUnary* ret = (AstUnary*)allocAligned(mem, sizeof(AstUnary));
+            ret->type = AST_END;
+            ret->value = value;
+            return (Ast*)ret;
+        }
+    } else {
+        return NULL;
+    }
+}
+
 static Ast* parseUnaryStatement(Scanner* scanner, StackAllocator* mem) {
     AstType type = AST_NONE;
     if(acceptToken(scanner, TOKEN_GOTO)) {
@@ -578,9 +594,7 @@ static Ast* parseUnaryStatement(Scanner* scanner, StackAllocator* mem) {
 
 static Ast* parseSimpleStatement(Scanner* scanner, StackAllocator* mem) {
     AstType type = AST_NONE;
-    if(acceptToken(scanner, TOKEN_END)) {
-        type = AST_END;    
-    } else if(acceptToken(scanner, TOKEN_STOP)) {
+    if(acceptToken(scanner, TOKEN_STOP)) {
         type = AST_STOP;
     } else if(acceptToken(scanner, TOKEN_RETURN)) {
         type = AST_RETURN;
@@ -981,6 +995,7 @@ static Ast* parseSingleOperation(Scanner* scanner, StackAllocator* mem) {
     Ast* ret = NULL;
     if((ret = parseSimpleStatement(scanner, mem)) != NULL ||
        (ret = parseUnaryStatement(scanner, mem)) != NULL ||
+       (ret = parseEndStatement(scanner, mem)) != NULL ||
        (ret = parseSleepStatement(scanner, mem)) != NULL ||
        (ret = parseSwitchStatement(scanner, mem)) != NULL ||
        (ret = parseIfThenElseStatement(scanner, mem)) != NULL ||

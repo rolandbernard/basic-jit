@@ -22,15 +22,16 @@ bool executeFunctionInMemory(void* mem, size_t len, int* ret) {
         uintptr_t end = start + len;
         uintptr_t pagestart = start & -pagesize;
         if (mprotect((void*)pagestart, end - pagestart, PROT_EXEC | PROT_READ | PROT_WRITE)) {
-            exit(123);
+            exit(EXIT_ERROR);
         } else {
             signal(SIGINT, SIG_DFL);
-            exit(entry());
+            entry();
+            exit(EXIT_NORMAL);
         }
     } else {
         waitpid(pid, ret, 0);
         *ret = WEXITSTATUS(*ret);
-        return *ret == 123;
+        return *ret == EXIT_ERROR;
     }
 }
 

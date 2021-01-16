@@ -653,10 +653,6 @@ static void beep() {
     fprintf(stderr, "\a");
 }
 
-static void end() {
-    exit(42);
-}
-
 static void stop() {
     fprintf(stderr, "Press [ENTER] to continue...");
     getc(stdin);
@@ -666,9 +662,6 @@ static Value generateMCSimpleCall(Ast* ast, MCGenerationData* data) {
     switch (ast->type) {
     case AST_BEEP:
         addInstFunctionCallSimple(data->inst_mem, data->registers, beep);
-        break;
-    case AST_END:
-        addInstFunctionCallSimple(data->inst_mem, data->registers, end);
         break;
     case AST_STOP:
         addInstFunctionCallSimple(data->inst_mem, data->registers, stop);
@@ -779,6 +772,44 @@ static Value generateMCUnaryFloatNoRet(AstUnary* ast, MCGenerationData* data) {
     return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCUnaryFloatNoRetAfterFreeReg, 1, 1);
 }
 
+static void end_simple() {
+    exit(0);
+}
+
+static void end_value(int val) {
+    exit(val);
+}
+
+static Value generateMCEndAfterFreeReg(AstUnary* ast, MCGenerationData* data) {
+    Value a = generateMCForAst(ast->value, data);
+    if (a.type == VALUE_ERROR) {
+        return a;
+    } else if (a.type == VALUE_NONE) {
+        Value ret = {.type = VALUE_ERROR, .error = ERROR_SYNTAX};
+        return ret;
+    } else {
+        if (a.type != VALUE_INT) {
+            Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
+            return ret;
+        } else {
+            addInstFunctionCallUnaryNoRet(data->inst_mem, data->registers, a.reg, end_value);
+            data->registers &= ~a.reg;
+            Value ret = {.type = VALUE_NONE };
+            return ret;
+        }
+    }
+}
+
+static Value generateMCEnd(AstUnary* ast, MCGenerationData* data) {
+    if (ast->value == NULL) {
+        addInstFunctionCallSimple(data->inst_mem, data->registers, end_simple);
+        Value ret = {.type = VALUE_NONE };
+        return ret;
+    } else {
+        return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCEndAfterFreeReg, 1, 1);
+    }
+}
+
 Value generateMCForFunctions(Ast* ast, MCGenerationData* data) {
     Value value = {.type = VALUE_NONE};
     if (ast != NULL) {
@@ -829,7 +860,6 @@ Value generateMCForFunctions(Ast* ast, MCGenerationData* data) {
             value = generateMCKey(ast, data);
             break;
         case AST_BEEP:
-        case AST_END:
         case AST_STOP:
             value = generateMCSimpleCall(ast, data);
             break;
@@ -839,6 +869,9 @@ Value generateMCForFunctions(Ast* ast, MCGenerationData* data) {
             break;
         case AST_SLEEP:
             value = generateMCUnaryFloatNoRet((AstUnary*)ast, data);
+            break;
+        case AST_END:
+            value = generateMCEnd((AstUnary*)ast, data);
             break;
         default:
             value.type = VALUE_ERROR;

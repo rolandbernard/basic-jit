@@ -3,6 +3,6 @@
 
 #include <stdbool.h>
 
-void executeCli();
+int executeCli();
 
 #endif

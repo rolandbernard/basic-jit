@@ -15,10 +15,12 @@
 #define MAX_LINE_BUFFER (1 << 20)
 static char line_buffer[MAX_LINE_BUFFER];
 
-void executeFile(const char* filename) {
+int executeFile(const char* filename) {
+    int exit_code = EXIT_SUCCESS;
     FILE* file = fopen(filename, "r");
     if(file == NULL) {
         fprintf(stderr, "error: Failed to open the file '%s'\n", filename);
+        return EXIT_FAILURE;
     } else {
         StackAllocator ast_memory = STACK_ALLOCATOR_INITIALIZER;
         DataList data_list = DATA_LIST_INITIALIZER;
@@ -86,6 +88,8 @@ void executeFile(const char* filename) {
 #endif
                 if(executeFunctionInMemory(jit_memory.memory, jit_memory.occupied, &ret)) {
                     perror("error: Failed to execute");
+                } else if (ret != EXIT_NORMAL) {
+                    exit_code = ret;
                 }
             }
         }
@@ -97,5 +101,6 @@ void executeFile(const char* filename) {
         freeStack(&ast_memory);
         freeStack(&jit_memory);
         freeStack(&global_exec_alloc);
+        return exit_code;
     }
 }
