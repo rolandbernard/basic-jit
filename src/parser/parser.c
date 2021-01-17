@@ -777,7 +777,10 @@ static Ast* parseSwitchStatement(Scanner* scanner, StackAllocator* mem) {
                 if (tmp_data[count] != NULL) {
                     if (tmp_data[count]->type == AST_ERROR) {
                         return tmp_data[count];
-                    } else if ((value->type != AST_VAR || ((AstVar*)value)->var_type != VAR_UNDEF) && value->type != AST_INTEGER) {
+                    } else if (
+                        (tmp_data[count]->type != AST_VAR || ((AstVar*)tmp_data[count])->var_type != VAR_UNDEF)
+                        && tmp_data[count]->type != AST_INTEGER
+                    ) {
                         return (Ast*)createError(error_offset, mem);
                     }
                 }
