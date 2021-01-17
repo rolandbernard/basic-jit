@@ -60,7 +60,7 @@ static int parseEscapeCode(const char* data, int* length) {
     case 'x':
         if (isHexChar(data[1]) && isHexChar(data[2])) {
             ret = (hexCharToInt(data[1]) << 4) | hexCharToInt(data[2]);
-            *length = 2;
+            *length = 3;
         } else {
             ret = -1;
         }
@@ -68,7 +68,7 @@ static int parseEscapeCode(const char* data, int* length) {
     case 'u':
         if (isHexChar(data[1]) && isHexChar(data[2]) && isHexChar(data[3]) && isHexChar(data[4])) {
             ret = (hexCharToInt(data[1]) << 12) | (hexCharToInt(data[2]) << 8) | (hexCharToInt(data[3]) << 4) | hexCharToInt(data[4]);
-            *length = 4;
+            *length = 5;
         } else {
             ret = -1;
         }
@@ -76,8 +76,8 @@ static int parseEscapeCode(const char* data, int* length) {
     case 'U':
         if (isHexChar(data[1]) && isHexChar(data[2]) && isHexChar(data[3]) && isHexChar(data[4]) && isHexChar(data[5]) && isHexChar(data[6]) && isHexChar(data[7]) && isHexChar(data[8])) {
             ret = (hexCharToInt(data[1]) << 28) | (hexCharToInt(data[2]) << 24) | (hexCharToInt(data[3]) << 20) | (hexCharToInt(data[4]) << 16);
-            ret = (hexCharToInt(data[5]) << 12) | (hexCharToInt(data[6]) << 8) | (hexCharToInt(data[7]) << 4) | hexCharToInt(data[8]);
-            *length = 8;
+            ret |= (hexCharToInt(data[5]) << 12) | (hexCharToInt(data[6]) << 8) | (hexCharToInt(data[7]) << 4) | hexCharToInt(data[8]);
+            *length = 9;
         } else {
             ret = -1;
         }
