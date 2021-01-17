@@ -821,8 +821,8 @@ void updateRelativeJumpTarget(StackAllocator* mem, size_t pos, size_t to) {
 void updateImmediateValue(StackAllocator* mem, size_t pos, int64_t value) {
     for (int i = 0; i < 4; i++) {
         Aarch64Instruction instr = getInstruction(mem, pos + 4 * i);
-        instr.move_imm.imm16 = value >> (16 * i);
-        updateInstruction(mem, pos, instr);
+        instr.move_imm.imm16 = (value >> (16 * i)) & 0xffff;
+        updateInstruction(mem, pos + 4 * i, instr);
     }
 }
 
