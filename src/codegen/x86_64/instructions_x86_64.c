@@ -160,11 +160,11 @@ void addInstPop(StackAllocator* mem, RegisterSet regs, Register reg) {
     }
 }
 
-void addInstPushAll(StackAllocator* mem, RegisterSet regs) {
+void addInstPushAll(StackAllocator* mem, RegisterSet regs, RegisterSet to_push) {
     int push_cnt = 0;
     Register double_pop = 0;
     for(int i = 0; i < REG_COUNT + FREG_COUNT; i++) {
-        if((regs & (1 << i)) != 0) {
+        if((to_push & (1 << i)) != 0) {
             push_cnt++;
             double_pop = (1 << i); 
             addInstPush(mem, regs, (1 << i));
@@ -175,11 +175,11 @@ void addInstPushAll(StackAllocator* mem, RegisterSet regs) {
     }
 }
 
-void addInstPopAll(StackAllocator* mem, RegisterSet regs) {
+void addInstPopAll(StackAllocator* mem, RegisterSet regs, RegisterSet to_pop) {
     int pop_cnt = 0;
     Register double_pop = 0;
     for(int i = REG_COUNT + FREG_COUNT - 1; i >= 0; i--) {
-        if((regs & (1 << i)) != 0) {
+        if((to_pop & (1 << i)) != 0) {
             pop_cnt++;
             double_pop = (1 << i); 
         }
@@ -188,7 +188,7 @@ void addInstPopAll(StackAllocator* mem, RegisterSet regs) {
         addPop(mem, double_pop);
     }
     for(int i = REG_COUNT + FREG_COUNT - 1; i >= 0; i--) {
-        if((regs & (1 << i)) != 0) {
+        if((to_pop & (1 << i)) != 0) {
             addInstPop(mem, regs, (1 << i));
         }
     }
@@ -533,7 +533,7 @@ void addInstMovFRegToMemReg(StackAllocator* mem, RegisterSet regs, Register addr
 }
 
 void addInstFunctionCallUnary(StackAllocator* mem, RegisterSet regs, Register ret, Register a, void* func) {
-    addInstPushAll(mem, regs & ~ret);
+    addInstPushAll(mem, regs, regs & ~ret);
     if(a >= (1 << REG_COUNT)) {
         if(a != FREG_0) {
             addMovFRegToFReg(mem, FREG_0, a);
@@ -553,11 +553,11 @@ void addInstFunctionCallUnary(StackAllocator* mem, RegisterSet regs, Register re
             addMovRegToReg(mem, ret, REG_A);
         }
     }
-    addInstPopAll(mem, regs & ~ret);
+    addInstPopAll(mem, regs, regs & ~ret);
 }
 
 void addInstFunctionCallBinary(StackAllocator* mem, RegisterSet regs, Register ret, Register a, Register b, void* func) {
-    addInstPushAll(mem, regs & ~ret);
+    addInstPushAll(mem, regs, regs & ~ret);
     if(a >= (1 << REG_COUNT)) {
         if(a != FREG_0) {
             if(b == FREG_0) {
@@ -604,11 +604,11 @@ void addInstFunctionCallBinary(StackAllocator* mem, RegisterSet regs, Register r
             addMovRegToReg(mem, ret, REG_A);
         }
     }
-    addInstPopAll(mem, regs & ~ret);
+    addInstPopAll(mem, regs, regs & ~ret);
 }
 
 void addInstFunctionCallUnaryNoRet(StackAllocator* mem, RegisterSet regs, Register a, void* func) {
-    addInstPushAll(mem, regs);
+    addInstPushAll(mem, regs, regs);
     if(a >= (1 << REG_COUNT)) {
         if(a != FREG_0) {
             addMovFRegToFReg(mem, FREG_0, a);
@@ -619,11 +619,11 @@ void addInstFunctionCallUnaryNoRet(StackAllocator* mem, RegisterSet regs, Regist
         }
     }
     addInstCall(mem, regs, func);
-    addInstPopAll(mem, regs);
+    addInstPopAll(mem, regs, regs);
 }
 
 void addInstFunctionCallRetOnly(StackAllocator* mem, RegisterSet regs, Register ret, void* func) {
-    addInstPushAll(mem, regs & ~ret);
+    addInstPushAll(mem, regs, regs & ~ret);
     addInstCall(mem, regs, func);
     if(ret >= (1 << REG_COUNT)) {
         if(ret != FREG_0) {
@@ -634,13 +634,13 @@ void addInstFunctionCallRetOnly(StackAllocator* mem, RegisterSet regs, Register 
             addMovRegToReg(mem, ret, REG_A);
         }
     }
-    addInstPopAll(mem, regs & ~ret);
+    addInstPopAll(mem, regs, regs & ~ret);
 }
 
 void addInstFunctionCallSimple(StackAllocator* mem, RegisterSet regs, void* func) {
-    addInstPushAll(mem, regs);
+    addInstPushAll(mem, regs, regs);
     addInstCall(mem, regs, func);
-    addInstPopAll(mem, regs);
+    addInstPopAll(mem, regs, regs);
 }
 
 void addInstPushCallerRegs(StackAllocator* mem, RegisterSet regs) {

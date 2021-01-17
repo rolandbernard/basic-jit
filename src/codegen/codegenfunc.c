@@ -330,16 +330,16 @@ static Value generateMCVal(AstUnary* ast, MCGenerationData* data) {
 }
 
 static char* stringifyInt(int64_t x) {
-    char out[25];
-    size_t len = snprintf(out, 25, "%li", x);
+    char out[128];
+    size_t len = snprintf(out, 128, "%li", x);
     char* ret = (char*)allocAligned(&global_exec_alloc, len + 1);
     memcpy(ret, out, len + 1);
     return ret;
 }
 
 static char* stringifyFloat(double x) {
-    char out[25];
-    size_t len = snprintf(out, 25, "%lg", x);
+    char out[128];
+    size_t len = snprintf(out, 128, "%lg", x);
     char* ret = (char*)allocAligned(&global_exec_alloc, len + 1);
     memcpy(ret, out, len + 1);
     return ret;
