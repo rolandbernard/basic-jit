@@ -675,7 +675,9 @@ static Value generateMCSimpleCall(Ast* ast, MCGenerationData* data) {
 
 static char* left(char* str, int64_t num) {
     size_t len = strlen(str);
-    if(len < num) {
+    if (num < 0) {
+        num = 0;
+    } else if (len < num) {
         num = len;
     }
     char* ret = (char*)allocAligned(&global_exec_alloc, num + 1);
@@ -686,7 +688,9 @@ static char* left(char* str, int64_t num) {
 
 static char* right(char* str, int64_t num) {
     size_t len = strlen(str);
-    if(len < num) {
+    if (num < 0) {
+        num = 0;
+    } else if (len < num) {
         num = len;
     }
     char* ret = (char*)allocAligned(&global_exec_alloc, num + 1);
