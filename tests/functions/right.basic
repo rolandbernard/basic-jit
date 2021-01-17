@@ -1,0 +1,5 @@
+
+Assert Right("ABCD", 2) = "CD"
+Assert Right("ABCD", 5) = "ABCD"
+Assert Right("ABCD", 0) = ""
+Assert Right("ABCD", -2) = ""

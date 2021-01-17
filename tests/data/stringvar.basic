@@ -1,0 +1,29 @@
+
+A$ = "ABC"
+B  = "BCD"
+C  = "CDE"
+
+Assert A = "ABC"
+Assert B = "BCD"
+Assert C = "CDE"
+
+Assert A$ = "ABC"
+Assert B$ = "BCD"
+Assert C$ = "CDE"
+
+A  = "X"
+B$ = "Y"
+C$ = "Z"
+
+Assert A < B
+Assert B < C
+Assert C > A
+
+A = "Q"
+B = "Q"
+C = "Q"
+
+Assert A = B
+Assert B = C
+Assert C = A
+

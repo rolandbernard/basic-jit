@@ -1,0 +1,12 @@
+
+Assert Abs(Sgn(-1000.0) - -1.0) < 1e-7
+Assert Abs(Sgn(-100.0) - -1.0) < 1e-7
+Assert Abs(Sgn(-10.0) - -1.0) < 1e-7
+Assert Abs(Sgn(-5.0) - -1.0) < 1e-7
+Assert Abs(Sgn(-1.0) - -1.0) < 1e-7
+Assert Abs(Sgn(0.0) - 0.0) < 1e-7
+Assert Abs(Sgn(1.0) - 1.0) < 1e-7
+Assert Abs(Sgn(5.0) - 1.0) < 1e-7
+Assert Abs(Sgn(10.0) - 1.0) < 1e-7
+Assert Abs(Sgn(100.0) - 1.0) < 1e-7
+Assert Abs(Sgn(1000.0) - 1.0) < 1e-7

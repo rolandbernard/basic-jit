@@ -1,0 +1,7 @@
+
+sum = 0
+For A = 1 To 100 Step 3
+    sum = sum + A
+Next A
+
+Assert sum = 1717

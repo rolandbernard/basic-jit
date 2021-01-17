@@ -1,0 +1,10 @@
+
+_A_variable_NAME_42 = 1
+CaN_contain_FOR_IF_THEN_ELSE = 2
+ASSERT_END_ = 3
+stop_data = 4
+
+Assert _A_variable_NAME_42 = 1
+Assert CaN_contain_FOR_IF_THEN_ELSE = 2
+Assert ASSERT_END_ = 3
+Assert stop_data = 4

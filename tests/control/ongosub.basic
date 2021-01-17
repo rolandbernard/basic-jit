@@ -1,0 +1,24 @@
+
+A = 3
+
+On (A - 1) GoSub sub1, sub2, sub3, sub4
+
+Assert B = 3
+End
+
+sub1:
+B = 1
+Return
+
+sub2:
+B = 2
+Return
+
+sub3:
+B = 3
+Return
+
+sub4:
+B = 4
+Return
+

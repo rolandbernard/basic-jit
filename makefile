@@ -37,6 +37,10 @@ $(ODIR)/%.o: $(SDIR)/%.c $(DEPS)
 .PHONY: new
 new: clean all
 	
+.PHONY: test
+test: all
+	./tests/run-tests.sh tests ./build/bin/basicjit
+	
 .PHONY: clean
 clean:
 	rm -fr $(ODIR)/*

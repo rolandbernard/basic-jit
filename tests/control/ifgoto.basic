@@ -1,0 +1,17 @@
+
+A = 0
+If A = 0 Then GoTo if1
+cont1:
+If A = 0 Then GoTo if2
+cont2:
+
+Assert A = 1
+End
+
+if1:
+A = 1
+GoTo cont1
+
+if2:
+A = 0
+GoTo cont2
