@@ -9,7 +9,7 @@ function runTest {
         do
             echo -n "  "
         done
-        if timeout 0.5s $COMPILER $1 &> /tmp/basic-test.out
+        if timeout 1s $COMPILER $1 &> /tmp/basic-test.out
         then
             if [ ${3::5} == fail. ]
             then
@@ -25,13 +25,19 @@ function runTest {
                 echo -e "\e[32mPassed\e[m test '$3'"
                 passed_count=$(expr $passed_count + 1)
             else 
-                echo -e "\e[31mFailed\e[m test '$3' at runtime ($?)"
-                failed_count=$(expr $failed_count + 1)
-                for i in $(seq 0 $2)
-                do
-                    sed -i "s/^/  /" /tmp/basic-test.out
-                done
-                cat /tmp/basic-test.out
+                if [ $? == 124 ]
+                then
+                    echo -e "\e[31mFailed\e[m test '$3' by timeout"
+                    failed_count=$(expr $failed_count + 1)
+                else
+                    echo -e "\e[31mFailed\e[m test '$3' at runtime"
+                    failed_count=$(expr $failed_count + 1)
+                    for i in $(seq 0 $2)
+                    do
+                        sed -i "s/^/  /" /tmp/basic-test.out
+                    done
+                    cat /tmp/basic-test.out
+                fi
             fi
         fi
     fi
