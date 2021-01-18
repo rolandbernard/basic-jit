@@ -1,0 +1,27 @@
+
+Assert "A" = "A"
+Assert "BB" = "B\B"
+Assert "CC\n" = "CC\n"
+Assert "Hello\"World" = "Hello\"World"
+Assert "0" = "\0"
+Assert "\n" = "\x0a"
+Assert "ä" = "\xe4"
+Assert "€" = "\u20ac"
+Assert "𐹼" = "\U00010e7c"
+
+Assert "A" < "B"
+Assert "A" < "a"
+Assert "Z" > "Y"
+Assert "z" > "Z"
+
+Assert "Z" >= "Z"
+Assert "Z" <= "Z"
+
+Assert "n" != "\n"
+Assert "a" != "\a"
+Assert "b" != "\b"
+Assert "t" != "\t"
+Assert "r" != "\r"
+Assert "v" != "\v"
+Assert "f" != "\f"
+Assert "e" != "\e"

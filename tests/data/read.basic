@@ -1,0 +1,17 @@
+
+Data 1, 2.5, "Hello"
+
+Read A%, B., C$
+
+Assert A = 1
+Assert B = 2.5
+Assert C = "Hello"
+
+Data 1, 2, 3
+
+Read D., E., F.
+
+Assert D = 1
+Assert E = 2
+Assert F = 3
+

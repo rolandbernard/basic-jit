@@ -139,7 +139,7 @@ static Value generateMCNext(AstUnary* ast, MCGenerationData* data) {
         Value ret = {.type = VALUE_ERROR, .error = ERROR_NO_MATCHING_FOR};
         return ret;
     }
-    addInstPushAll(data->inst_mem, data->registers);
+    addInstPushAll(data->inst_mem, data->registers, data->registers);
     RegisterSet tmp_regs = data->registers;
     data->registers = 0;
     Register ret_reg = getFirstRegister();
@@ -152,7 +152,7 @@ static Value generateMCNext(AstUnary* ast, MCGenerationData* data) {
     pos = addInstCondJmpRel(data->inst_mem, data->registers, COND_EQ, ret_reg, cmp_reg, 0);
     updateRelativeJumpTarget(data->inst_mem, pos, jmp_for_pos);
     data->registers = tmp_regs;
-    addInstPopAll(data->inst_mem, data->registers);
+    addInstPopAll(data->inst_mem, data->registers, data->registers);
     Value ret = {.type=VALUE_NONE};
     return ret;
 }

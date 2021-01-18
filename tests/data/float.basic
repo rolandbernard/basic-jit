@@ -1,0 +1,19 @@
+
+Assert -0.0 = 0.0
+Assert 0.5 = 0.5
+Assert 5. = 5.
+Assert 5. = 0.5e1
+Assert -0.05 = -5e-2
+Assert 1234.1234 = 1__2__3__4__.__1__2__3__4
+
+Assert 5. > 1e-10
+Assert -0.05 < 1e-20
+
+Assert 5. >= 1e-10
+Assert 5. >= 5.0
+Assert -0.05 < 1e-20
+Assert -0.05 <= -.05
+
+Assert 1e1 != 1
+Assert 1e1 != 1e-1
+Assert -1e1 != 1e1

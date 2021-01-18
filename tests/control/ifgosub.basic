@@ -1,0 +1,15 @@
+
+A = 0
+If A = 0 Then GoSub if1
+If A = 0 Then GoSub if2
+
+Assert A = 1
+End
+
+if1:
+A = 1
+Return
+
+if2:
+A = 0
+Return

@@ -29,6 +29,8 @@ static VariableTable var_table = VARIABLE_TABLE_INITIALIZER;
 static StackAllocator jit_memory = STACK_ALLOCATOR_INITIALIZER;
 static VariableTable label_table = VARIABLE_TABLE_INITIALIZER;
 static UnhandeledLabelList label_list = UNHANDLED_LABEL_LIST_INITIALIZER;
+            
+static int exit_code = EXIT_SUCCESS;
 
 static int findLine(int64_t line_number) {
     int i = 0, j = num_lines;
@@ -234,8 +236,9 @@ static bool executeLine(const char* line) {
 #endif
                     if(executeFunctionInMemory(jit_memory.memory, jit_memory.occupied, &ret)) {
                         perror("error: Failed to execute");
-                    } else if(ret == 42) {
+                    } else if(ret != EXIT_NORMAL) {
                         end = true;
+                        exit_code = ret;
                     }
                 }
             }
@@ -244,7 +247,7 @@ static bool executeLine(const char* line) {
     return end;
 }
 
-void executeCli() {
+int executeCli() {
     bool end = false;
     while(!end) {
         fprintf(stdout, ">");
@@ -295,4 +298,5 @@ void executeCli() {
     freeStack(&ast_memory);
     freeStack(&jit_memory);
     freeStack(&global_exec_alloc);
+    return exit_code;
 }

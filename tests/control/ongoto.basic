@@ -1,0 +1,17 @@
+
+A = 3
+
+On (A - 1) GoTo exit1, exit2, exit3, exit4
+End 1
+
+exit1:
+End 1
+
+exit2:
+End 1
+
+exit3:
+End
+
+exit4:
+End 1

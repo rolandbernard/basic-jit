@@ -11,7 +11,6 @@ typedef enum {
     AST_ERROR,
     
     // simple
-    AST_END,
     AST_STOP,
     AST_KEY,
     AST_RETURN,
@@ -48,6 +47,8 @@ typedef enum {
     AST_RESTORE,
     AST_LIST,
     AST_SLEEP,
+    AST_END,
+    AST_ASSERT,
 
     // binary
     AST_ADD,

@@ -34,6 +34,13 @@ $(ODIR)/%.o: $(SDIR)/%.c $(DEPS)
 	mkdir -p `dirname $@`
 	$(CC) $(CFLAGS) -c -o $@ $<
 	
+.PHONY: new
+new: clean all
+	
+.PHONY: test
+test: all
+	./tests/run-tests.sh tests ./build/bin/basicjit
+	
 .PHONY: clean
 clean:
 	rm -fr $(ODIR)/*

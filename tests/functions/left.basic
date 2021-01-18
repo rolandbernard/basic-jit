@@ -1,0 +1,5 @@
+
+Assert Left("ABCD", 2) = "AB"
+Assert Left("ABCD", 5) = "ABCD"
+Assert Left("ABCD", 0) = ""
+Assert Left("ABCD", -2) = ""

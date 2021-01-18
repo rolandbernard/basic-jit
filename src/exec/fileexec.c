@@ -15,10 +15,12 @@
 #define MAX_LINE_BUFFER (1 << 20)
 static char line_buffer[MAX_LINE_BUFFER];
 
-void executeFile(const char* filename) {
+int executeFile(const char* filename) {
+    int exit_code = EXIT_SUCCESS;
     FILE* file = fopen(filename, "r");
     if(file == NULL) {
         fprintf(stderr, "error: Failed to open the file '%s'\n", filename);
+        return EXIT_FAILURE;
     } else {
         StackAllocator ast_memory = STACK_ALLOCATOR_INITIALIZER;
         DataList data_list = DATA_LIST_INITIALIZER;
@@ -61,11 +63,13 @@ void executeFile(const char* filename) {
                     fputc('^', stderr);
                     fputc('\n', stderr);
                     had_error = true;
+                    exit_code = EXIT_FAILURE;
                 } else {
                     Error error = generateMC(ast, &data);
                     if(error != ERROR_NONE) {
                         fprintf(stderr, "error: %s at line %i\n", getErrorName(error), data.line);
                         had_error = true;
+                        exit_code = EXIT_FAILURE;
                     }
                 }
             }
@@ -79,6 +83,7 @@ void executeFile(const char* filename) {
             int err = fillUnhandledLabelLocations(data.label_list, data.label_table, data.inst_mem);
             if(err >= 0) {
                 fprintf(stderr, "error: Unresolved label %s at line %i\n", label_list.data[err].name, label_list.data[err].line);
+                exit_code = EXIT_FAILURE;
             } else {
                 int ret;
 #ifdef DEBUG
@@ -86,6 +91,9 @@ void executeFile(const char* filename) {
 #endif
                 if(executeFunctionInMemory(jit_memory.memory, jit_memory.occupied, &ret)) {
                     perror("error: Failed to execute");
+                    exit_code = EXIT_FAILURE;
+                } else if (ret != EXIT_NORMAL) {
+                    exit_code = ret;
                 }
             }
         }
@@ -97,5 +105,6 @@ void executeFile(const char* filename) {
         freeStack(&ast_memory);
         freeStack(&jit_memory);
         freeStack(&global_exec_alloc);
+        return exit_code;
     }
 }

@@ -60,7 +60,7 @@ static int parseEscapeCode(const char* data, int* length) {
     case 'x':
         if (isHexChar(data[1]) && isHexChar(data[2])) {
             ret = (hexCharToInt(data[1]) << 4) | hexCharToInt(data[2]);
-            *length = 2;
+            *length = 3;
         } else {
             ret = -1;
         }
@@ -68,7 +68,7 @@ static int parseEscapeCode(const char* data, int* length) {
     case 'u':
         if (isHexChar(data[1]) && isHexChar(data[2]) && isHexChar(data[3]) && isHexChar(data[4])) {
             ret = (hexCharToInt(data[1]) << 12) | (hexCharToInt(data[2]) << 8) | (hexCharToInt(data[3]) << 4) | hexCharToInt(data[4]);
-            *length = 4;
+            *length = 5;
         } else {
             ret = -1;
         }
@@ -76,8 +76,8 @@ static int parseEscapeCode(const char* data, int* length) {
     case 'U':
         if (isHexChar(data[1]) && isHexChar(data[2]) && isHexChar(data[3]) && isHexChar(data[4]) && isHexChar(data[5]) && isHexChar(data[6]) && isHexChar(data[7]) && isHexChar(data[8])) {
             ret = (hexCharToInt(data[1]) << 28) | (hexCharToInt(data[2]) << 24) | (hexCharToInt(data[3]) << 20) | (hexCharToInt(data[4]) << 16);
-            ret = (hexCharToInt(data[5]) << 12) | (hexCharToInt(data[6]) << 8) | (hexCharToInt(data[7]) << 4) | hexCharToInt(data[8]);
-            *length = 8;
+            ret |= (hexCharToInt(data[5]) << 12) | (hexCharToInt(data[6]) << 8) | (hexCharToInt(data[7]) << 4) | hexCharToInt(data[8]);
+            *length = 9;
         } else {
             ret = -1;
         }
@@ -135,7 +135,7 @@ static long stringToInt(const char* str, int len) {
             str += 2;
             len -= 2;
         } else if (str[1] == 'b') {
-            base = 1;
+            base = 2;
             str += 2;
             len -= 2;
         }
@@ -534,6 +534,22 @@ static Ast* parseSleepStatement(Scanner* scanner, StackAllocator* mem) {
     }
 }
 
+static Ast* parseEndStatement(Scanner* scanner, StackAllocator* mem) {
+    if (acceptToken(scanner, TOKEN_END)) {
+        Ast* value = parseExpression(scanner, mem);
+        if (value != NULL && value->type == AST_ERROR) {
+            return value;
+        } else {
+            AstUnary* ret = (AstUnary*)allocAligned(mem, sizeof(AstUnary));
+            ret->type = AST_END;
+            ret->value = value;
+            return (Ast*)ret;
+        }
+    } else {
+        return NULL;
+    }
+}
+
 static Ast* parseUnaryStatement(Scanner* scanner, StackAllocator* mem) {
     AstType type = AST_NONE;
     if(acceptToken(scanner, TOKEN_GOTO)) {
@@ -578,9 +594,7 @@ static Ast* parseUnaryStatement(Scanner* scanner, StackAllocator* mem) {
 
 static Ast* parseSimpleStatement(Scanner* scanner, StackAllocator* mem) {
     AstType type = AST_NONE;
-    if(acceptToken(scanner, TOKEN_END)) {
-        type = AST_END;    
-    } else if(acceptToken(scanner, TOKEN_STOP)) {
+    if(acceptToken(scanner, TOKEN_STOP)) {
         type = AST_STOP;
     } else if(acceptToken(scanner, TOKEN_RETURN)) {
         type = AST_RETURN;
@@ -763,7 +777,10 @@ static Ast* parseSwitchStatement(Scanner* scanner, StackAllocator* mem) {
                 if (tmp_data[count] != NULL) {
                     if (tmp_data[count]->type == AST_ERROR) {
                         return tmp_data[count];
-                    } else if ((value->type != AST_VAR || ((AstVar*)value)->var_type != VAR_UNDEF) && value->type != AST_INTEGER) {
+                    } else if (
+                        (tmp_data[count]->type != AST_VAR || ((AstVar*)tmp_data[count])->var_type != VAR_UNDEF)
+                        && tmp_data[count]->type != AST_INTEGER
+                    ) {
                         return (Ast*)createError(error_offset, mem);
                     }
                 }
@@ -865,6 +882,24 @@ static Ast* parseIfThenElseStatement(Scanner* scanner, StackAllocator* mem) {
                 ret->if_false = if_false;
                 return (Ast*)ret;
             }
+        }
+    } else {
+        return NULL;
+    }
+}
+
+static Ast* parseAssertStatement(Scanner* scanner, StackAllocator* mem) {
+    if (acceptToken(scanner, TOKEN_ASSERT)) {
+        Ast* condition = parseCondition(scanner, mem);
+        if (condition == NULL) {
+            return (Ast*)createError(getScannerOffset(scanner), mem);
+        } else if (condition->type == AST_ERROR) {
+            return condition;
+        } else {
+            AstUnary* ret = (AstUnary*)allocAligned(mem, sizeof(AstUnary));
+            ret->type = AST_ASSERT;
+            ret->value = condition;
+            return (Ast*)ret;
         }
     } else {
         return NULL;
@@ -981,6 +1016,8 @@ static Ast* parseSingleOperation(Scanner* scanner, StackAllocator* mem) {
     Ast* ret = NULL;
     if((ret = parseSimpleStatement(scanner, mem)) != NULL ||
        (ret = parseUnaryStatement(scanner, mem)) != NULL ||
+       (ret = parseAssertStatement(scanner, mem)) != NULL ||
+       (ret = parseEndStatement(scanner, mem)) != NULL ||
        (ret = parseSleepStatement(scanner, mem)) != NULL ||
        (ret = parseSwitchStatement(scanner, mem)) != NULL ||
        (ret = parseIfThenElseStatement(scanner, mem)) != NULL ||

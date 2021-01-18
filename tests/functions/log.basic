@@ -1,0 +1,14 @@
+
+Assert Abs(Log(0.01) - -2.0) < 1e-7
+Assert Abs(Log(0.1) - -1.0) < 1e-7
+Assert Abs(Log(1.0) - 0.0) < 1e-7
+Assert Abs(Log(2.0) - 0.3010299956639812) < 1e-7
+Assert Abs(Log(3.0) - 0.47712125471966244) < 1e-7
+Assert Abs(Log(4.0) - 0.6020599913279624) < 1e-7
+Assert Abs(Log(5.0) - 0.6989700043360189) < 1e-7
+Assert Abs(Log(10.0) - 1.0) < 1e-7
+Assert Abs(Log(25.0) - 1.3979400086720377) < 1e-7
+Assert Abs(Log(50.0) - 1.6989700043360187) < 1e-7
+Assert Abs(Log(100.0) - 2.0) < 1e-7
+Assert Abs(Log(500.0) - 2.6989700043360187) < 1e-7
+Assert Abs(Log(1000.0) - 3.0) < 1e-7

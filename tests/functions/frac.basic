@@ -1,0 +1,14 @@
+
+Assert Abs(Frac(0.01) - 0.01) < 1e-7
+Assert Abs(Frac(0.1) - 0.1) < 1e-7
+Assert Abs(Frac(1.1) - 0.1) < 1e-7
+Assert Abs(Frac(2.2) - 0.2) < 1e-7
+Assert Abs(Frac(3.3) - 0.3) < 1e-7
+Assert Abs(Frac(4.4) - 0.4) < 1e-7
+Assert Abs(Frac(5.5) - 0.5) < 1e-7
+Assert Abs(Frac(10.6) - 0.6) < 1e-7
+Assert Abs(Frac(25.7) - 0.7) < 1e-7
+Assert Abs(Frac(50.8) - 0.8) < 1e-7
+Assert Abs(Frac(100.9) - 0.9) < 1e-7
+Assert Abs(Frac(500.005) - 0.005) < 1e-7
+Assert Abs(Frac(1000.00025) - 0.00025) < 1e-7

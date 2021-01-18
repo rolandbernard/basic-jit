@@ -1,0 +1,11 @@
+
+Assert Abs(Rnd(5.0) - 5.0) < 1e-7
+Assert Abs(Rnd(10.1) - 10.0) < 1e-7
+Assert Abs(Rnd(20.2) - 20.0) < 1e-7
+Assert Abs(Rnd(50.3) - 50.0) < 1e-7
+Assert Abs(Rnd(100.4) - 100.0) < 1e-7
+Assert Abs(Rnd(500.5) - 501.0) < 1e-7
+Assert Abs(Rnd(0.6) - 1.0) < 1e-7
+Assert Abs(Rnd(1.7) - 2.0) < 1e-7
+Assert Abs(Rnd(2.8) - 3.0) < 1e-7
+Assert Abs(Rnd(2.9) - 3.0) < 1e-7

@@ -1,0 +1,14 @@
+
+
+GoTo jmp1
+End 1
+
+jmp2:
+GoTo 100
+End 1
+
+jmp1:
+GoTo jmp2
+End 1
+
+100 End

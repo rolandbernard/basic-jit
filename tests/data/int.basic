@@ -1,0 +1,18 @@
+
+Assert -0 = 0
+Assert 12 = 12
+Assert 15 = 0xf
+Assert 15 = 0b1111
+Assert 15 = 0o17
+Assert 1000 = 1__0__0__0__
+
+Assert -1 < 1
+Assert 1 > 0
+
+Assert -1 <= 1
+Assert -1 <= -1
+Assert 1 >= -1
+Assert 1 >= 1
+
+Assert -1 != 1
+Assert 1 != 0

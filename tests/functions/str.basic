@@ -1,0 +1,11 @@
+
+Assert Str(5.0) = "5"
+Assert Str(10.1) = "10.1"
+Assert Str(20.2) = "20.2"
+Assert Str(50.3) = "50.3"
+Assert Str(100.4) = "100.4"
+Assert Str(500.5) = "500.5"
+Assert Str(0.6) = "0.6"
+Assert Str(1.7) = "1.7"
+Assert Str(2.8) = "2.8"
+Assert Str(3.9) = "3.9"

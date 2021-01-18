@@ -1,0 +1,24 @@
+
+Let A% = 1
+Let B  = 2
+Let C  = 3
+
+Assert A = 1
+Assert B = 2
+Assert C = 3
+
+Let D. = 0.5
+Let E  = 1e20
+Let F  = -1e-20
+
+Assert D = 0.5
+Assert E = 1e20
+Assert F = -1e-20
+
+Let G$ = "ABC"
+Let H  = "BCD"
+Let I  = "CDE"
+
+Assert G = "ABC"
+Assert H = "BCD"
+Assert I = "CDE"

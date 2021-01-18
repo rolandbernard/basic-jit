@@ -1,0 +1,11 @@
+
+Assert Int(5.0) = 5
+Assert Int(10.1) = 10
+Assert Int(20.2) = 20
+Assert Int(50.3) = 50
+Assert Int(100.4) = 100
+Assert Int(500.5) = 500
+Assert Int(0.6) = 0
+Assert Int(1.7) = 1
+Assert Int(2.8) = 2
+Assert Int(3.9) = 3

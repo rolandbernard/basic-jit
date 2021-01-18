@@ -3,6 +3,6 @@
 
 #include <stdbool.h>
 
-void executeFile(const char* filename);
+int executeFile(const char* filename);
 
 #endif

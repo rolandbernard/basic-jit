@@ -60,9 +60,9 @@ void addInstPush(StackAllocator* mem, RegisterSet regs, Register reg);
 
 void addInstPop(StackAllocator* mem, RegisterSet regs, Register reg);
 
-void addInstPushAll(StackAllocator* mem, RegisterSet regs);
+void addInstPushAll(StackAllocator* mem, RegisterSet regs, RegisterSet to_push);
 
-void addInstPopAll(StackAllocator* mem, RegisterSet regs);
+void addInstPopAll(StackAllocator* mem, RegisterSet regs, RegisterSet to_pop);
 
 void addInstCall(StackAllocator* mem, RegisterSet regs, void* func);
 

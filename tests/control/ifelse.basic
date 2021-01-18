@@ -1,0 +1,6 @@
+
+A = 0
+If A = 0 Then A = 1 Else A = 0
+If A = 0 Then A = 0 Else A = 1
+
+Assert A = 1
