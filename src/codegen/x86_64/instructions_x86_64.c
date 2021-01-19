@@ -362,6 +362,48 @@ void addInstRem(StackAllocator* mem, RegisterSet regs, Register dest, Register a
     }
 }
 
+void addInstAnd(StackAllocator* mem, RegisterSet regs, Register dest, Register a, Register b) {
+    if(a == dest) {
+        addAnd(mem, dest, b);
+    } else if(b == dest) {
+        addAnd(mem, dest, a);
+    } else {
+        addMovRegToReg(mem, dest, a);
+        addAnd(mem, dest, b);
+    }
+}
+
+void addInstXor(StackAllocator* mem, RegisterSet regs, Register dest, Register a, Register b) {
+    if(a == dest) {
+        addXor(mem, dest, b);
+    } else if(b == dest) {
+        addXor(mem, dest, a);
+    } else {
+        addMovRegToReg(mem, dest, a);
+        addXor(mem, dest, b);
+    }
+}
+
+void addInstOr(StackAllocator* mem, RegisterSet regs, Register dest, Register a, Register b) {
+    if(a == dest) {
+        addOr(mem, dest, b);
+    } else if(b == dest) {
+        addOr(mem, dest, a);
+    } else {
+        addMovRegToReg(mem, dest, a);
+        addOr(mem, dest, b);
+    }
+}
+
+void addInstNot(StackAllocator* mem, RegisterSet regs, Register dest, Register a) {
+    if(a == dest) {
+        addNot(mem, dest);
+    } else {
+        addMovRegToReg(mem, dest, a);
+        addNot(mem, dest);
+    }
+}
+
 size_t addInstCondJmpRel(StackAllocator* mem, RegisterSet regs, JmpCondistions cond, Register a, Register b, size_t to) {
     if(a < (1 << REG_COUNT)) {
         addCmp(mem, a, b);
