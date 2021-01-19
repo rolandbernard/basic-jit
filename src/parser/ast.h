@@ -49,6 +49,7 @@ typedef enum {
     AST_SLEEP,
     AST_END,
     AST_ASSERT,
+    AST_NOT,
 
     // binary
     AST_ADD,
@@ -66,6 +67,9 @@ typedef enum {
     AST_NE,
     AST_LEFT,
     AST_RIGHT,
+    AST_AND,
+    AST_OR,
+    AST_XOR,
     
     // string
     AST_STRING,

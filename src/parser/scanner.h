@@ -60,6 +60,10 @@ typedef enum {
     TOKEN_RIGHT,
     TOKEN_SLEEP,
     TOKEN_ASSERT,
+    TOKEN_AND,
+    TOKEN_OR,
+    TOKEN_XOR,
+    TOKEN_NOT,
     TOKEN_KEYWORDS_END,
     
     TOKEN_PLUS,
