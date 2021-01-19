@@ -407,6 +407,8 @@ static Ast* parseUnaryExpression(Scanner* scanner, StackAllocator* mem) {
             type = AST_VAL;
         } else if (acceptToken(scanner, TOKEN_MINUS)) {
             type = AST_NEG;
+        } else if (acceptToken(scanner, TOKEN_NOT)) {
+            type = AST_NOT;
         } else if (acceptToken(scanner, TOKEN_STR)) {
             acceptToken(scanner, TOKEN_DOLLAR);
             type = AST_STR;
@@ -548,8 +550,8 @@ static Ast* parseXorExpression(Scanner* scanner, StackAllocator* mem) {
     AstType type;
     do {
         type = AST_NONE;
-        if (acceptToken(scanner, TOKEN_AND)) {
-            type = AST_AND;
+        if (acceptToken(scanner, TOKEN_XOR)) {
+            type = AST_XOR;
         }
         if (type != AST_NONE) {
             Ast* second = parseAndExpression(scanner, mem);
@@ -576,8 +578,8 @@ static Ast* parseOrExpression(Scanner* scanner, StackAllocator* mem) {
     AstType type;
     do {
         type = AST_NONE;
-        if (acceptToken(scanner, TOKEN_AND)) {
-            type = AST_AND;
+        if (acceptToken(scanner, TOKEN_OR)) {
+            type = AST_OR;
         }
         if (type != AST_NONE) {
             Ast* second = parseXorExpression(scanner, mem);
