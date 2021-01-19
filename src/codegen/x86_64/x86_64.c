@@ -173,11 +173,32 @@ void addSub(StackAllocator* mem, X86Register dest, X86Register src) {
     ptr[2] = 0xc0 + regToOpcodeNo(dest) + (regToOpcodeNo(src) * 8);
 }
 
+void addAnd(StackAllocator* mem, X86Register dest, X86Register src) {
+    uint8_t* ptr = (uint8_t*)allocUnaligned(mem, 3);
+    ptr[0] = 0x48 + (dest >= REG_8 ? 1 : 0) + (src >= REG_8 ? 4 : 0);
+    ptr[1] = 0x21;
+    ptr[2] = 0xc0 + regToOpcodeNo(dest) + (regToOpcodeNo(src) * 8);
+}
+
 void addXor(StackAllocator* mem, X86Register dest, X86Register src) {
     uint8_t* ptr = (uint8_t*)allocUnaligned(mem, 3);
     ptr[0] = 0x48 + (dest >= REG_8 ? 1 : 0) + (src >= REG_8 ? 4 : 0);
     ptr[1] = 0x31;
     ptr[2] = 0xc0 + regToOpcodeNo(dest) + (regToOpcodeNo(src) * 8);
+}
+
+void addOr(StackAllocator* mem, X86Register dest, X86Register src) {
+    uint8_t* ptr = (uint8_t*)allocUnaligned(mem, 3);
+    ptr[0] = 0x48 + (dest >= REG_8 ? 1 : 0) + (src >= REG_8 ? 4 : 0);
+    ptr[1] = 0x09;
+    ptr[2] = 0xc0 + regToOpcodeNo(dest) + (regToOpcodeNo(src) * 8);
+}
+
+void addNot(StackAllocator* mem, X86Register src) {
+    uint8_t* ptr = (uint8_t*)allocUnaligned(mem, 3);
+    ptr[0] = 0x48 + (src >= REG_8 ? 1 : 0);
+    ptr[1] = 0xf7;
+    ptr[2] = 0xd0 + regToOpcodeNo(src);
 }
 
 void addTest(StackAllocator* mem, X86Register dest, X86Register src) {
