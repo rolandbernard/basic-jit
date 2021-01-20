@@ -276,6 +276,8 @@ static Ast* parseBaseExpression(Scanner* scanner, StackAllocator* mem) {
             ret->var_type = VAR_STR;
         } else if(acceptToken(scanner, TOKEN_PERCENT)) {
             ret->var_type = VAR_INT;
+        } else if(acceptToken(scanner, TOKEN_QUESTION_MARK)) {
+            ret->var_type = VAR_BOOL;
         }
         if(acceptToken(scanner, TOKEN_BRAC_OPEN)) {
             int count = 0;
@@ -316,6 +318,14 @@ static Ast* parseBaseExpression(Scanner* scanner, StackAllocator* mem) {
         } else {
             return ret;
         }
+    } else if(acceptToken(scanner, TOKEN_TRUE)) {
+        Ast* ret = (Ast*)allocAligned(mem, sizeof(Ast*));
+        ret->type = AST_TRUE;
+        return ret;
+    } else if(acceptToken(scanner, TOKEN_FALSE)) {
+        Ast* ret = (Ast*)allocAligned(mem, sizeof(Ast*));
+        ret->type = AST_FALSE;
+        return ret;
     } else {
         return NULL;
     }
@@ -514,8 +524,47 @@ static Ast* parseAdditiveExpression(Scanner* scanner, StackAllocator* mem) {
     return (Ast*)ret;
 }
 
-static Ast* parseAndExpression(Scanner* scanner, StackAllocator* mem) {
+static Ast* parseConditionExpression(Scanner* scanner, StackAllocator* mem) {
     Ast* ret = parseAdditiveExpression(scanner, mem);
+    if (ret == NULL || ret->type == AST_ERROR) {
+        return ret;
+    }
+    AstType type;
+    do {
+        type = AST_NONE;
+        if(acceptToken(scanner, TOKEN_EQ)) {
+            type = AST_EQ;
+        } else if(acceptToken(scanner, TOKEN_LT)) {
+            type = AST_LT;
+        } else if(acceptToken(scanner, TOKEN_GT)) {
+            type = AST_GT;
+        } else if(acceptToken(scanner, TOKEN_LE)) {
+            type = AST_LE;
+        } else if(acceptToken(scanner, TOKEN_GE)) {
+            type = AST_GE;
+        } else if(acceptToken(scanner, TOKEN_NE)) {
+            type = AST_NE;
+        }
+        if (type != AST_NONE) {
+            Ast* second = parseAdditiveExpression(scanner, mem);
+            if (second == NULL) {
+                return (Ast*)createError(getScannerOffset(scanner), mem);
+            } else if (second->type == AST_ERROR) {
+                return second;
+            }
+            AstBinary* parent = (AstBinary*)allocAligned(mem, sizeof(AstBinary));
+            parent->type = type;
+            parent->first = ret;
+            parent->second = second;
+            ret = (Ast*)parent;
+        }
+    } while(type != AST_NONE);
+    return (Ast*)ret;
+}
+
+
+static Ast* parseAndExpression(Scanner* scanner, StackAllocator* mem) {
+    Ast* ret = parseConditionExpression(scanner, mem);
     if (ret == NULL || ret->type == AST_ERROR) {
         return ret;
     }
@@ -526,7 +575,7 @@ static Ast* parseAndExpression(Scanner* scanner, StackAllocator* mem) {
             type = AST_AND;
         }
         if (type != AST_NONE) {
-            Ast* second = parseAdditiveExpression(scanner, mem);
+            Ast* second = parseConditionExpression(scanner, mem);
             if (second == NULL) {
                 return (Ast*)createError(getScannerOffset(scanner), mem);
             } else if (second->type == AST_ERROR) {
@@ -711,6 +760,8 @@ static Ast* parseLetStatmentAfterName(Scanner* scanner, StackAllocator* mem, Tok
         ast_name->var_type = VAR_STR;
     } else if(acceptToken(scanner, TOKEN_PERCENT)) {
         ast_name->var_type = VAR_INT;
+    } else if(acceptToken(scanner, TOKEN_QUESTION_MARK)) {
+        ast_name->var_type = VAR_BOOL;
     }
     Ast* ast_name_ret = (Ast*)ast_name;
     if(acceptToken(scanner, TOKEN_BRAC_OPEN)) {
@@ -806,7 +857,7 @@ static Ast* parseInputOrPrintOrDataOrReadStatement(Scanner* scanner, StackAlloca
                         return tmp_data[count];
                     } else if(type == AST_INPUT && tmp_data[count]->type != AST_STRING && tmp_data[count]->type != AST_VAR) {
                         return (Ast*)createError(error_offset, mem);
-                    } else if(type == AST_DATA && tmp_data[count]->type != AST_STRING && tmp_data[count]->type != AST_INTEGER && tmp_data[count]->type != AST_FLOAT) {
+                    } else if(type == AST_DATA && tmp_data[count]->type != AST_STRING && tmp_data[count]->type != AST_INTEGER && tmp_data[count]->type != AST_FLOAT && tmp_data[count]->type != AST_TRUE && tmp_data[count]->type != AST_FALSE) {
                         return (Ast*)createError(error_offset, mem);
                     } else if(type == AST_READ && tmp_data[count]->type != AST_VAR && tmp_data[count]->type != AST_INDEX) {
                         return (Ast*)createError(error_offset, mem);
@@ -893,49 +944,9 @@ static Ast* parseSwitchStatement(Scanner* scanner, StackAllocator* mem) {
     }
 }
 
-static Ast* parseCondition(Scanner* scanner, StackAllocator* mem) {
-    Ast* first = parseExpression(scanner, mem);
-    if (first == NULL) {
-        return NULL;
-    } else if (first->type == AST_ERROR) {
-        return first;
-    } else {
-        AstType type = AST_NONE;
-        if(acceptToken(scanner, TOKEN_EQ)) {
-            type = AST_EQ;
-        } else if(acceptToken(scanner, TOKEN_LT)) {
-            type = AST_LT;
-        } else if(acceptToken(scanner, TOKEN_GT)) {
-            type = AST_GT;
-        } else if(acceptToken(scanner, TOKEN_LE)) {
-            type = AST_LE;
-        } else if(acceptToken(scanner, TOKEN_GE)) {
-            type = AST_GE;
-        } else if(acceptToken(scanner, TOKEN_NE)) {
-            type = AST_NE;
-        }
-        if(type != AST_NONE) {
-            Ast* second = parseExpression(scanner, mem);
-            if (second == NULL) {
-                return (Ast*)createError(getScannerOffset(scanner), mem);
-            } else if (second->type == AST_ERROR) {
-                return second;
-            } else {
-                AstBinary* ret = (AstBinary*)allocAligned(mem, sizeof(AstBinary));
-                ret->type = type;
-                ret->first = first;
-                ret->second = second;
-                return (Ast*)ret;
-            }
-        } else {
-            return (Ast*)createError(getScannerOffset(scanner), mem);
-        }
-    }
-}
-
 static Ast* parseIfThenElseStatement(Scanner* scanner, StackAllocator* mem) {
     if(acceptToken(scanner, TOKEN_IF)) {
-        Ast* condition = parseCondition(scanner, mem);
+        Ast* condition = parseExpression(scanner, mem);
         if (condition == NULL) {
             return (Ast*)createError(getScannerOffset(scanner), mem);
         } else if (condition->type == AST_ERROR) {
@@ -976,7 +987,7 @@ static Ast* parseIfThenElseStatement(Scanner* scanner, StackAllocator* mem) {
 
 static Ast* parseAssertStatement(Scanner* scanner, StackAllocator* mem) {
     if (acceptToken(scanner, TOKEN_ASSERT)) {
-        Ast* condition = parseCondition(scanner, mem);
+        Ast* condition = parseExpression(scanner, mem);
         if (condition == NULL) {
             return (Ast*)createError(getScannerOffset(scanner), mem);
         } else if (condition->type == AST_ERROR) {
@@ -995,7 +1006,7 @@ static Ast* parseAssertStatement(Scanner* scanner, StackAllocator* mem) {
 static Ast* parseForStatement(Scanner* scanner, StackAllocator* mem) {
     if(acceptToken(scanner, TOKEN_FOR)) {
         int error_offset = getScannerOffset(scanner);
-        Ast* variable = parseExpression(scanner, mem);
+        Ast* variable = parseBaseExpression(scanner, mem);
         if (variable == NULL) {
             return (Ast*)createError(error_offset, mem);
         } else if (variable->type == AST_ERROR) {
@@ -1059,6 +1070,8 @@ static Ast* parseDimStatment(Scanner* scanner, StackAllocator* mem) {
                 name_ast->var_type = VAR_STR;
             } else if (acceptToken(scanner, TOKEN_PERCENT)) {
                 name_ast->var_type = VAR_INT;
+            } else if(acceptToken(scanner, TOKEN_QUESTION_MARK)) {
+                name_ast->var_type = VAR_BOOL;
             }
             if(acceptToken(scanner, TOKEN_BRAC_OPEN)) {
                 Token size;

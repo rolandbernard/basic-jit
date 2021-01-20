@@ -122,6 +122,7 @@ static void runProgram() {
     addInstPushCallerRegs(data.inst_mem, data.registers);
     bool had_error = false;
     for(int i = 0; i < num_lines && !had_error; i++) {
+        data.line = line_numbers[i];
         Ast* ast = parseLine(lines[i], &ast_memory);
         if(ast != NULL) {
             if(ast->type == AST_ERROR) {
@@ -148,7 +149,6 @@ static void runProgram() {
             }
         }
         resetStack(&ast_memory);
-        data.line++;
     }
     if(!had_error) {
         addInstPopCallerRegs(data.inst_mem, data.registers);

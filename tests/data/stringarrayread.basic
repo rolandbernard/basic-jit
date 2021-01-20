@@ -1,0 +1,12 @@
+
+Data "0", "1", "2", "3", "4"
+
+Dim A$(5)
+
+For X = 0 To 4
+    Read A(X)
+Next X
+
+For X = 0 To 4
+    Rem Assert A(X) = Str(X)
+Next X

@@ -1,0 +1,16 @@
+
+Dim A%(5, 5)
+
+For Y = 0 To 4
+    For X = 0 To 4
+        A(X, Y) = X + Y
+        A%(X, Y) = X + Y
+    Next X
+Next Y
+
+For Y = 0 To 4
+    For X = 0 To 4
+        Assert A(X, Y) = X + Y
+        Assert A%(X, Y) = X + Y
+    Next X
+Next Y

@@ -1,6 +1,7 @@
 
 A = 0
-If A = 0 Then A = 1
-If A = 0 Then A = 0
+If A = 1 OR A = 0 Then A = 1
+If A = 1 AND A = 0 Then A = 0
+If NOT (A = 0) Then A = 2
 
-Assert A = 1
+Assert A = 2

@@ -11,9 +11,11 @@ typedef enum {
     VARIABLE_INT,
     VARIABLE_FLOAT,
     VARIABLE_STRING,
+    VARIABLE_BOOLEAN,
     VARIABLE_INT_ARRAY,
     VARIABLE_FLOAT_ARRAY,
     VARIABLE_STRING_ARRAY,
+    VARIABLE_BOOLEAN_ARRAY,
     VARIABLE_LABEL,
 } VariableType;
 
@@ -42,6 +44,11 @@ typedef struct {
 
 typedef struct {
     VARIABLE_BASE
+    int64_t value;
+} VariableBoolean;
+
+typedef struct {
+    VARIABLE_BASE
     int dim_count;
     int64_t* size;
     int64_t* value;
@@ -60,6 +67,13 @@ typedef struct {
     int64_t* size;
     char** str;
 } VariableStringArray;
+
+typedef struct {
+    VARIABLE_BASE
+    int dim_count;
+    int64_t* size;
+    int64_t* value;
+} VariableBooleanArray;
 
 typedef struct {
     VARIABLE_BASE

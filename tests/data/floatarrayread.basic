@@ -1,0 +1,12 @@
+
+Data 0.0, 0.5, 1.0, 1.5, 2.0
+
+Dim A.(5)
+
+For X = 0 To 4
+    Read A(X)
+Next X
+
+For Y = 0.0 To 4
+    Assert A(Int(Y)) = Y / 2
+Next Y

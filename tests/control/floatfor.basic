@@ -1,0 +1,7 @@
+
+sum = 0.0
+For A = 1.0 To 10 Step 0.5
+    sum = sum + A
+Next A
+
+Assert sum = 104.5

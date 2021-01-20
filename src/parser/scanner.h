@@ -64,6 +64,8 @@ typedef enum {
     TOKEN_OR,
     TOKEN_XOR,
     TOKEN_NOT,
+    TOKEN_TRUE,
+    TOKEN_FALSE,
     TOKEN_KEYWORDS_END,
     
     TOKEN_PLUS,
@@ -84,6 +86,7 @@ typedef enum {
     TOKEN_DOT,
     TOKEN_BRAC_OPEN,
     TOKEN_BRAC_CLOSE,
+    TOKEN_QUESTION_MARK,
     
     TOKEN_STRING,
     TOKEN_FLOAT,

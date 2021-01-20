@@ -1,0 +1,4 @@
+
+Assert True = True
+Assert True != False
+Assert True
