@@ -9,3 +9,5 @@ Assert Int(0.6) = 0
 Assert Int(1.7) = 1
 Assert Int(2.8) = 2
 Assert Int(3.9) = 3
+Assert Int(False) = 0
+Assert Int(True) = 1
