@@ -338,6 +338,62 @@ void addInstSub(StackAllocator* mem, RegisterSet regs, Register dest, Register a
     addInstruction(mem, instr);
 }
 
+void addInstAnd(StackAllocator* mem, RegisterSet regs, Register dest, Register a, Register b) {
+    Aarch64Instruction instr = { .instruction = 0, };
+    instr.logical_shift_reg.cnst0 = LOGICAL_SHIFT_REG_CNST0;
+    instr.logical_shift_reg.opc = LOGICAL_SHIFT_REG_OPC_AND;
+    instr.logical_shift_reg.sf = 1;
+    instr.logical_shift_reg.shift = 0;
+    instr.logical_shift_reg.imm6 = 0;
+    instr.logical_shift_reg.n = 0;
+    instr.logical_shift_reg.rn = regToNo(a);
+    instr.logical_shift_reg.rm = regToNo(b);
+    instr.logical_shift_reg.rd = regToNo(dest);
+    addInstruction(mem, instr);
+}
+
+void addInstXor(StackAllocator* mem, RegisterSet regs, Register dest, Register a, Register b) {
+    Aarch64Instruction instr = { .instruction = 0, };
+    instr.logical_shift_reg.cnst0 = LOGICAL_SHIFT_REG_CNST0;
+    instr.logical_shift_reg.opc = LOGICAL_SHIFT_REG_OPC_EOR;
+    instr.logical_shift_reg.sf = 1;
+    instr.logical_shift_reg.shift = 0;
+    instr.logical_shift_reg.imm6 = 0;
+    instr.logical_shift_reg.n = 0;
+    instr.logical_shift_reg.rn = regToNo(a);
+    instr.logical_shift_reg.rm = regToNo(b);
+    instr.logical_shift_reg.rd = regToNo(dest);
+    addInstruction(mem, instr);
+}
+
+void addInstOr(StackAllocator* mem, RegisterSet regs, Register dest, Register a, Register b) {
+    Aarch64Instruction instr = { .instruction = 0, };
+    instr.logical_shift_reg.cnst0 = LOGICAL_SHIFT_REG_CNST0;
+    instr.logical_shift_reg.opc = LOGICAL_SHIFT_REG_OPC_ORR;
+    instr.logical_shift_reg.sf = 1;
+    instr.logical_shift_reg.shift = 0;
+    instr.logical_shift_reg.imm6 = 0;
+    instr.logical_shift_reg.n = 0;
+    instr.logical_shift_reg.rn = regToNo(a);
+    instr.logical_shift_reg.rm = regToNo(b);
+    instr.logical_shift_reg.rd = regToNo(dest);
+    addInstruction(mem, instr);
+}
+
+void addInstNot(StackAllocator* mem, RegisterSet regs, Register dest, Register a) {
+    Aarch64Instruction instr = { .instruction = 0, };
+    instr.logical_shift_reg.cnst0 = LOGICAL_SHIFT_REG_CNST0;
+    instr.logical_shift_reg.opc = LOGICAL_SHIFT_REG_OPC_ORR;
+    instr.logical_shift_reg.sf = 1;
+    instr.logical_shift_reg.shift = 0;
+    instr.logical_shift_reg.imm6 = 0;
+    instr.logical_shift_reg.n = 1;
+    instr.logical_shift_reg.rn = REG_SPECIAL;
+    instr.logical_shift_reg.rm = regToNo(a);
+    instr.logical_shift_reg.rd = regToNo(dest);
+    addInstruction(mem, instr);
+}
+
 void addInstMul(StackAllocator* mem, RegisterSet regs, Register dest, Register a, Register b) {
     Aarch64Instruction instr = { .instruction = 0, };
     instr.proc_reg_three_source.cnst0 = PROC_REG_THREE_SOURCE_CNST0;

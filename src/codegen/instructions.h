@@ -80,6 +80,14 @@ void addInstDiv(StackAllocator* mem, RegisterSet regs, Register dest, Register a
 
 void addInstRem(StackAllocator* mem, RegisterSet regs, Register dest, Register a, Register b);
 
+void addInstAnd(StackAllocator* mem, RegisterSet regs, Register dest, Register a, Register b);
+
+void addInstXor(StackAllocator* mem, RegisterSet regs, Register dest, Register a, Register b);
+
+void addInstOr(StackAllocator* mem, RegisterSet regs, Register dest, Register a, Register b);
+
+void addInstNot(StackAllocator* mem, RegisterSet regs, Register dest, Register a);
+
 size_t addInstCondJmpRel(StackAllocator* mem, RegisterSet regs, JmpCondistions cond, Register a, Register b, size_t to);
 
 void addInstFAdd(StackAllocator* mem, RegisterSet regs, Register dest, Register a, Register b);

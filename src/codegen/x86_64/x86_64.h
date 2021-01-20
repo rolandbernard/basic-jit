@@ -58,7 +58,13 @@ void addAdd(StackAllocator* mem, X86Register dest, X86Register src);
 
 void addSub(StackAllocator* mem, X86Register dest, X86Register src);
 
+void addAnd(StackAllocator* mem, X86Register dest, X86Register src);
+
 void addXor(StackAllocator* mem, X86Register dest, X86Register src);
+
+void addOr(StackAllocator* mem, X86Register dest, X86Register src);
+
+void addNot(StackAllocator* mem, X86Register src);
 
 void addTest(StackAllocator* mem, X86Register dest, X86Register src);
 

@@ -407,6 +407,8 @@ static Ast* parseUnaryExpression(Scanner* scanner, StackAllocator* mem) {
             type = AST_VAL;
         } else if (acceptToken(scanner, TOKEN_MINUS)) {
             type = AST_NEG;
+        } else if (acceptToken(scanner, TOKEN_NOT)) {
+            type = AST_NOT;
         } else if (acceptToken(scanner, TOKEN_STR)) {
             acceptToken(scanner, TOKEN_DOLLAR);
             type = AST_STR;
@@ -512,8 +514,92 @@ static Ast* parseAdditiveExpression(Scanner* scanner, StackAllocator* mem) {
     return (Ast*)ret;
 }
 
+static Ast* parseAndExpression(Scanner* scanner, StackAllocator* mem) {
+    Ast* ret = parseAdditiveExpression(scanner, mem);
+    if (ret == NULL || ret->type == AST_ERROR) {
+        return ret;
+    }
+    AstType type;
+    do {
+        type = AST_NONE;
+        if (acceptToken(scanner, TOKEN_AND)) {
+            type = AST_AND;
+        }
+        if (type != AST_NONE) {
+            Ast* second = parseAdditiveExpression(scanner, mem);
+            if (second == NULL) {
+                return (Ast*)createError(getScannerOffset(scanner), mem);
+            } else if (second->type == AST_ERROR) {
+                return second;
+            }
+            AstBinary* parent = (AstBinary*)allocAligned(mem, sizeof(AstBinary));
+            parent->type = type;
+            parent->first = ret;
+            parent->second = second;
+            ret = (Ast*)parent;
+        }
+    } while(type != AST_NONE);
+    return (Ast*)ret;
+}
+
+static Ast* parseXorExpression(Scanner* scanner, StackAllocator* mem) {
+    Ast* ret = parseAndExpression(scanner, mem);
+    if (ret == NULL || ret->type == AST_ERROR) {
+        return ret;
+    }
+    AstType type;
+    do {
+        type = AST_NONE;
+        if (acceptToken(scanner, TOKEN_XOR)) {
+            type = AST_XOR;
+        }
+        if (type != AST_NONE) {
+            Ast* second = parseAndExpression(scanner, mem);
+            if (second == NULL) {
+                return (Ast*)createError(getScannerOffset(scanner), mem);
+            } else if (second->type == AST_ERROR) {
+                return second;
+            }
+            AstBinary* parent = (AstBinary*)allocAligned(mem, sizeof(AstBinary));
+            parent->type = type;
+            parent->first = ret;
+            parent->second = second;
+            ret = (Ast*)parent;
+        }
+    } while(type != AST_NONE);
+    return (Ast*)ret;
+}
+
+static Ast* parseOrExpression(Scanner* scanner, StackAllocator* mem) {
+    Ast* ret = parseXorExpression(scanner, mem);
+    if (ret == NULL || ret->type == AST_ERROR) {
+        return ret;
+    }
+    AstType type;
+    do {
+        type = AST_NONE;
+        if (acceptToken(scanner, TOKEN_OR)) {
+            type = AST_OR;
+        }
+        if (type != AST_NONE) {
+            Ast* second = parseXorExpression(scanner, mem);
+            if (second == NULL) {
+                return (Ast*)createError(getScannerOffset(scanner), mem);
+            } else if (second->type == AST_ERROR) {
+                return second;
+            }
+            AstBinary* parent = (AstBinary*)allocAligned(mem, sizeof(AstBinary));
+            parent->type = type;
+            parent->first = ret;
+            parent->second = second;
+            ret = (Ast*)parent;
+        }
+    } while(type != AST_NONE);
+    return (Ast*)ret;
+}
+
 static inline Ast* parseExpression(Scanner* scanner, StackAllocator* mem) {
-    return parseAdditiveExpression(scanner, mem);
+    return parseOrExpression(scanner, mem);
 }
 
 static Ast* parseSleepStatement(Scanner* scanner, StackAllocator* mem) {

@@ -242,12 +242,10 @@ static Value generateMCBinarayOperationAfterFreeReg(AstBinary* ast, MCGeneration
                     case AST_DIV:
                         addInstFDiv(data->inst_mem, data->registers, b.reg, freg, b.reg);
                         break;
-                    case AST_MOD: {
+                    default: {
                         Value ret = { .type = VALUE_ERROR, .error = ERROR_TYPE };
                         return ret;
                     }
-                    default:
-                        break;
                     }
                     data->registers &= ~freg;
                     data->registers &= ~a.reg;
@@ -269,12 +267,10 @@ static Value generateMCBinarayOperationAfterFreeReg(AstBinary* ast, MCGeneration
                     case AST_DIV:
                         addInstFDiv(data->inst_mem, data->registers, a.reg, a.reg, freg);
                         break;
-                    case AST_MOD: {
+                    default: {
                         Value ret = { .type = VALUE_ERROR, .error = ERROR_TYPE };
                         return ret;
                     }
-                    default:
-                        break;
                     }
                     data->registers &= ~freg;
                     data->registers &= ~(b.reg);
@@ -298,6 +294,15 @@ static Value generateMCBinarayOperationAfterFreeReg(AstBinary* ast, MCGeneration
                     case AST_DIV:
                         addInstDiv(data->inst_mem, data->registers, a.reg, a.reg, b.reg);
                         break;
+                    case AST_AND:
+                        addInstAnd(data->inst_mem, data->registers, a.reg, a.reg, b.reg);
+                        break;
+                    case AST_XOR:
+                        addInstXor(data->inst_mem, data->registers, a.reg, a.reg, b.reg);
+                        break;
+                    case AST_OR:
+                        addInstOr(data->inst_mem, data->registers, a.reg, a.reg, b.reg);
+                        break;
                     case AST_MOD:
                         addInstRem(data->inst_mem, data->registers, a.reg, a.reg, b.reg);
                         break;
@@ -318,12 +323,10 @@ static Value generateMCBinarayOperationAfterFreeReg(AstBinary* ast, MCGeneration
                     case AST_DIV:
                         addInstFDiv(data->inst_mem, data->registers, a.reg, a.reg, b.reg);
                         break;
-                    case AST_MOD: {
+                    default: {
                         Value ret = { .type = VALUE_ERROR, .error = ERROR_TYPE };
                         return ret;
                     }
-                    default:
-                        break;
                     }
                 } else if(a.type == VALUE_STRING) {
                     switch (ast->type) {
@@ -350,25 +353,44 @@ static Value generateMCBinarayOperation(AstBinary* ast, MCGenerationData* data) 
     return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCBinarayOperationAfterFreeReg, 2, 2);
 }
 
-static Value generateMCNegAfterFreeReg(AstUnary* ast, MCGenerationData* data) {
+static Value generateMCUnaryAfterFreeReg(AstUnary* ast, MCGenerationData* data) {
     Value a = generateMCForAst(ast->value, data);
     if(a.type == VALUE_ERROR) {
         return a;
     } else {
         if (a.type == VALUE_INT) {
-            Register reg = getFreeRegister(data->registers);
-            data->registers |= reg;
-            addInstMovImmToReg(data->inst_mem, data->registers, reg, 0);
-            addInstSub(data->inst_mem, data->registers, reg, reg, a.reg);
-            data->registers &= ~a.reg;
-            a.reg = reg;
+            switch (ast->type) {
+            case AST_NEG: {
+                Register reg = getFreeRegister(data->registers);
+                data->registers |= reg;
+                addInstMovImmToReg(data->inst_mem, data->registers, reg, 0);
+                addInstSub(data->inst_mem, data->registers, reg, reg, a.reg);
+                data->registers &= ~a.reg;
+                a.reg = reg;
+            } break;
+            case AST_NOT:
+                addInstNot(data->inst_mem, data->registers, a.reg, a.reg);
+                break;
+            default: {
+                Value ret = { .type = VALUE_ERROR, .error = ERROR_TYPE };
+                return ret;
+            }
+            }
         } else if (a.type == VALUE_FLOAT) {
-            Register freg = getFreeFRegister(data->registers);
-            data->registers |= freg;
-            addInstMovImmToFReg(data->inst_mem, data->registers, freg, 0);
-            addInstFSub(data->inst_mem, data->registers, freg, freg, a.reg);
-            data->registers &= ~a.reg;
-            a.reg = freg;
+            switch (ast->type) {
+            case AST_NEG: {
+                Register freg = getFreeFRegister(data->registers);
+                data->registers |= freg;
+                addInstMovImmToFReg(data->inst_mem, data->registers, freg, 0);
+                addInstFSub(data->inst_mem, data->registers, freg, freg, a.reg);
+                data->registers &= ~a.reg;
+                a.reg = freg;
+            } break;
+            default: {
+                Value ret = { .type = VALUE_ERROR, .error = ERROR_TYPE };
+                return ret;
+            }
+            }
         } else {
             Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
             return ret;
@@ -377,8 +399,8 @@ static Value generateMCNegAfterFreeReg(AstUnary* ast, MCGenerationData* data) {
     }
 }
 
-static Value generateMCNeg(AstUnary* ast, MCGenerationData* data) {
-    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCNegAfterFreeReg, 2, 2);
+static Value generateMCUnaryOperation(AstUnary* ast, MCGenerationData* data) {
+    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCUnaryAfterFreeReg, 2, 2);
 }
 
 static Value generateMCString(AstString* ast, MCGenerationData* data) {
@@ -1443,10 +1465,14 @@ Value generateMCForAst(Ast* ast, MCGenerationData* data) {
     case AST_MUL:
     case AST_DIV:
     case AST_MOD:
+    case AST_AND:
+    case AST_OR:
+    case AST_XOR:
         value = generateMCBinarayOperation((AstBinary*)ast, data);
         break;
     case AST_NEG:
-        value = generateMCNeg((AstUnary*)ast, data);
+    case AST_NOT:
+        value = generateMCUnaryOperation((AstUnary*)ast, data);
         break;
     case AST_STRING:
         value = generateMCString((AstString*)ast, data);
