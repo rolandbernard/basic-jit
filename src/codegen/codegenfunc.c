@@ -840,8 +840,8 @@ static Value generateMCEnd(AstUnary* ast, MCGenerationData* data) {
     }
 }
 
-static void failed_assert() {
-    fprintf(stderr, "error: Failed assertion\n");
+static void failedAssert(int64_t line) {
+    fprintf(stderr, "error: Failed assertion at line %li\n", line);
     exit(EXIT_FAILURE);
 }
 
@@ -863,7 +863,11 @@ static Value generateMCAssertAfterFreeReg(AstUnary* ast, MCGenerationData* data)
         skipjmp = addInstCondJmpRel(data->inst_mem, data->registers, COND_NE, cond.reg, zero, 0);
         data->registers &= ~cond.reg;
         data->registers &= ~zero;
-        addInstFunctionCallSimple(data->inst_mem, data->registers, failed_assert);
+        Register line = getFreeRegister(data->registers);
+        data->registers |= line;
+        addInstMovImmToReg(data->inst_mem, data->registers, line, data->line);
+        addInstFunctionCallUnaryNoRet(data->inst_mem, data->registers, line, failedAssert);
+        data->registers &= ~line;
         updateRelativeJumpTarget(data->inst_mem, skipjmp, data->inst_mem->occupied);
         Value ret = { .type=VALUE_NONE };
         return ret;
