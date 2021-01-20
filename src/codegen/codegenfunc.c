@@ -819,87 +819,28 @@ static void failed_assert() {
     exit(EXIT_FAILURE);
 }
 
-static int64_t compareStrings(char* a, char* b) {
-    return strcmp(a == NULL ? "" : a, b == NULL ? "" : b);
-}
-
 static Value generateMCAssertAfterFreeReg(AstUnary* ast, MCGenerationData* data) {
     size_t skipjmp = 0;
-    AstBinary* condition = (AstBinary*)ast->value;
-    Value a = generateMCForAst(condition->first, data);
-    if(a.type == VALUE_ERROR) {
-        return a;
-    } else if(a.type == VALUE_NONE) {
+    Value cond = generateMCForAst(ast->value, data);
+    if (cond.type == VALUE_ERROR) {
+        return cond;
+    } else if (cond.type == VALUE_NONE) {
         Value ret = {.type = VALUE_ERROR, .error = ERROR_SYNTAX};
         return ret;
+    } else if (cond.type != VALUE_BOOLEAN) {
+        Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
+        return ret;
     } else {
-        Value b = generateMCForAst(condition->second, data);
-        if (b.type == VALUE_ERROR) {
-            return b;
-        } else if (b.type == VALUE_NONE) {
-            Value ret = {.type = VALUE_ERROR, .error = ERROR_SYNTAX};
-            return ret;
-        } else {
-            if(b.type != a.type) {
-                if(b.type == VALUE_INT && a.type == VALUE_FLOAT) {
-                    Register freg = getFreeFRegister(data->registers);
-                    data->registers |= freg;
-                    addInstMovRegToFReg(data->inst_mem, data->registers, freg, b.reg);
-                    data->registers &= ~b.reg;
-                    b.type = VALUE_FLOAT;
-                    b.reg = freg;
-                } else if (b.type == VALUE_FLOAT && a.type == VALUE_INT) {
-                    Register freg = getFreeFRegister(data->registers);
-                    data->registers |= freg;
-                    addInstMovRegToFReg(data->inst_mem, data->registers, freg, a.reg);
-                    data->registers &= ~a.reg;
-                    a.type = VALUE_FLOAT;
-                    a.reg = freg;
-                } else {
-                    Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
-                    return ret;
-                }
-            }
-            if (a.type == VALUE_INT || a.type == VALUE_FLOAT || a.type == VALUE_STRING) {
-                if (a.type == VALUE_STRING) {
-                    addInstFunctionCallBinary(data->inst_mem, data->registers, a.reg, a.reg, b.reg, compareStrings);
-                    a.type = VALUE_INT;
-                    addInstMovImmToReg(data->inst_mem, data->registers, b.reg, 0);
-                    b.type = VALUE_INT;
-                }
-                switch (condition->type) {
-                case AST_EQ:
-                    skipjmp = addInstCondJmpRel(data->inst_mem, data->registers, COND_EQ, a.reg, b.reg, 0);
-                    break;
-                case AST_NE:
-                    skipjmp = addInstCondJmpRel(data->inst_mem, data->registers, COND_NE, a.reg, b.reg, 0);
-                    break;
-                case AST_LT:
-                    skipjmp = addInstCondJmpRel(data->inst_mem, data->registers, COND_LT, a.reg, b.reg, 0);
-                    break;
-                case AST_GT:
-                    skipjmp = addInstCondJmpRel(data->inst_mem, data->registers, COND_GT, a.reg, b.reg, 0);
-                    break;
-                case AST_LE:
-                    skipjmp = addInstCondJmpRel(data->inst_mem, data->registers, COND_LE, a.reg, b.reg, 0);
-                    break;
-                case AST_GE:
-                    skipjmp = addInstCondJmpRel(data->inst_mem, data->registers, COND_GE, a.reg, b.reg, 0);
-                    break;
-                default:
-                    break;
-                }
-            } else {
-                Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
-                return ret;
-            }
-            data->registers &= ~a.reg;
-            data->registers &= ~b.reg;
-            addInstFunctionCallSimple(data->inst_mem, data->registers, failed_assert);
-            updateRelativeJumpTarget(data->inst_mem, skipjmp, data->inst_mem->occupied);
-            Value ret = { .type=VALUE_NONE };
-            return ret;
-        }
+        Register zero = getFreeRegister(data->registers);
+        data->registers |= zero;
+        addInstMovImmToReg(data->inst_mem, data->registers, zero, 0);
+        skipjmp = addInstCondJmpRel(data->inst_mem, data->registers, COND_NE, cond.reg, zero, 0);
+        data->registers &= ~cond.reg;
+        data->registers &= ~zero;
+        addInstFunctionCallSimple(data->inst_mem, data->registers, failed_assert);
+        updateRelativeJumpTarget(data->inst_mem, skipjmp, data->inst_mem->occupied);
+        Value ret = { .type=VALUE_NONE };
+        return ret;
     }
 }
 

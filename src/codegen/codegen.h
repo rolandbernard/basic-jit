@@ -25,6 +25,7 @@ typedef enum {
     VALUE_INT,
     VALUE_FLOAT,
     VALUE_STRING,
+    VALUE_BOOLEAN,
 } ValueType;
 
 typedef enum {
