@@ -22,3 +22,11 @@ Let I  = "CDE"
 Assert G = "ABC"
 Assert H = "BCD"
 Assert I = "CDE"
+
+Let J? = True
+Let K  = False
+Let L  = True
+
+Assert J = True
+Assert K = False
+Assert L = True

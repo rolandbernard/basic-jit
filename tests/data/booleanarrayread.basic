@@ -1,0 +1,12 @@
+
+Data True, False, True, False, True
+
+Dim A%(5)
+
+For X = 0 To 4
+    Read A(X)
+Next X
+
+For X = 0 To 4
+    Rem Assert A(X) = (X Mod 2 = 0)
+Next X

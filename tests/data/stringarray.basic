@@ -1,0 +1,16 @@
+
+Dim A$(5, 5)
+
+For Y = 0 To 4
+    For X = 0 To 4
+        A(X, Y) = Str(X) + Str(Y)
+        A$(X, Y) = Str(X) + Str(Y)
+    Next X
+Next Y
+
+For Y = 0 To 4
+    For X = 0 To 4
+        Assert A(X, Y) = Str(X) + Str(Y)
+        Assert A$(X, Y) = Str(X) + Str(Y)
+    Next X
+Next Y

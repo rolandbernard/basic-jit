@@ -1,20 +1,21 @@
 
 Data 1, 2, 3
 second:
-Data 1, 2.5, "Hello"
+Data 1, 2.5, "Hello", True
 
 Restore second
 
-Read A%, B., C$
+Read A%, B., C$, D?
 
 Assert A = 1
 Assert B = 2.5
 Assert C = "Hello"
+Assert D = True
 
 Restore
 
-Read D., E., F.
+Read X., Y., Z.
 
-Assert D = 1
-Assert E = 2
-Assert F = 3
+Assert X = 1
+Assert Y = 2
+Assert Z = 3
