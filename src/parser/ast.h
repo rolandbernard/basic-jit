@@ -18,6 +18,8 @@ typedef enum {
     AST_BEEP,
     AST_RUN,
     AST_NEW,
+    AST_TRUE,
+    AST_FALSE,
     
     // unary 
     AST_TAB,
@@ -121,7 +123,7 @@ typedef struct {
         VAR_UNDEF,
         VAR_FLOAT,
         VAR_INT,
-        VAR_STR
+        VAR_STR,
     } var_type;
     char* name;
 } AstVar;

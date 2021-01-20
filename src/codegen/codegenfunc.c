@@ -345,6 +345,18 @@ static char* stringifyFloat(double x) {
     return ret;
 }
 
+static char* stringifyBoolean(int64_t x) {
+    if (x) {
+        char* ret = (char*)allocAligned(&global_exec_alloc, 5);
+        memcpy(ret, "True", 5);
+        return ret;
+    } else {
+        char* ret = (char*)allocAligned(&global_exec_alloc, 6);
+        memcpy(ret, "False", 6);
+        return ret;
+    }
+}
+
 static Value generateMCStrAfterFreeReg(AstUnary* ast, MCGenerationData* data) {
     Value a = generateMCForAst(ast->value, data);
     if (a.type == VALUE_ERROR) {
@@ -364,6 +376,10 @@ static Value generateMCStrAfterFreeReg(AstUnary* ast, MCGenerationData* data) {
             data->registers &= ~a.reg;
             a.type = VALUE_STRING;
             a.reg = reg;
+            return a;
+        } else if (a.type == VALUE_BOOLEAN) {
+            addInstFunctionCallUnary(data->inst_mem, data->registers, a.reg, a.reg, stringifyBoolean);
+            a.type = VALUE_STRING;
             return a;
         } else {
             Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
@@ -390,6 +406,14 @@ static void printString(char* x) {
     }
 }
 
+static void printBoolean(int64_t x) {
+    if (x) {
+        fprintf(stdout, "True");
+    } else {
+        fprintf(stdout, "False");
+    }
+}
+
 static void printLn() {
     fprintf(stdout, "\n");
 }
@@ -409,6 +433,8 @@ static Value generateMCPrintAfterFreeReg(AstVariable* ast, MCGenerationData* dat
                 addInstFunctionCallUnaryNoRet(data->inst_mem, data->registers, a.reg, printFloat);
             } else if (a.type == VALUE_STRING) {
                 addInstFunctionCallUnaryNoRet(data->inst_mem, data->registers, a.reg, printString);
+            } else if (a.type == VALUE_BOOLEAN) {
+                addInstFunctionCallUnaryNoRet(data->inst_mem, data->registers, a.reg, printBoolean);
             } else {
                 Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
                 return ret;

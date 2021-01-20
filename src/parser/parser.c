@@ -316,6 +316,14 @@ static Ast* parseBaseExpression(Scanner* scanner, StackAllocator* mem) {
         } else {
             return ret;
         }
+    } else if(acceptToken(scanner, TOKEN_TRUE)) {
+        Ast* ret = (Ast*)allocAligned(mem, sizeof(Ast*));
+        ret->type = AST_TRUE;
+        return ret;
+    } else if(acceptToken(scanner, TOKEN_FALSE)) {
+        Ast* ret = (Ast*)allocAligned(mem, sizeof(Ast*));
+        ret->type = AST_FALSE;
+        return ret;
     } else {
         return NULL;
     }

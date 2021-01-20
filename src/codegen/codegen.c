@@ -874,7 +874,7 @@ static Value generateMCConditionAfterFreeReg(AstBinary* ast, MCGenerationData* d
                     return ret;
                 }
             }
-            if (a.type == VALUE_INT || a.type == VALUE_FLOAT || a.type == VALUE_STRING) {
+            if (a.type == VALUE_INT || a.type == VALUE_FLOAT || a.type == VALUE_STRING || a.type == VALUE_BOOLEAN) {
                 if (a.type == VALUE_STRING) {
                     addInstFunctionCallBinary(data->inst_mem, data->registers, a.reg, a.reg, b.reg, compareStrings);
                     a.type = VALUE_INT;
@@ -1439,6 +1439,9 @@ static Value generateMCToIntConvAfterFreeReg(AstUnary* ast, MCGenerationData* da
             a.type = VALUE_INT;
             a.reg = reg;
             return a;
+        } else if (a.type == VALUE_BOOLEAN) {
+            a.type = VALUE_INT;
+            return a;
         } else {
             Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
             return ret;
@@ -1446,7 +1449,9 @@ static Value generateMCToIntConvAfterFreeReg(AstUnary* ast, MCGenerationData* da
     }
 }
 
-static Value generateMCToIntConv(AstUnary* ast, MCGenerationData* data) { return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCToIntConvAfterFreeReg, 1, 1); }
+static Value generateMCToIntConv(AstUnary* ast, MCGenerationData* data) {
+    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCToIntConvAfterFreeReg, 1, 1);
+}
 
 static Value generateMCLineNum(AstLineNum* ast, MCGenerationData* data) {
     char name[25];
@@ -1469,6 +1474,21 @@ static Value generateMCLineNum(AstLineNum* ast, MCGenerationData* data) {
         Value ret = {.type = VALUE_ERROR, .reg = ERROR_DUBLICATE_LABEL};
         return ret;
     }
+}
+
+static Value generateMCBoolean(Ast* ast, MCGenerationData* data) {
+    Register reg = getFreeRegister(data->registers);
+    data->registers |= reg;
+    if (ast->type == AST_TRUE) {
+        addInstMovImmToReg(data->inst_mem, data->registers, reg, 1);
+    } else if (ast->type == AST_FALSE) {
+        addInstMovImmToReg(data->inst_mem, data->registers, reg, 0);
+    }
+    Value ret = {
+        .type = VALUE_BOOLEAN,
+        .reg = reg,
+    };
+    return ret;
 }
 
 Value generateMCForAst(Ast* ast, MCGenerationData* data) {
@@ -1557,6 +1577,10 @@ Value generateMCForAst(Ast* ast, MCGenerationData* data) {
     case AST_GT:
     case AST_GE:
         value = generateMCCondition((AstBinary*)ast, data);
+        break;
+    case AST_TRUE:
+    case AST_FALSE:
+        value = generateMCBoolean(ast, data);
         break;
     default:
         value = generateMCForFunctions(ast, data);
