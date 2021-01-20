@@ -86,6 +86,7 @@ typedef enum {
     TOKEN_DOT,
     TOKEN_BRAC_OPEN,
     TOKEN_BRAC_CLOSE,
+    TOKEN_QUESTION_MARK,
     
     TOKEN_STRING,
     TOKEN_FLOAT,

@@ -276,6 +276,8 @@ static Ast* parseBaseExpression(Scanner* scanner, StackAllocator* mem) {
             ret->var_type = VAR_STR;
         } else if(acceptToken(scanner, TOKEN_PERCENT)) {
             ret->var_type = VAR_INT;
+        } else if(acceptToken(scanner, TOKEN_QUESTION_MARK)) {
+            ret->var_type = VAR_BOOL;
         }
         if(acceptToken(scanner, TOKEN_BRAC_OPEN)) {
             int count = 0;
@@ -758,6 +760,8 @@ static Ast* parseLetStatmentAfterName(Scanner* scanner, StackAllocator* mem, Tok
         ast_name->var_type = VAR_STR;
     } else if(acceptToken(scanner, TOKEN_PERCENT)) {
         ast_name->var_type = VAR_INT;
+    } else if(acceptToken(scanner, TOKEN_QUESTION_MARK)) {
+        ast_name->var_type = VAR_BOOL;
     }
     Ast* ast_name_ret = (Ast*)ast_name;
     if(acceptToken(scanner, TOKEN_BRAC_OPEN)) {
@@ -853,7 +857,7 @@ static Ast* parseInputOrPrintOrDataOrReadStatement(Scanner* scanner, StackAlloca
                         return tmp_data[count];
                     } else if(type == AST_INPUT && tmp_data[count]->type != AST_STRING && tmp_data[count]->type != AST_VAR) {
                         return (Ast*)createError(error_offset, mem);
-                    } else if(type == AST_DATA && tmp_data[count]->type != AST_STRING && tmp_data[count]->type != AST_INTEGER && tmp_data[count]->type != AST_FLOAT) {
+                    } else if(type == AST_DATA && tmp_data[count]->type != AST_STRING && tmp_data[count]->type != AST_INTEGER && tmp_data[count]->type != AST_FLOAT && tmp_data[count]->type != AST_TRUE && tmp_data[count]->type != AST_FALSE) {
                         return (Ast*)createError(error_offset, mem);
                     } else if(type == AST_READ && tmp_data[count]->type != AST_VAR && tmp_data[count]->type != AST_INDEX) {
                         return (Ast*)createError(error_offset, mem);
@@ -1066,6 +1070,8 @@ static Ast* parseDimStatment(Scanner* scanner, StackAllocator* mem) {
                 name_ast->var_type = VAR_STR;
             } else if (acceptToken(scanner, TOKEN_PERCENT)) {
                 name_ast->var_type = VAR_INT;
+            } else if(acceptToken(scanner, TOKEN_QUESTION_MARK)) {
+                name_ast->var_type = VAR_BOOL;
             }
             if(acceptToken(scanner, TOKEN_BRAC_OPEN)) {
                 Token size;

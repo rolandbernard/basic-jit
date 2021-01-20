@@ -124,6 +124,7 @@ typedef struct {
         VAR_FLOAT,
         VAR_INT,
         VAR_STR,
+        VAR_BOOL,
     } var_type;
     char* name;
 } AstVar;

@@ -466,6 +466,10 @@ static Value generateMCData(AstVariable* ast, MCGenerationData* data) {
             AstFloat* value = (AstFloat*)ast->values[i];
             data_element.integer = (int64_t)value->value;
             data_element.real = value->value;
+        } else if (ast->values[i]->type == AST_TRUE || ast->values[i]->type == AST_FALSE) {
+            int64_t value = ast->values[i]->type == AST_TRUE ? 1 : 0;
+            data_element.integer = value;
+            data_element.real = value;
         } else {
             AstString* value = (AstString*)ast->values[i];
             int len = strlen(value->str);
@@ -479,20 +483,30 @@ static Value generateMCData(AstVariable* ast, MCGenerationData* data) {
     return ret;
 }
 
-static Value generateMCReadOfArrayAccessAfterFreeReg(AstIndex* ast, MCGenerationData* data) {
+static Value generateMCIndexPositionAfterFreeReg(AstIndex* ast, MCGenerationData* data) {
     AstVar* var = (AstVar*)ast->name;
     Variable* variable = getVariable(data->variable_table, var->name);
     if (variable != NULL) {
-        if (variable->type != VARIABLE_STRING_ARRAY && variable->type != VARIABLE_INT_ARRAY && variable->type != VARIABLE_FLOAT_ARRAY) {
+        if (variable->type != VARIABLE_STRING_ARRAY && variable->type != VARIABLE_INT_ARRAY && variable->type != VARIABLE_FLOAT_ARRAY && variable->type != VARIABLE_BOOLEAN_ARRAY) {
             Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
             return ret;
         } else if (var->var_type != VAR_UNDEF) {
-            if ((variable->type == VARIABLE_INT_ARRAY && var->var_type != VAR_INT) || (variable->type == VARIABLE_FLOAT_ARRAY && var->var_type != VAR_FLOAT) || (variable->type == VARIABLE_STRING_ARRAY && var->var_type != VAR_STR)) {
+            if (
+                (variable->type == VARIABLE_INT_ARRAY && var->var_type != VAR_INT)
+                || (variable->type == VARIABLE_FLOAT_ARRAY && var->var_type != VAR_FLOAT)
+                || (variable->type == VARIABLE_STRING_ARRAY && var->var_type != VAR_STR)
+                || (variable->type == VARIABLE_BOOLEAN_ARRAY && var->var_type != VAR_BOOL)
+            ) {
                 Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
                 return ret;
             }
         }
-        if ((variable->type == VARIABLE_INT_ARRAY && ((VariableIntArray*)variable)->dim_count != ast->count) || (variable->type == VARIABLE_FLOAT_ARRAY && ((VariableIntArray*)variable)->dim_count != ast->count) || (variable->type == VARIABLE_STRING_ARRAY && ((VariableIntArray*)variable)->dim_count != ast->count)) {
+        if (
+            (variable->type == VARIABLE_INT_ARRAY && ((VariableIntArray*)variable)->dim_count != ast->count)
+            || (variable->type == VARIABLE_FLOAT_ARRAY && ((VariableIntArray*)variable)->dim_count != ast->count)
+            || (variable->type == VARIABLE_STRING_ARRAY && ((VariableStringArray*)variable)->dim_count != ast->count)
+            || (variable->type == VARIABLE_BOOLEAN_ARRAY && ((VariableBooleanArray*)variable)->dim_count != ast->count)
+        ) {
             Value ret = {.type = VALUE_ERROR, .error = ERROR_ARRAY_DIM_COUNT_MISMATCH};
             return ret;
         }
@@ -500,25 +514,6 @@ static Value generateMCReadOfArrayAccessAfterFreeReg(AstIndex* ast, MCGeneration
         data->registers |= imm_reg;
         Register index_reg = getFreeRegister(data->registers);
         data->registers |= index_reg;
-        Register data_reg = getFreeRegister(data->registers);
-        data->registers |= data_reg;
-        addInstMovMemToReg(data->inst_mem, data->registers, index_reg, (void*)&data_index);
-        addInstMovMemToReg(data->inst_mem, data->registers, data_reg, (void*)data->data_mem->data);
-        addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, sizeof(DataElement));
-        addInstMul(data->inst_mem, data->registers, imm_reg, imm_reg, index_reg);
-        addInstAdd(data->inst_mem, data->registers, data_reg, data_reg, imm_reg);
-        addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, 1);
-        addInstAdd(data->inst_mem, data->registers, index_reg, index_reg, imm_reg);
-        addInstMovRegToMem(data->inst_mem, data->registers, index_reg, (void*)&data_index);
-        if (variable->type == VARIABLE_INT_ARRAY) {
-            addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, offsetof(DataElement, integer));
-        } else if (variable->type == VARIABLE_FLOAT_ARRAY) {
-            addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, offsetof(DataElement, real));
-        } else if (variable->type == VARIABLE_STRING_ARRAY) {
-            addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, offsetof(DataElement, string));
-        }
-        addInstAdd(data->inst_mem, data->registers, data_reg, data_reg, imm_reg);
-        addInstMovMemRegToReg(data->inst_mem, data->registers, data_reg, data_reg);
         size_t indexing_size;
         if (variable->type == VARIABLE_INT_ARRAY) {
             addInstMovImmToReg(data->inst_mem, data->registers, index_reg, (intptr_t)((VariableIntArray*)variable)->value);
@@ -529,21 +524,24 @@ static Value generateMCReadOfArrayAccessAfterFreeReg(AstIndex* ast, MCGeneration
         } else if (variable->type == VARIABLE_STRING_ARRAY) {
             addInstMovImmToReg(data->inst_mem, data->registers, index_reg, (intptr_t)((VariableStringArray*)variable)->str);
             indexing_size = sizeof(char*);
+        } else if (variable->type == VARIABLE_BOOLEAN_ARRAY) {
+            addInstMovImmToReg(data->inst_mem, data->registers, index_reg, (intptr_t)((VariableBooleanArray*)variable)->value);
+            indexing_size = sizeof(int64_t);
         }
         for (int i = 0; i < ast->count; i++) {
-            Value index = generateMCForAst(ast->size[i], data);
-            if (index.type == VALUE_ERROR) {
-                return index;
-            } else if (index.type == VALUE_NONE) {
+            Value ind = generateMCForAst(ast->size[i], data);
+            if (ind.type == VALUE_ERROR) {
+                return ind;
+            } else if (ind.type == VALUE_NONE) {
                 Value ret = {.type = VALUE_ERROR, .error = ERROR_SYNTAX};
                 return ret;
-            } else if (index.type != VALUE_INT) {
+            } else if (ind.type != VALUE_INT) {
                 Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
                 return ret;
             } else {
                 addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, indexing_size);
-                addInstMul(data->inst_mem, data->registers, imm_reg, imm_reg, index.reg);
-                data->registers &= ~index.reg;
+                addInstMul(data->inst_mem, data->registers, imm_reg, imm_reg, ind.reg);
+                data->registers &= ~ind.reg;
                 addInstAdd(data->inst_mem, data->registers, index_reg, index_reg, imm_reg);
             }
             if (variable->type == VARIABLE_INT_ARRAY) {
@@ -552,23 +550,87 @@ static Value generateMCReadOfArrayAccessAfterFreeReg(AstIndex* ast, MCGeneration
                 indexing_size *= ((VariableFloatArray*)variable)->size[i];
             } else if (variable->type == VARIABLE_STRING_ARRAY) {
                 indexing_size *= ((VariableStringArray*)variable)->size[i];
+            } else if (variable->type == VARIABLE_BOOLEAN_ARRAY) {
+                indexing_size *= ((VariableBooleanArray*)variable)->size[i];
             }
         }
         data->registers &= ~imm_reg;
-        if (variable->type == VARIABLE_INT_ARRAY) {
-            addInstMovRegToMemReg(data->inst_mem, data->registers, index_reg, data_reg);
-        } else if (variable->type == VARIABLE_FLOAT_ARRAY) {
-            addInstMovRegToMemReg(data->inst_mem, data->registers, index_reg, data_reg);
-        } else if (variable->type == VARIABLE_STRING_ARRAY) {
-            addInstMovRegToMemReg(data->inst_mem, data->registers, index_reg, data_reg);
-        }
-        data->registers &= ~index_reg;
-        data->registers &= ~data_reg;
-        Value ret = {.type = VALUE_NONE};
+        Value ret = {.type = VALUE_INT, .reg=index_reg};
         return ret;
     } else {
         Value ret = {.type = VALUE_ERROR, .error = ERROR_ARRAY_NOT_DEF};
         return ret;
+    }
+}
+
+static Value generateMCIndexPosition(AstIndex* ast, MCGenerationData* data) {
+    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCIndexPositionAfterFreeReg, 2, 0);
+}
+
+static Value generateMCDataPositionAfterFreeReg(AstVar* ast, MCGenerationData* data) {
+    Variable* variable = getVariable(data->variable_table, ast->name);
+    if (variable == NULL) {
+        Value ret = {.type = VALUE_ERROR, .error = ERROR_ARRAY_NOT_DEF};
+        return ret;
+    } else {
+        Register imm_reg = getFreeRegister(data->registers);
+        data->registers |= imm_reg;
+        Register index_reg = getFreeRegister(data->registers);
+        data->registers |= index_reg;
+        Register data_reg = getFreeRegister(data->registers);
+        data->registers |= data_reg;
+        addInstMovMemToReg(data->inst_mem, data->registers, index_reg, (void*)&data_index);
+        addInstMovMemToReg(data->inst_mem, data->registers, data_reg, (void*)&data->data_mem->data);
+        addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, sizeof(DataElement));
+        addInstMul(data->inst_mem, data->registers, imm_reg, imm_reg, index_reg);
+        addInstAdd(data->inst_mem, data->registers, data_reg, data_reg, imm_reg);
+        addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, 1);
+        addInstAdd(data->inst_mem, data->registers, index_reg, index_reg, imm_reg);
+        addInstMovRegToMem(data->inst_mem, data->registers, index_reg, (void*)&data_index);
+        data->registers &= ~index_reg;
+        if (variable->type == VARIABLE_INT || variable->type == VARIABLE_INT_ARRAY) {
+            addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, offsetof(DataElement, integer));
+        } else if (variable->type == VARIABLE_FLOAT || variable->type == VARIABLE_FLOAT_ARRAY) {
+            addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, offsetof(DataElement, real));
+        } else if (variable->type == VARIABLE_STRING || variable->type == VARIABLE_STRING_ARRAY) {
+            addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, offsetof(DataElement, string));
+        } else if (variable->type == VARIABLE_BOOLEAN || variable->type == VARIABLE_BOOLEAN_ARRAY) {
+            addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, offsetof(DataElement, integer));
+        }
+        addInstAdd(data->inst_mem, data->registers, data_reg, data_reg, imm_reg);
+        data->registers &= ~imm_reg;
+        Value ret = {.type = VALUE_INT, .reg = data_reg};
+        return ret;
+    }
+}
+
+static Value generateMCDataPosition(AstVar* ast, MCGenerationData* data) {
+    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCDataPositionAfterFreeReg, 2, 0);
+}
+
+static Value generateMCReadOfArrayAccessAfterFreeReg(AstIndex* ast, MCGenerationData* data) {
+    AstVar* var = (AstVar*)ast->name;
+    Value index = generateMCIndexPosition(ast, data);
+    if (index.type == VALUE_ERROR) {
+        return index;
+    } else if (index.type != VALUE_INT) {
+        Value ret = {.type=VALUE_ERROR, .error=ERROR_TYPE};
+        return ret;
+    } else {
+        Value data_pos = generateMCDataPosition(var, data);
+        if (data_pos.type == VALUE_ERROR) {
+            return data_pos;
+        } else if (data_pos.type != VALUE_INT) {
+            Value ret = {.type=VALUE_ERROR, .error=ERROR_TYPE};
+            return ret;
+        } else {
+            addInstMovMemRegToReg(data->inst_mem, data->registers, data_pos.reg, data_pos.reg);
+            addInstMovRegToMemReg(data->inst_mem, data->registers, index.reg, data_pos.reg);
+            data->registers &= ~index.reg;
+            data->registers &= ~data_pos.reg;
+            Value ret = {.type = VALUE_NONE};
+            return ret;
+        }
     }
 }
 
@@ -600,51 +662,48 @@ static Value generateMCReadAfterFreeReg(AstVariable* ast, MCGenerationData* data
                     varib->str = NULL;
                     addVariable(data->variable_table, var->name, (Variable*)varib, data->variable_mem);
                     variable = (Variable*)varib;
+                } else if (var->var_type == VAR_BOOL) {
+                    VariableBoolean* varib = (VariableBoolean*)allocAligned(data->variable_mem, sizeof(VariableBoolean));
+                    varib->type = VARIABLE_BOOLEAN;
+                    varib->value = 0;
+                    addVariable(data->variable_table, var->name, (Variable*)varib, data->variable_mem);
+                    variable = (Variable*)varib;
                 }
             } else if (var->var_type != VAR_UNDEF) {
-                if ((variable->type == VARIABLE_INT && var->var_type != VAR_INT) || (variable->type == VARIABLE_FLOAT && var->var_type != VAR_FLOAT) || (variable->type == VARIABLE_STRING && var->var_type != VAR_STR)) {
+                if (
+                    (variable->type == VARIABLE_INT && var->var_type != VAR_INT)
+                    || (variable->type == VARIABLE_FLOAT && var->var_type != VAR_FLOAT)
+                    || (variable->type == VARIABLE_STRING && var->var_type != VAR_STR)
+                    || (variable->type == VARIABLE_BOOLEAN && var->var_type != VAR_BOOL)
+                ) {
                     Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
                     return ret;
                 }
-            } else if (variable->type != VARIABLE_FLOAT && variable->type != VARIABLE_INT && variable->type != VARIABLE_STRING) {
+            } else if (variable->type != VARIABLE_FLOAT && variable->type != VARIABLE_INT && variable->type != VARIABLE_STRING && variable->type != VARIABLE_BOOLEAN) {
                 Value ret = {.type = VALUE_ERROR, .error = ERROR_UNINDEXED_ARRAY};
                 return ret;
             }
-            Register imm_reg = getFreeRegister(data->registers);
-            data->registers |= imm_reg;
-            Register index_reg = getFreeRegister(data->registers);
-            data->registers |= index_reg;
-            Register data_reg = getFreeRegister(data->registers);
-            data->registers |= data_reg;
-            addInstMovMemToReg(data->inst_mem, data->registers, index_reg, (void*)&data_index);
-            addInstMovMemToReg(data->inst_mem, data->registers, data_reg, (void*)&data->data_mem->data);
-            addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, sizeof(DataElement));
-            addInstMul(data->inst_mem, data->registers, imm_reg, imm_reg, index_reg);
-            addInstAdd(data->inst_mem, data->registers, data_reg, data_reg, imm_reg);
-            addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, 1);
-            addInstAdd(data->inst_mem, data->registers, index_reg, index_reg, imm_reg);
-            addInstMovRegToMem(data->inst_mem, data->registers, index_reg, (void*)&data_index);
-            data->registers &= ~index_reg;
-            if (variable->type == VARIABLE_INT) {
-                addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, offsetof(DataElement, integer));
-            } else if (variable->type == VARIABLE_FLOAT) {
-                addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, offsetof(DataElement, real));
-            } else if (variable->type == VARIABLE_STRING) {
-                addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, offsetof(DataElement, string));
+            Value data_pos = generateMCDataPosition(var, data);
+            if (data_pos.type == VALUE_ERROR) {
+                return data_pos;
+            } else if (data_pos.type != VALUE_INT) {
+                Value ret = {.type=VALUE_ERROR, .error=ERROR_TYPE};
+                return ret;
+            } else {
+                addInstMovMemRegToReg(data->inst_mem, data->registers, data_pos.reg, data_pos.reg);
+                if (variable->type == VARIABLE_INT) {
+                    addInstMovRegToMem(data->inst_mem, data->registers, data_pos.reg, &((VariableInt*)variable)->value);
+                } else if (variable->type == VARIABLE_FLOAT) {
+                    addInstMovRegToMem(data->inst_mem, data->registers, data_pos.reg, &((VariableFloat*)variable)->value);
+                } else if (variable->type == VARIABLE_STRING) {
+                    addInstMovRegToMem(data->inst_mem, data->registers, data_pos.reg, &((VariableString*)variable)->str);
+                } else if (variable->type == VARIABLE_BOOLEAN) {
+                    addInstMovRegToMem(data->inst_mem, data->registers, data_pos.reg, &((VariableBoolean*)variable)->value);
+                }
+                data->registers &= ~data_pos.reg;
             }
-            addInstAdd(data->inst_mem, data->registers, data_reg, data_reg, imm_reg);
-            data->registers &= ~imm_reg;
-            addInstMovMemRegToReg(data->inst_mem, data->registers, data_reg, data_reg);
-            if (variable->type == VARIABLE_INT) {
-                addInstMovRegToMem(data->inst_mem, data->registers, data_reg, &((VariableInt*)variable)->value);
-            } else if (variable->type == VARIABLE_FLOAT) {
-                addInstMovRegToMem(data->inst_mem, data->registers, data_reg, &((VariableFloat*)variable)->value);
-            } else if (variable->type == VARIABLE_STRING) {
-                addInstMovRegToMem(data->inst_mem, data->registers, data_reg, &((VariableString*)variable)->str);
-            }
-            data->registers &= ~data_reg;
         } else if (ast->values[i]->type == AST_INDEX) {
-            AstIndex* index = (AstIndex*)ast->values[i]->type;
+            AstIndex* index = (AstIndex*)ast->values[i];
             Value ret = withFreeRegister((Ast*)index, data, (GenerateMCFunction)generateMCReadOfArrayAccessAfterFreeReg, 4, 0);
             if (ret.type == VALUE_ERROR) {
                 return ret;
@@ -658,7 +717,9 @@ static Value generateMCReadAfterFreeReg(AstVariable* ast, MCGenerationData* data
     return ret;
 }
 
-static Value generateMCRead(AstVariable* ast, MCGenerationData* data) { return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCReadAfterFreeReg, 3, 0); }
+static Value generateMCRead(AstVariable* ast, MCGenerationData* data) {
+    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCReadAfterFreeReg, 3, 0);
+}
 
 static Value generateMCMultiple(AstVariable* ast, MCGenerationData* data) {
     for (int i = 0; i < ast->count; i++) {
@@ -677,16 +738,26 @@ static Value generateMCLetOfArrayAccessAfterFreeReg(AstLet* ast, MCGenerationDat
     AstVar* var = (AstVar*)index->name;
     Variable* variable = getVariable(data->variable_table, var->name);
     if (variable != NULL) {
-        if (variable->type != VARIABLE_STRING_ARRAY && variable->type != VARIABLE_INT_ARRAY && variable->type != VARIABLE_FLOAT_ARRAY) {
+        if (variable->type != VARIABLE_STRING_ARRAY && variable->type != VARIABLE_INT_ARRAY && variable->type != VARIABLE_FLOAT_ARRAY && variable->type != VARIABLE_BOOLEAN_ARRAY) {
             Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
             return ret;
         } else if (var->var_type != VAR_UNDEF) {
-            if ((variable->type == VARIABLE_INT_ARRAY && var->var_type != VAR_INT) || (variable->type == VARIABLE_FLOAT_ARRAY && var->var_type != VAR_FLOAT) || (variable->type == VARIABLE_STRING_ARRAY && var->var_type != VAR_STR)) {
+            if (
+                (variable->type == VARIABLE_INT_ARRAY && var->var_type != VAR_INT)
+                || (variable->type == VARIABLE_FLOAT_ARRAY && var->var_type != VAR_FLOAT)
+                || (variable->type == VARIABLE_STRING_ARRAY && var->var_type != VAR_STR)
+                || (variable->type == VARIABLE_BOOLEAN_ARRAY && var->var_type != VAR_BOOL)
+            ) {
                 Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
                 return ret;
             }
         }
-        if ((variable->type == VARIABLE_INT_ARRAY && ((VariableIntArray*)variable)->dim_count != index->count) || (variable->type == VARIABLE_FLOAT_ARRAY && ((VariableFloatArray*)variable)->dim_count != index->count) || (variable->type == VARIABLE_STRING_ARRAY && ((VariableStringArray*)variable)->dim_count != index->count)) {
+        if (
+            (variable->type == VARIABLE_INT_ARRAY && ((VariableIntArray*)variable)->dim_count != index->count)
+            || (variable->type == VARIABLE_FLOAT_ARRAY && ((VariableFloatArray*)variable)->dim_count != index->count)
+            || (variable->type == VARIABLE_STRING_ARRAY && ((VariableStringArray*)variable)->dim_count != index->count)
+            || (variable->type == VARIABLE_BOOLEAN_ARRAY && ((VariableBooleanArray*)variable)->dim_count != index->count)
+        ) {
             Value ret = {.type = VALUE_ERROR, .error = ERROR_ARRAY_DIM_COUNT_MISMATCH};
             return ret;
         }
@@ -704,6 +775,9 @@ static Value generateMCLetOfArrayAccessAfterFreeReg(AstLet* ast, MCGenerationDat
         } else if (variable->type == VARIABLE_STRING_ARRAY) {
             addInstMovImmToReg(data->inst_mem, data->registers, index_reg, (intptr_t)((VariableStringArray*)variable)->str);
             indexing_size = sizeof(char*);
+        } else if (variable->type == VARIABLE_BOOLEAN_ARRAY) {
+            addInstMovImmToReg(data->inst_mem, data->registers, index_reg, (intptr_t)((VariableBooleanArray*)variable)->value);
+            indexing_size = sizeof(int64_t);
         }
         for (int i = 0; i < index->count; i++) {
             Value ind = generateMCForAst(index->size[i], data);
@@ -727,6 +801,8 @@ static Value generateMCLetOfArrayAccessAfterFreeReg(AstLet* ast, MCGenerationDat
                 indexing_size *= ((VariableFloatArray*)variable)->size[i];
             } else if (variable->type == VARIABLE_STRING_ARRAY) {
                 indexing_size *= ((VariableStringArray*)variable)->size[i];
+            } else if (variable->type == VARIABLE_BOOLEAN_ARRAY) {
+                indexing_size *= ((VariableBooleanArray*)variable)->size[i];
             }
         }
         data->registers &= ~imm_reg;
@@ -736,7 +812,11 @@ static Value generateMCLetOfArrayAccessAfterFreeReg(AstLet* ast, MCGenerationDat
         } else if (a.type == VALUE_NONE) {
             Value ret = {.type = VALUE_ERROR, .error = ERROR_SYNTAX};
             return ret;
-        } else if ((variable->type == VARIABLE_INT_ARRAY && a.type == VALUE_INT) || (variable->type == VARIABLE_STRING_ARRAY && a.type == VALUE_STRING)) {
+        } else if (
+            (variable->type == VARIABLE_INT_ARRAY && a.type == VALUE_INT)
+            || (variable->type == VARIABLE_STRING_ARRAY && a.type == VALUE_STRING)
+            || (variable->type == VARIABLE_BOOLEAN_ARRAY && a.type == VALUE_BOOLEAN)
+        ) {
             addInstMovRegToMemReg(data->inst_mem, data->registers, index_reg, a.reg);
         } else if (variable->type == VARIABLE_FLOAT_ARRAY && a.type == VALUE_FLOAT) {
             addInstMovFRegToMemReg(data->inst_mem, data->registers, index_reg, a.reg);
@@ -794,13 +874,19 @@ static Value generateMCLetAfterFreeReg(AstLet* ast, MCGenerationData* data) {
                     varib->str = NULL;
                     addVariable(data->variable_table, var->name, (Variable*)varib, data->variable_mem);
                     variable = (Variable*)varib;
+                } else if ((var->var_type == VAR_UNDEF && a.type == VALUE_BOOLEAN) || var->var_type == VAR_BOOL) {
+                    VariableBoolean* varib = (VariableBoolean*)allocAligned(data->variable_mem, sizeof(VariableBoolean));
+                    varib->type = VARIABLE_BOOLEAN;
+                    varib->value = 0;
+                    addVariable(data->variable_table, var->name, (Variable*)varib, data->variable_mem);
+                    variable = (Variable*)varib;
                 }
             } else if (var->var_type != VAR_UNDEF) {
                 if ((variable->type == VARIABLE_INT && var->var_type != VAR_INT) || (variable->type == VARIABLE_FLOAT && var->var_type != VAR_FLOAT) || (variable->type == VARIABLE_STRING && var->var_type != VAR_STR)) {
                     Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
                     return ret;
                 }
-            } else if (variable->type != VARIABLE_FLOAT && variable->type != VARIABLE_INT && variable->type != VARIABLE_STRING) {
+            } else if (variable->type != VARIABLE_FLOAT && variable->type != VARIABLE_INT && variable->type != VARIABLE_STRING && variable->type != VARIABLE_BOOLEAN) {
                 Value ret = {.type = VALUE_ERROR, .error = ERROR_UNINDEXED_ARRAY};
                 return ret;
             }
@@ -810,6 +896,8 @@ static Value generateMCLetAfterFreeReg(AstLet* ast, MCGenerationData* data) {
                 addInstMovFRegToMem(data->inst_mem, data->registers, a.reg, &((VariableFloat*)variable)->value);
             } else if (variable->type == VARIABLE_STRING && a.type == VALUE_STRING) {
                 addInstMovRegToMem(data->inst_mem, data->registers, a.reg, &((VariableString*)variable)->str);
+            } else if (variable->type == VARIABLE_BOOLEAN && a.type == VALUE_BOOLEAN) {
+                addInstMovRegToMem(data->inst_mem, data->registers, a.reg, &((VariableBoolean*)variable)->value);
             } else if (variable->type == VARIABLE_FLOAT && a.type == VALUE_INT) {
                 Register freg = getFreeFRegister(data->registers);
                 data->registers |= freg;
@@ -1158,13 +1246,24 @@ static Value generateMCVarAfterFreeReg(AstVar* ast, MCGenerationData* data) {
             varib->str = NULL;
             addVariable(data->variable_table, ast->name, (Variable*)varib, data->variable_mem);
             variable = (Variable*)varib;
+        } else if (ast->var_type == VAR_BOOL) {
+            VariableBoolean* varib = (VariableBoolean*)allocAligned(data->variable_mem, sizeof(VariableBoolean));
+            varib->type = VARIABLE_BOOLEAN;
+            varib->value = 0;
+            addVariable(data->variable_table, ast->name, (Variable*)varib, data->variable_mem);
+            variable = (Variable*)varib;
         }
     } else if (ast->var_type != VAR_UNDEF) {
-        if ((variable->type == VARIABLE_INT && ast->var_type != VAR_INT) || (variable->type == VARIABLE_FLOAT && ast->var_type != VAR_FLOAT) || (variable->type == VARIABLE_STRING && ast->var_type != VAR_STR)) {
+        if (
+            (variable->type == VARIABLE_INT && ast->var_type != VAR_INT)
+            || (variable->type == VARIABLE_FLOAT && ast->var_type != VAR_FLOAT)
+            || (variable->type == VARIABLE_STRING && ast->var_type != VAR_STR)
+            || (variable->type == VARIABLE_BOOLEAN && ast->var_type != VAR_BOOL)
+        ) {
             Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
             return ret;
         }
-    } else if (variable->type != VARIABLE_FLOAT && variable->type != VARIABLE_INT && variable->type != VARIABLE_STRING) {
+    } else if (variable->type != VARIABLE_FLOAT && variable->type != VARIABLE_INT && variable->type != VARIABLE_STRING && variable->type != VARIABLE_BOOLEAN) {
         Value ret = {.type = VALUE_ERROR, .error = ERROR_UNINDEXED_ARRAY};
         return ret;
     }
@@ -1187,6 +1286,12 @@ static Value generateMCVarAfterFreeReg(AstVar* ast, MCGenerationData* data) {
         data->registers |= imm_reg;
         addInstMovMemToReg(data->inst_mem, data->registers, imm_reg, &((VariableString*)variable)->str);
         ret.type = VALUE_STRING;
+        ret.reg = imm_reg;
+    } else if (variable->type == VARIABLE_BOOLEAN) {
+        imm_reg = getFreeRegister(data->registers);
+        data->registers |= imm_reg;
+        addInstMovMemToReg(data->inst_mem, data->registers, imm_reg, &((VariableBoolean*)variable)->value);
+        ret.type = VALUE_BOOLEAN;
         ret.reg = imm_reg;
     }
     return ret;
@@ -1265,7 +1370,7 @@ static Value generateMCDim(AstIndex* ast, MCGenerationData* data) {
         VariableFloatArray* varib = (VariableFloatArray*)allocAligned(data->variable_mem, sizeof(VariableFloatArray));
         varib->type = VARIABLE_FLOAT_ARRAY;
         varib->dim_count = ast->count;
-        varib->size = (int64_t*)allocAligned(data->variable_mem, sizeof(int64_t) * size);
+        varib->size = (int64_t*)allocAligned(data->variable_mem, sizeof(int64_t) * ast->count);
         for (int i = 0; i < ast->count; i++) {
             AstInt* ds = (AstInt*)ast->size[i];
             varib->size[i] = ds->value;
@@ -1279,7 +1384,7 @@ static Value generateMCDim(AstIndex* ast, MCGenerationData* data) {
         VariableIntArray* varib = (VariableIntArray*)allocAligned(data->variable_mem, sizeof(VariableIntArray));
         varib->type = VARIABLE_INT_ARRAY;
         varib->dim_count = ast->count;
-        varib->size = (int64_t*)allocAligned(data->variable_mem, sizeof(int64_t) * size);
+        varib->size = (int64_t*)allocAligned(data->variable_mem, sizeof(int64_t) * ast->count);
         for (int i = 0; i < ast->count; i++) {
             AstInt* ds = (AstInt*)ast->size[i];
             varib->size[i] = ds->value;
@@ -1293,7 +1398,7 @@ static Value generateMCDim(AstIndex* ast, MCGenerationData* data) {
         VariableStringArray* varib = (VariableStringArray*)allocAligned(data->variable_mem, sizeof(VariableStringArray));
         varib->type = VARIABLE_STRING_ARRAY;
         varib->dim_count = ast->count;
-        varib->size = (int64_t*)allocAligned(data->variable_mem, sizeof(int64_t) * size);
+        varib->size = (int64_t*)allocAligned(data->variable_mem, sizeof(int64_t) * ast->count);
         for (int i = 0; i < ast->count; i++) {
             AstInt* ds = (AstInt*)ast->size[i];
             varib->size[i] = ds->value;
@@ -1301,6 +1406,20 @@ static Value generateMCDim(AstIndex* ast, MCGenerationData* data) {
         varib->str = (char**)allocAligned(data->variable_mem, sizeof(char*) * size);
         for (int i = 0; i < size; i++) {
             varib->str[i] = NULL;
+        }
+        addVariable(data->variable_table, var->name, (Variable*)varib, data->variable_mem);
+    } else if (var->var_type == VAR_BOOL) {
+        VariableBooleanArray* varib = (VariableBooleanArray*)allocAligned(data->variable_mem, sizeof(VariableBooleanArray));
+        varib->type = VARIABLE_BOOLEAN_ARRAY;
+        varib->dim_count = ast->count;
+        varib->size = (int64_t*)allocAligned(data->variable_mem, sizeof(int64_t) * ast->count);
+        for (int i = 0; i < ast->count; i++) {
+            AstInt* ds = (AstInt*)ast->size[i];
+            varib->size[i] = ds->value;
+        }
+        varib->value = (int64_t*)allocAligned(data->variable_mem, sizeof(int64_t) * size);
+        for (int i = 0; i < size; i++) {
+            varib->value[i] = 0;
         }
         addVariable(data->variable_table, var->name, (Variable*)varib, data->variable_mem);
     }
@@ -1311,90 +1430,48 @@ static Value generateMCDim(AstIndex* ast, MCGenerationData* data) {
 static Value generateMCIndexAfterFreeReg(AstIndex* ast, MCGenerationData* data) {
     AstVar* var = (AstVar*)ast->name;
     Variable* variable = getVariable(data->variable_table, var->name);
-    if (variable != NULL) {
-        if (variable->type != VARIABLE_STRING_ARRAY && variable->type != VARIABLE_INT_ARRAY && variable->type != VARIABLE_FLOAT_ARRAY) {
-            Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
-            return ret;
-        } else if (var->var_type != VAR_UNDEF) {
-            if ((variable->type == VARIABLE_INT_ARRAY && var->var_type != VAR_INT) || (variable->type == VARIABLE_FLOAT_ARRAY && var->var_type != VAR_FLOAT) || (variable->type == VARIABLE_STRING_ARRAY && var->var_type != VAR_STR)) {
-                Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
-                return ret;
-            }
-        }
-        if ((variable->type == VARIABLE_INT_ARRAY && ((VariableIntArray*)variable)->dim_count != ast->count) || (variable->type == VARIABLE_FLOAT_ARRAY && ((VariableIntArray*)variable)->dim_count != ast->count) || (variable->type == VARIABLE_STRING_ARRAY && ((VariableIntArray*)variable)->dim_count != ast->count)) {
-            Value ret = {.type = VALUE_ERROR, .error = ERROR_ARRAY_DIM_COUNT_MISMATCH};
-            return ret;
-        }
-        Register imm_reg = getFreeRegister(data->registers);
-        data->registers |= imm_reg;
-        Register index_reg = getFreeRegister(data->registers);
-        data->registers |= index_reg;
-        size_t indexing_size;
-        if (variable->type == VARIABLE_INT_ARRAY) {
-            addInstMovImmToReg(data->inst_mem, data->registers, index_reg, (intptr_t)((VariableIntArray*)variable)->value);
-            indexing_size = sizeof(int64_t);
-        } else if (variable->type == VARIABLE_FLOAT_ARRAY) {
-            addInstMovImmToReg(data->inst_mem, data->registers, index_reg, (intptr_t)((VariableFloatArray*)variable)->value);
-            indexing_size = sizeof(double);
-        } else if (variable->type == VARIABLE_STRING_ARRAY) {
-            addInstMovImmToReg(data->inst_mem, data->registers, index_reg, (intptr_t)((VariableStringArray*)variable)->str);
-            indexing_size = sizeof(char*);
-        }
-        for (int i = 0; i < ast->count; i++) {
-            Value ind = generateMCForAst(ast->size[i], data);
-            if (ind.type == VALUE_ERROR) {
-                return ind;
-            } else if (ind.type == VALUE_NONE) {
-                Value ret = {.type = VALUE_ERROR, .error = ERROR_SYNTAX};
-                return ret;
-            } else if (ind.type != VALUE_INT) {
-                Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
-                return ret;
-            } else {
-                addInstMovImmToReg(data->inst_mem, data->registers, imm_reg, indexing_size);
-                addInstMul(data->inst_mem, data->registers, imm_reg, imm_reg, ind.reg);
-                data->registers &= ~ind.reg;
-                addInstAdd(data->inst_mem, data->registers, index_reg, index_reg, imm_reg);
-            }
-            if (variable->type == VARIABLE_INT_ARRAY) {
-                indexing_size *= ((VariableIntArray*)variable)->size[i];
-            } else if (variable->type == VARIABLE_FLOAT_ARRAY) {
-                indexing_size *= ((VariableFloatArray*)variable)->size[i];
-            } else if (variable->type == VARIABLE_STRING_ARRAY) {
-                indexing_size *= ((VariableStringArray*)variable)->size[i];
-            }
-        }
-        data->registers &= ~imm_reg;
+    Value index = generateMCIndexPosition(ast, data);
+    if (index.type == VALUE_ERROR) {
+        return index;
+    } else if (index.type != VALUE_INT) {
+        Value ret = {.type=VALUE_ERROR, .error=ERROR_TYPE};
+        return ret;
+    } else {
         Register ret_reg;
         Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
         if (variable->type == VARIABLE_INT_ARRAY) {
             ret_reg = getFreeRegister(data->registers);
             data->registers |= ret_reg;
-            addInstMovMemRegToReg(data->inst_mem, data->registers, ret_reg, index_reg);
+            addInstMovMemRegToReg(data->inst_mem, data->registers, ret_reg, index.reg);
             ret.type = VALUE_INT;
             ret.reg = ret_reg;
         } else if (variable->type == VARIABLE_FLOAT_ARRAY) {
             ret_reg = getFreeFRegister(data->registers);
             data->registers |= ret_reg;
-            addInstMovMemRegToFReg(data->inst_mem, data->registers, ret_reg, index_reg);
+            addInstMovMemRegToFReg(data->inst_mem, data->registers, ret_reg, index.reg);
             ret.type = VALUE_FLOAT;
             ret.reg = ret_reg;
         } else if (variable->type == VARIABLE_STRING_ARRAY) {
             ret_reg = getFreeRegister(data->registers);
             data->registers |= ret_reg;
-            addInstMovMemRegToReg(data->inst_mem, data->registers, ret_reg, index_reg);
+            addInstMovMemRegToReg(data->inst_mem, data->registers, ret_reg, index.reg);
             ret.type = VALUE_STRING;
             ret.reg = ret_reg;
+        } else if (variable->type == VARIABLE_BOOLEAN_ARRAY) {
+            ret_reg = getFreeRegister(data->registers);
+            data->registers |= ret_reg;
+            addInstMovMemRegToReg(data->inst_mem, data->registers, ret_reg, index.reg);
+            ret.type = VALUE_BOOLEAN;
+            ret.reg = ret_reg;
         }
-        data->registers &= ~index_reg;
-        return ret;
-    } else {
-        Value ret = {.type = VALUE_ERROR, .error = ERROR_ARRAY_NOT_DEF};
+        data->registers &= ~index.reg;
         return ret;
     }
 }
 
-static Value generateMCIndex(AstIndex* ast, MCGenerationData* data) { return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCIndexAfterFreeReg, 2, 1); }
+static Value generateMCIndex(AstIndex* ast, MCGenerationData* data) {
+    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCIndexAfterFreeReg, 2, 1);
+}
 
 static Value generateMCReturn(Ast* ast, MCGenerationData* data) {
     addInstReturn(data->inst_mem, data->registers);
