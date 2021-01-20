@@ -514,8 +514,47 @@ static Ast* parseAdditiveExpression(Scanner* scanner, StackAllocator* mem) {
     return (Ast*)ret;
 }
 
-static Ast* parseAndExpression(Scanner* scanner, StackAllocator* mem) {
+static Ast* parseConditionExpression(Scanner* scanner, StackAllocator* mem) {
     Ast* ret = parseAdditiveExpression(scanner, mem);
+    if (ret == NULL || ret->type == AST_ERROR) {
+        return ret;
+    }
+    AstType type;
+    do {
+        type = AST_NONE;
+        if(acceptToken(scanner, TOKEN_EQ)) {
+            type = AST_EQ;
+        } else if(acceptToken(scanner, TOKEN_LT)) {
+            type = AST_LT;
+        } else if(acceptToken(scanner, TOKEN_GT)) {
+            type = AST_GT;
+        } else if(acceptToken(scanner, TOKEN_LE)) {
+            type = AST_LE;
+        } else if(acceptToken(scanner, TOKEN_GE)) {
+            type = AST_GE;
+        } else if(acceptToken(scanner, TOKEN_NE)) {
+            type = AST_NE;
+        }
+        if (type != AST_NONE) {
+            Ast* second = parseAdditiveExpression(scanner, mem);
+            if (second == NULL) {
+                return (Ast*)createError(getScannerOffset(scanner), mem);
+            } else if (second->type == AST_ERROR) {
+                return second;
+            }
+            AstBinary* parent = (AstBinary*)allocAligned(mem, sizeof(AstBinary));
+            parent->type = type;
+            parent->first = ret;
+            parent->second = second;
+            ret = (Ast*)parent;
+        }
+    } while(type != AST_NONE);
+    return (Ast*)ret;
+}
+
+
+static Ast* parseAndExpression(Scanner* scanner, StackAllocator* mem) {
+    Ast* ret = parseConditionExpression(scanner, mem);
     if (ret == NULL || ret->type == AST_ERROR) {
         return ret;
     }
@@ -526,7 +565,7 @@ static Ast* parseAndExpression(Scanner* scanner, StackAllocator* mem) {
             type = AST_AND;
         }
         if (type != AST_NONE) {
-            Ast* second = parseAdditiveExpression(scanner, mem);
+            Ast* second = parseConditionExpression(scanner, mem);
             if (second == NULL) {
                 return (Ast*)createError(getScannerOffset(scanner), mem);
             } else if (second->type == AST_ERROR) {
@@ -893,49 +932,9 @@ static Ast* parseSwitchStatement(Scanner* scanner, StackAllocator* mem) {
     }
 }
 
-static Ast* parseCondition(Scanner* scanner, StackAllocator* mem) {
-    Ast* first = parseExpression(scanner, mem);
-    if (first == NULL) {
-        return NULL;
-    } else if (first->type == AST_ERROR) {
-        return first;
-    } else {
-        AstType type = AST_NONE;
-        if(acceptToken(scanner, TOKEN_EQ)) {
-            type = AST_EQ;
-        } else if(acceptToken(scanner, TOKEN_LT)) {
-            type = AST_LT;
-        } else if(acceptToken(scanner, TOKEN_GT)) {
-            type = AST_GT;
-        } else if(acceptToken(scanner, TOKEN_LE)) {
-            type = AST_LE;
-        } else if(acceptToken(scanner, TOKEN_GE)) {
-            type = AST_GE;
-        } else if(acceptToken(scanner, TOKEN_NE)) {
-            type = AST_NE;
-        }
-        if(type != AST_NONE) {
-            Ast* second = parseExpression(scanner, mem);
-            if (second == NULL) {
-                return (Ast*)createError(getScannerOffset(scanner), mem);
-            } else if (second->type == AST_ERROR) {
-                return second;
-            } else {
-                AstBinary* ret = (AstBinary*)allocAligned(mem, sizeof(AstBinary));
-                ret->type = type;
-                ret->first = first;
-                ret->second = second;
-                return (Ast*)ret;
-            }
-        } else {
-            return (Ast*)createError(getScannerOffset(scanner), mem);
-        }
-    }
-}
-
 static Ast* parseIfThenElseStatement(Scanner* scanner, StackAllocator* mem) {
     if(acceptToken(scanner, TOKEN_IF)) {
-        Ast* condition = parseCondition(scanner, mem);
+        Ast* condition = parseExpression(scanner, mem);
         if (condition == NULL) {
             return (Ast*)createError(getScannerOffset(scanner), mem);
         } else if (condition->type == AST_ERROR) {
@@ -976,7 +975,7 @@ static Ast* parseIfThenElseStatement(Scanner* scanner, StackAllocator* mem) {
 
 static Ast* parseAssertStatement(Scanner* scanner, StackAllocator* mem) {
     if (acceptToken(scanner, TOKEN_ASSERT)) {
-        Ast* condition = parseCondition(scanner, mem);
+        Ast* condition = parseExpression(scanner, mem);
         if (condition == NULL) {
             return (Ast*)createError(getScannerOffset(scanner), mem);
         } else if (condition->type == AST_ERROR) {
@@ -995,7 +994,7 @@ static Ast* parseAssertStatement(Scanner* scanner, StackAllocator* mem) {
 static Ast* parseForStatement(Scanner* scanner, StackAllocator* mem) {
     if(acceptToken(scanner, TOKEN_FOR)) {
         int error_offset = getScannerOffset(scanner);
-        Ast* variable = parseExpression(scanner, mem);
+        Ast* variable = parseBaseExpression(scanner, mem);
         if (variable == NULL) {
             return (Ast*)createError(error_offset, mem);
         } else if (variable->type == AST_ERROR) {

@@ -334,6 +334,22 @@ static Value generateMCBinarayOperationAfterFreeReg(AstBinary* ast, MCGeneration
                         return ret;
                     }
                     }
+                } else if (a.type == VALUE_BOOLEAN) {
+                    switch (ast->type) {
+                    case AST_AND:
+                        addInstAnd(data->inst_mem, data->registers, a.reg, a.reg, b.reg);
+                        break;
+                    case AST_XOR:
+                        addInstXor(data->inst_mem, data->registers, a.reg, a.reg, b.reg);
+                        break;
+                    case AST_OR:
+                        addInstOr(data->inst_mem, data->registers, a.reg, a.reg, b.reg);
+                        break;
+                    default: {
+                        Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
+                        return ret;
+                    }
+                    }
                 } else {
                     Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
                     return ret;
@@ -345,7 +361,7 @@ static Value generateMCBinarayOperationAfterFreeReg(AstBinary* ast, MCGeneration
     }
 }
 
-static Value generateMCBinarayOperation(AstBinary* ast, MCGenerationData* data) { return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCBinarayOperationAfterFreeReg, 2, 2); }
+static Value generateMCBinaryOperation(AstBinary* ast, MCGenerationData* data) { return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCBinarayOperationAfterFreeReg, 2, 2); }
 
 static Value generateMCUnaryAfterFreeReg(AstUnary* ast, MCGenerationData* data) {
     Value a = generateMCForAst(ast->value, data);
@@ -380,6 +396,21 @@ static Value generateMCUnaryAfterFreeReg(AstUnary* ast, MCGenerationData* data) 
                 data->registers &= ~a.reg;
                 a.reg = freg;
             } break;
+            default: {
+                Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
+                return ret;
+            }
+            }
+        } else if (a.type == VALUE_BOOLEAN) {
+            switch (ast->type) {
+            case AST_NOT:
+                addInstNot(data->inst_mem, data->registers, a.reg, a.reg);
+                Register one = getFreeRegister(data->registers);
+                data->registers |= one;
+                addInstMovImmToReg(data->inst_mem, data->registers, one, 1);
+                addInstAnd(data->inst_mem, data->registers, a.reg, a.reg, one);
+                data->registers &= ~one;
+                break;
             default: {
                 Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
                 return ret;
@@ -1461,7 +1492,7 @@ Value generateMCForAst(Ast* ast, MCGenerationData* data) {
     case AST_AND:
     case AST_OR:
     case AST_XOR:
-        value = generateMCBinarayOperation((AstBinary*)ast, data);
+        value = generateMCBinaryOperation((AstBinary*)ast, data);
         break;
     case AST_NEG:
     case AST_NOT:
