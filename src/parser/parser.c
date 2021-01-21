@@ -7,6 +7,7 @@
 #include "parser/parser.h"
 #include "parser/ast.h"
 #include "parser/scanner.h"
+#include "common/utf8.h"
 
 #define MAX_LIST_LENGTH (1 << 10)
 
@@ -88,27 +89,6 @@ static int parseEscapeCode(const char* data, int* length) {
         break;
     }
     return ret;
-}
-
-static int printUTF8(int c, char* out) {
-    if(c <= 0x7f) {
-        out[0] = (char)c;
-        return 1;
-    } else {
-        int i = 2;
-        while (c > (1 << ((i - 1) * 6 + (6 - i)))) {
-            i++;
-        }
-        out[0] = 0;
-        for(int j = 0; j < i; j++) {
-            out[0] |= (1 << (7 - j));
-        }
-        out[0] |= (c >> ((i - 1) * 6)); 
-        for(int j = 1; j < i; j++) {
-            out[j] = 0x80 | ((c >> ((i - j - 1) * 6)) & 0x3f);
-        }
-        return i;
-    }
 }
 
 static AstError* createError(int offset, StackAllocator* mem) {
@@ -211,7 +191,7 @@ static char* copyEscapedString(const char* str, int len, StackAllocator* mem) {
             if (codepoint == -1) {
                 return NULL;
             } else {
-                new += printUTF8(codepoint, ret + new);
+                new += writeUTF8(codepoint, ret + new);
                 old += length;
             }
             old++;
@@ -422,6 +402,11 @@ static Ast* parseUnaryExpression(Scanner* scanner, StackAllocator* mem) {
         } else if (acceptToken(scanner, TOKEN_STR)) {
             acceptToken(scanner, TOKEN_DOLLAR);
             type = AST_STR;
+        } else if (acceptToken(scanner, TOKEN_CHR)) {
+            acceptToken(scanner, TOKEN_DOLLAR);
+            type = AST_CHR;
+        } else if (acceptToken(scanner, TOKEN_ASC)) {
+            type = AST_ASC;
         }
     }
     if(type != AST_NONE) {

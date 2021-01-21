@@ -6,6 +6,7 @@
 
 #include "codegenfunc.h"
 #include "exec/execalloc.h"
+#include "common/utf8.h"
 
 #define PI 3.14159265358979323
 
@@ -186,6 +187,14 @@ static char* spcFunction(int64_t x) {
     return ret;
 }
 
+static char* chrFunction(int64_t x) {
+    int len = getLengthUTF8(x);
+    char* ret = (char*)allocAligned(&global_exec_alloc, len + 1);
+    writeUTF8(x, ret);
+    ret[len] = 0;
+    return ret;
+}
+
 static Value generateMCUnaryIntToStringAfterFreeReg(AstUnary* ast, MCGenerationData* data) {
     Value a = generateMCForAst(ast->value, data);
     if (a.type == VALUE_ERROR) {
@@ -204,6 +213,9 @@ static Value generateMCUnaryIntToStringAfterFreeReg(AstUnary* ast, MCGenerationD
             break;
         case AST_SPC:
             addInstFunctionCallUnary(data->inst_mem, data->registers, a.reg, a.reg, spcFunction);
+            break;
+        case AST_CHR:
+            addInstFunctionCallUnary(data->inst_mem, data->registers, a.reg, a.reg, chrFunction);
             break;
         default:
             break;
@@ -327,6 +339,35 @@ static Value generateMCValAfterFreeReg(AstUnary* ast, MCGenerationData* data) {
 
 static Value generateMCVal(AstUnary* ast, MCGenerationData* data) {
     return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCValAfterFreeReg, 1, 1);
+}
+
+static int64_t ascFunction(char* str) {
+    uint64_t ret = 0;
+    parseUTF8(str, &ret);
+    return ret;
+}
+
+static Value generateMCAscAfterFreeReg(AstUnary* ast, MCGenerationData* data) {
+    Value a = generateMCForAst(ast->value, data);
+    if (a.type == VALUE_ERROR) {
+        return a;
+    } else if (a.type == VALUE_NONE) {
+        Value ret = {.type = VALUE_ERROR, .error = ERROR_SYNTAX};
+        return ret;
+    } else {
+        if (a.type != VALUE_STRING) {
+            Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
+            return ret;
+        } else {
+            addInstFunctionCallUnary(data->inst_mem, data->registers, a.reg, a.reg, ascFunction);
+            a.type = VALUE_INT;
+            return a;
+        }
+    }
+}
+
+static Value generateMCAsc(AstUnary* ast, MCGenerationData* data) {
+    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCAscAfterFreeReg, 1, 1);
 }
 
 static char* stringifyInt(int64_t x) {
@@ -887,6 +928,7 @@ Value generateMCForFunctions(Ast* ast, MCGenerationData* data) {
             break;
         case AST_TAB:
         case AST_SPC:
+        case AST_CHR:
             value = generateMCUnaryIntToString((AstUnary*)ast, data);
             break;
         case AST_SIN:
@@ -911,6 +953,9 @@ Value generateMCForFunctions(Ast* ast, MCGenerationData* data) {
             break;
         case AST_VAL:
             value = generateMCVal((AstUnary*)ast, data);
+            break;
+        case AST_ASC:
+            value = generateMCAsc((AstUnary*)ast, data);
             break;
         case AST_STR:
             value = generateMCStr((AstUnary*)ast, data);
