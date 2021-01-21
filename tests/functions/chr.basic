@@ -1,0 +1,8 @@
+
+Assert CHR(0x0a) = "\x0a"
+Assert CHR(0x60) = "\x60"
+Assert CHR(0xe4) = "\xe4"
+Assert CHR(0x20ac) = "\u20ac"
+Assert CHR(0xfffd) = "\ufffd"
+Assert CHR(0x10e7c) = "\U00010e7c"
+Assert CHR(0x1f600) = "\U0001F600"
