@@ -13,8 +13,9 @@
 #include "exec/executil.h"
 #include "exec/execalloc.h"
 
-#define MAX_LINE_BUFFER (1 << 20)
-static char line_buffer[MAX_LINE_BUFFER];
+#define INITIAL_LINE_BUFFER 32
+static char* line_buffer;
+static size_t line_buffer_capacity = 0;
 
 int executeFile(const char* filename) {
     int exit_code = EXIT_SUCCESS;
@@ -42,40 +43,59 @@ int executeFile(const char* filename) {
         };
         addInstPushCallerRegs(data.inst_mem, data.registers);
         bool had_error = false;
-        while(!had_error && fgets(line_buffer, MAX_LINE_BUFFER, file) != NULL) {
-            size_t len = strlen(line_buffer);
-            if(line_buffer[len - 1] == '\n') {
-                line_buffer[len - 1] = 0;
-            }
-            Ast* ast = parseLine(line_buffer, &ast_memory);
-            if(ast != NULL) {
-                if(ast->type == AST_ERROR) {
-                    AstError* error = (AstError*)ast;
-                    fprintf(stderr, "error: Syntax error at line %i:%i\n", data.line, error->offset + 1);
-                    fprintf(stderr, " | %s\n", line_buffer);
-                    fprintf(stderr, " | ");
-                    for(size_t i = 0; i < error->offset; i++) {
-                        if(line_buffer[i] == '\t') {
-                            fputc('\t', stderr);
-                        } else {
-                            fputc(' ', stderr);
-                        }
-                    }
-                    fputc('^', stderr);
-                    fputc('\n', stderr);
-                    had_error = true;
-                    exit_code = EXIT_FAILURE;
-                } else {
-                    Error error = generateMC(ast, &data);
-                    if(error != ERROR_NONE) {
-                        fprintf(stderr, "error: %s at line %i\n", getErrorName(error), data.line);
-                        had_error = true;
-                        exit_code = EXIT_FAILURE;
+        bool end_of_file = false;
+        while(!had_error && !end_of_file) {
+            int next_char; 
+            int len = 0;
+            do {
+                next_char = fgetc(file);
+                if (len == line_buffer_capacity) {
+                    if (line_buffer_capacity == 0) {
+                        line_buffer_capacity = INITIAL_LINE_BUFFER;
+                        line_buffer = (char*)malloc(sizeof(char) * line_buffer_capacity);
+                    } else {
+                        line_buffer_capacity *= 2;
+                        line_buffer = (char*)realloc(line_buffer, sizeof(char) * line_buffer_capacity);
                     }
                 }
+                line_buffer[len] = next_char;
+                len++;
+            } while (next_char != '\n' && next_char != EOF);
+            len--;
+            line_buffer[len] = 0;
+            if (next_char == EOF) {
+                end_of_file = true;
+            } else {
+                Ast* ast = parseLine(line_buffer, &ast_memory);
+                if (ast != NULL) {
+                    if (ast->type == AST_ERROR) {
+                        AstError* error = (AstError*)ast;
+                        fprintf(stderr, "error: Syntax error at line %i:%i\n", data.line, error->offset + 1);
+                        fprintf(stderr, " | %s\n", line_buffer);
+                        fprintf(stderr, " | ");
+                        for (size_t i = 0; i < error->offset; i++) {
+                            if (line_buffer[i] == '\t') {
+                                fputc('\t', stderr);
+                            } else {
+                                fputc(' ', stderr);
+                            }
+                        }
+                        fputc('^', stderr);
+                        fputc('\n', stderr);
+                        had_error = true;
+                        exit_code = EXIT_FAILURE;
+                    } else {
+                        Error error = generateMC(ast, &data);
+                        if (error != ERROR_NONE) {
+                            fprintf(stderr, "error: %s at line %i\n", getErrorName(error), data.line);
+                            had_error = true;
+                            exit_code = EXIT_FAILURE;
+                        }
+                    }
+                }
+                resetStack(&ast_memory);
+                data.line++;
             }
-            resetStack(&ast_memory);
-            data.line++;
         }
         fclose(file);
         if(!had_error) {
