@@ -109,6 +109,8 @@ static void removeAllLines() {
     }
     free(line_numbers);
     free(lines);
+    line_numbers = NULL;
+    lines = NULL;
     num_lines = 0;
     line_capacity = 0;
 }
@@ -187,6 +189,64 @@ static void runProgram() {
     }
 }
 
+static bool executeLine(const char* line);
+
+static bool inputLine(FILE* input) {
+    bool end = false;
+    int next_char;
+    int len = 0;
+    do {
+        next_char = fgetc(input);
+        if (len == line_buffer_capacity) {
+            if (line_buffer_capacity == 0) {
+                line_buffer_capacity = INITIAL_LINE_BUFFER;
+                line_buffer = (char*)malloc(sizeof(char) * line_buffer_capacity);
+            } else {
+                line_buffer_capacity *= 2;
+                line_buffer = (char*)realloc(line_buffer, sizeof(char) * line_buffer_capacity);
+            }
+        }
+        line_buffer[len] = next_char;
+        len++;
+    } while (next_char != '\n' && next_char != EOF);
+    len--;
+    line_buffer[len] = 0;
+    if (next_char != EOF || len != 0) {
+        int i = 0;
+        while (isspace(line_buffer[i])) {
+            i++;
+        }
+        if (line_buffer[i] >= '0' && line_buffer[i] <= '9') {
+            int64_t line_num = 0;
+            for (; line_buffer[i] >= '0' && line_buffer[i] <= '9'; i++) {
+                line_num *= 10;
+                line_num += line_buffer[i] - '0';
+            }
+            while (isspace(line_buffer[i])) {
+                i++;
+            }
+            if (line_buffer[i] == 0) {
+                removeLine(line_num);
+            } else {
+                addLine(line_buffer, line_num);
+            }
+        } else {
+            if (line_buffer[i] == '>') {
+                if (executeLine(line_buffer + i + 1)) {
+                    end = true;
+                }
+            } else {
+                if (executeLine(line_buffer)) {
+                    end = true;
+                }
+            }
+        }
+    } else {
+        end = true;
+    }
+    return end;
+}
+
 static bool executeLine(const char* line) {
     resetLabelList(&label_list);
     resetDataList(&data_list);
@@ -240,6 +300,17 @@ static bool executeLine(const char* line) {
                 }
                 fclose(file);
             }
+        } else if(ast->type == AST_LOAD) {
+            AstUnary* load_ast = (AstUnary*)ast;
+            AstString* filename_ast = (AstString*)load_ast->value;
+            FILE* file = fopen(filename_ast->str, "r");
+            if (file == NULL) {
+                fprintf(stderr, "error: Failed to open the file '%s': %s\n", filename_ast->str, strerror(errno));
+            } else {
+                removeAllLines();
+                while (!inputLine(file)) { }
+                fclose(file);
+            }
         } else if(ast->type == AST_LIST) {
             AstUnary* list = (AstUnary*)ast;
             if(list->value == NULL) {
@@ -281,58 +352,7 @@ int executeCli() {
     bool end = false;
     while(!end) {
         fprintf(stdout, ">");
-        int next_char; 
-        int len = 0;
-        do {
-            next_char = fgetc(stdin);
-            if (len == line_buffer_capacity) {
-                if (line_buffer_capacity == 0) {
-                    line_buffer_capacity = INITIAL_LINE_BUFFER;
-                    line_buffer = (char*)malloc(sizeof(char) * line_buffer_capacity);
-                } else {
-                    line_buffer_capacity *= 2;
-                    line_buffer = (char*)realloc(line_buffer, sizeof(char) * line_buffer_capacity);
-                }
-            }
-            line_buffer[len] = next_char;
-            len++;
-        } while (next_char != '\n' && next_char != EOF);
-        len--;
-        line_buffer[len] = 0;
-        if (next_char == EOF && len == 0) {
-            fprintf(stdout, "\n");
-            end = true;
-        } else {
-            int i = 0;
-            while(isspace(line_buffer[i])) {
-                i++;
-            }
-            if (line_buffer[i] >= '0' && line_buffer[i] <= '9') {
-                int64_t line_num = 0;
-                for (; line_buffer[i] >= '0' && line_buffer[i] <= '9'; i++) {
-                    line_num *= 10;
-                    line_num += line_buffer[i] - '0';
-                }
-                while(isspace(line_buffer[i])) {
-                    i++;
-                }
-                if(line_buffer[i] == 0) {
-                    removeLine(line_num);
-                } else {
-                    addLine(line_buffer, line_num);
-                }
-            } else {
-                if(line_buffer[i] == '>') {
-                    if(executeLine(line_buffer + i + 1)) {
-                        end = true;
-                    }
-                } else {
-                    if(executeLine(line_buffer)) {
-                        end = true;
-                    }
-                }
-            }
-        }
+        end = inputLine(stdin);
     }
     freeLabelList(&label_list);
     freeDataList(&data_list);
@@ -344,6 +364,7 @@ int executeCli() {
     freeStack(&global_exec_alloc);
     removeAllLines();
     free(line_buffer);
+    line_buffer = NULL;
     line_buffer_capacity = 0;
     return exit_code;
 }

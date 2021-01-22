@@ -675,7 +675,13 @@ static Ast* parseEndStatement(Scanner* scanner, StackAllocator* mem) {
 }
 
 static Ast* parseSaveStatement(Scanner* scanner, StackAllocator* mem) {
+    AstType type = AST_NONE;
     if (acceptToken(scanner, TOKEN_SAVE)) {
+        type = AST_SAVE;
+    } else if (acceptToken(scanner, TOKEN_LOAD)) {
+        type = AST_LOAD;
+    }
+    if (type != AST_NONE) {
         int error_offset = getScannerOffset(scanner);
         Ast* value = parseBaseExpression(scanner, mem);
         if (value == NULL) {
@@ -686,7 +692,7 @@ static Ast* parseSaveStatement(Scanner* scanner, StackAllocator* mem) {
             return (Ast*)createError(error_offset, mem);
         } else {
             AstUnary* ret = (AstUnary*)allocAligned(mem, sizeof(AstUnary));
-            ret->type = AST_SAVE;
+            ret->type = type;
             ret->value = value;
             return (Ast*)ret;
         }
