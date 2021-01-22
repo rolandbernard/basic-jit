@@ -1,0 +1,9 @@
+
+Assert ASC("") = 0
+Assert ASC("\x0a") = 0x0a
+Assert ASC("\x60") = 0x60
+Assert ASC("\xe4") = 0xe4
+Assert ASC("\u20ac") = 0x20ac
+Assert ASC("\ufffd") = 0xfffd
+Assert ASC("\U00010e7c") = 0x10e7c
+Assert ASC("\U0001F600") = 0x1f600

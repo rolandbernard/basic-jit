@@ -52,6 +52,8 @@ typedef enum {
     AST_END,
     AST_ASSERT,
     AST_NOT,
+    AST_CHR,
+    AST_ASC,
 
     // binary
     AST_ADD,

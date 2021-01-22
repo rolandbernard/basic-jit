@@ -20,16 +20,22 @@ function runTest {
                 passed_count=$(expr $passed_count + 1)
             fi
         else
-            if [ ${3::5} == fail. ]
+            if [ $? == 124 ]
             then
-                echo -e "\e[32mPassed\e[m test '$3'"
-                passed_count=$(expr $passed_count + 1)
-            else 
-                if [ $? == 124 ]
+                if [ ${3::5} == fail. ]
                 then
+                    echo -e "\e[32mPassed\e[m test '$3'"
+                    passed_count=$(expr $passed_count + 1)
+                else 
                     echo -e "\e[31mFailed\e[m test '$3' by timeout"
                     failed_count=$(expr $failed_count + 1)
-                else
+                fi
+            else
+                if [ ${3::5} == fail. ]
+                then
+                    echo -e "\e[32mPassed\e[m test '$3'"
+                    passed_count=$(expr $passed_count + 1)
+                else 
                     echo -e "\e[31mFailed\e[m test '$3' at runtime"
                     failed_count=$(expr $failed_count + 1)
                     for i in $(seq 0 $2)
@@ -38,7 +44,7 @@ function runTest {
                     done
                     cat /tmp/basic-test.out
                 fi
-            fi
+            fi            
         fi
     fi
 }
