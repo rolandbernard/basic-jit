@@ -1,6 +1,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 
 #include "exec/fileexec.h"
 #include "common/stackalloc.h"
@@ -19,7 +20,7 @@ int executeFile(const char* filename) {
     int exit_code = EXIT_SUCCESS;
     FILE* file = fopen(filename, "r");
     if(file == NULL) {
-        fprintf(stderr, "error: Failed to open the file '%s'\n", filename);
+        fprintf(stderr, "error: Failed to open the file '%s': %s\n", filename, strerror(errno));
         return EXIT_FAILURE;
     } else {
         StackAllocator ast_memory = STACK_ALLOCATOR_INITIALIZER;

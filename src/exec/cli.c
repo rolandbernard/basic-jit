@@ -3,6 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <signal.h>
+#include <errno.h>
 
 #include "exec/cli.h"
 #include "common/stackalloc.h"
@@ -210,6 +211,19 @@ static bool executeLine(const char* line) {
             runProgram();
         } else if(ast->type == AST_NEW) {
             removeAllLines();
+        } else if(ast->type == AST_SAVE) {
+            AstUnary* save_ast = (AstUnary*)ast;
+            AstString* filename_ast = (AstString*)save_ast->value;
+            FILE* file = fopen(filename_ast->str, "w");
+            if (file == NULL) {
+                fprintf(stderr, "error: Failed to open the file '%s': %s\n", filename_ast->str, strerror(errno));
+            } else {
+                for (int i = 0; i < num_lines; i++) {
+                    fwrite(lines[i], 1, strlen(lines[i]), file);
+                    putc('\n', file);
+                }
+                fclose(file);
+            }
         } else if(ast->type == AST_LIST) {
             AstUnary* list = (AstUnary*)ast;
             if(list->value == NULL) {

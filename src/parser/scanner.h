@@ -68,6 +68,7 @@ typedef enum {
     TOKEN_FALSE,
     TOKEN_CHR,
     TOKEN_ASC,
+    TOKEN_SAVE,
     TOKEN_KEYWORDS_END,
     
     TOKEN_PLUS,
