@@ -5,7 +5,6 @@
 
 #include "common/stackalloc.h"
 #include "codegen/value.h"
-#include "parser/ast.h"
 
 #define VARIABLE_BASE VariableType type;
 
@@ -87,7 +86,7 @@ typedef struct {
 typedef struct {
     VARIABLE_BASE
     size_t pos;
-    VarType param_type;
+    Variable* param;
     ValueType return_type;
 } VariableFunc;
 

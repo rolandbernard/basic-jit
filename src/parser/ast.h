@@ -124,7 +124,6 @@ typedef struct {
 } AstError;
 
 typedef enum {
-    VAR_NONE,
     VAR_UNDEF,
     VAR_FLOAT,
     VAR_INT,
