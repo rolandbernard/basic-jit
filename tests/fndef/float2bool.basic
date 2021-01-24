@@ -1,0 +1,8 @@
+
+X = 42
+
+Def Fn isint(X) = (Int(X) = X)
+
+Assert Fn isint(5)
+Assert Not Fn isint(5.5)
+Assert X = 42

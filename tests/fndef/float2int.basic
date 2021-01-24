@@ -1,0 +1,7 @@
+
+X = 42
+
+Def Fn round(X) = Int(X + 0.5)
+
+Assert Fn round(5.5) = 6
+Assert X = 42

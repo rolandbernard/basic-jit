@@ -1,0 +1,7 @@
+
+X = 42
+
+Def Fn double(X$) = Int(Val(X)) * 2
+
+Assert Fn double("12") = 24
+Assert X = 42

@@ -1,0 +1,7 @@
+
+X = 42
+
+Def Fn double(X$) = X + X
+
+Assert Fn double("Hello") = "HelloHello"
+Assert X = 42

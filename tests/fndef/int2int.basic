@@ -1,0 +1,7 @@
+
+X = 42
+
+Def Fn double(X%) = 2 * X
+
+Assert Fn double(5) = 10
+Assert X = 42
