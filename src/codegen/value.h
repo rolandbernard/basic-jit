@@ -23,6 +23,8 @@ typedef enum {
     ERROR_DUBLICATE_LABEL,
     ERROR_UNINDEXED_ARRAY,
     ERROR_FUNC_NOT_DEF,
+    ERROR_TO_MANY_PARAMS,
+    ERROR_TO_FEW_PARAMS,
 } Error;
 
 typedef struct {

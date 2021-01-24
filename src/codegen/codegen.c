@@ -1469,7 +1469,11 @@ static Value generateMCFn(AstFn* ast, MCGenerationData* data) {
     data->registers = 0;
     data->registers |= ret_reg;
     void* param_ptr = NULL;
-    if (ast->value) {
+    if (ast->value != NULL) {
+        if (function->param == NULL) {
+            Value ret = {.type = VALUE_ERROR, .error = ERROR_TO_MANY_PARAMS};
+            return ret;
+        }
         Value a = generateMCForAst(ast->value, data);
         if (a.type == VALUE_ERROR) {
             return a;
@@ -1512,7 +1516,7 @@ static Value generateMCFn(AstFn* ast, MCGenerationData* data) {
             data->registers &= ~a.reg;
         }
     } else if (function->param != NULL) {
-        Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
+        Value ret = {.type = VALUE_ERROR, .error = ERROR_TO_FEW_PARAMS};
         return ret;
     }
     addInstCallRel(data->inst_mem, data->registers, function->pos);
