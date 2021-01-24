@@ -1127,7 +1127,9 @@ static Value generateMCVarAfterFreeReg(AstVar* ast, MCGenerationData* data) {
     return ret;
 }
 
-static Value generateMCVar(AstVar* ast, MCGenerationData* data) { return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCVarAfterFreeReg, 1, 1); }
+static Value generateMCVar(AstVar* ast, MCGenerationData* data) {
+    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCVarAfterFreeReg, 1, 1);
+}
 
 static Value generateMCOnGoAfterFreeReg(AstSwitch* ast, MCGenerationData* data) {
     Value index = generateMCForAst(ast->value, data);
@@ -1479,7 +1481,11 @@ static Value generateMCDef(AstDef* ast, MCGenerationData* data) {
     VariableFunc* function = (VariableFunc*)allocAligned(data->variable_mem, sizeof(VariableFunc));
     function->type = VARIABLE_FUNC;
     function->pos = call_target;
-    function->function = ast;
+    if (ast->variable) {
+        function->param_type = ast->variable->var_type;
+    } else {
+        function->param_type = VAR_NONE;
+    }
     function->return_type = retur.type;
     addVariable(data->func_table, ast->name, (Variable*)function, data->variable_mem);
     Value ret = { .type = VALUE_NONE, };
@@ -1502,30 +1508,35 @@ static Value generateMCFn(AstFn* ast, MCGenerationData* data) {
     RegisterSet old_regs = data->registers;
     data->registers = 0;
     data->registers |= ret_reg;
-    Value a = generateMCForAst(ast->value, data);
-    if (a.type == VALUE_ERROR) {
-        return a;
-    } else {
-        if (
-            (a.type == VALUE_INT && function->function->variable->var_type == VAR_INT)
-            || (a.type == VALUE_STRING && function->function->variable->var_type == VAR_STR)
-            || (a.type == VALUE_BOOLEAN && function->function->variable->var_type == VAR_BOOL)
-        ) {
-            Register param_reg = getFirstRegister();
-            data->registers |= param_reg;
-            addInstMovRegToReg(data->inst_mem, data->registers, param_reg, a.reg);
-        } else if (a.type == VALUE_FLOAT && (function->function->variable->var_type == VAR_FLOAT || function->function->variable->var_type == VAR_UNDEF)) {
-            Register param_reg = getFirstFRegister();
-            data->registers |= param_reg;
-            addInstMovFRegToFReg(data->inst_mem, data->registers, param_reg, a.reg);
-        } else if (a.type == VALUE_INT && (function->function->variable->var_type == VAR_FLOAT || function->function->variable->var_type == VAR_UNDEF)) {
-            Register param_reg = getFirstFRegister();
-            data->registers |= param_reg;
-            addInstMovRegToFReg(data->inst_mem, data->registers, param_reg, a.reg);
+    if (ast->value) {
+        Value a = generateMCForAst(ast->value, data);
+        if (a.type == VALUE_ERROR) {
+            return a;
         } else {
-            Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
-            return ret;
+            if (
+                (a.type == VALUE_INT && function->param_type == VAR_INT)
+                || (a.type == VALUE_STRING && function->param_type == VAR_STR)
+                || (a.type == VALUE_BOOLEAN && function->param_type == VAR_BOOL)
+            ) {
+                Register param_reg = getFirstRegister();
+                data->registers |= param_reg;
+                addInstMovRegToReg(data->inst_mem, data->registers, param_reg, a.reg);
+            } else if (a.type == VALUE_FLOAT && (function->param_type == VAR_FLOAT || function->param_type == VAR_UNDEF)) {
+                Register param_reg = getFirstFRegister();
+                data->registers |= param_reg;
+                addInstMovFRegToFReg(data->inst_mem, data->registers, param_reg, a.reg);
+            } else if (a.type == VALUE_INT && (function->param_type == VAR_FLOAT || function->param_type == VAR_UNDEF)) {
+                Register param_reg = getFirstFRegister();
+                data->registers |= param_reg;
+                addInstMovRegToFReg(data->inst_mem, data->registers, param_reg, a.reg);
+            } else {
+                Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
+                return ret;
+            }
         }
+    } else if (function->param_type != VAR_NONE) {
+        Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
+        return ret;
     }
     addInstCallRel(data->inst_mem, data->registers, function->pos);
     if (function->return_type == VALUE_FLOAT) {

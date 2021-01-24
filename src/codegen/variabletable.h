@@ -87,7 +87,7 @@ typedef struct {
 typedef struct {
     VARIABLE_BASE
     size_t pos;
-    const AstDef* function;
+    VarType param_type;
     ValueType return_type;
 } VariableFunc;
 

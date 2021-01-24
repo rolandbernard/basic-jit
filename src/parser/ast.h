@@ -123,15 +123,18 @@ typedef struct {
     int offset;
 } AstError;
 
+typedef enum {
+    VAR_NONE,
+    VAR_UNDEF,
+    VAR_FLOAT,
+    VAR_INT,
+    VAR_STR,
+    VAR_BOOL,
+} VarType;
+
 typedef struct {
     AST_BASE
-    enum {
-        VAR_UNDEF,
-        VAR_FLOAT,
-        VAR_INT,
-        VAR_STR,
-        VAR_BOOL,
-    } var_type;
+    VarType var_type;
     char* name;
 } AstVar;
 
