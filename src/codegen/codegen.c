@@ -7,22 +7,6 @@
 
 static uint64_t data_index = 0;
 
-static const char* error_to_name[] = {
-    [ERROR_NONE] = "No error",
-    [ERROR_SYNTAX] = "Syntax error",
-    [ERROR_TYPE] = "Type error",
-    [ERROR_VARIABLE_NOT_DEF] = "Variable not defined",
-    [ERROR_NO_MATCHING_FOR] = "No matching for",
-    [ERROR_ARRAY_NOT_DEF] = "Array not defined",
-    [ERROR_ARRAY_DIM_COUNT_MISMATCH] = "Array size mismatch",
-    [ERROR_DUBLICATE_LABEL] = "Dublicate label name",
-    [ERROR_UNINDEXED_ARRAY] = "Unindexed array use",
-};
-
-const char* getErrorName(Error e) {
-    return error_to_name[e];
-}
-
 static int int64ToString(char* str, int64_t v) {
     int len = 0;
     if (v == 0) {
@@ -1414,6 +1398,148 @@ static Value generateMCBoolean(Ast* ast, MCGenerationData* data) {
     return ret;
 }
 
+static Value generateMCDef(AstDef* ast, MCGenerationData* data) {
+    size_t jump = addInstJmpRel(data->inst_mem, data->registers, 0);
+    size_t call_target = data->inst_mem->occupied;
+    RegisterSet old_regs = data->registers;
+    data->registers = 0;
+    Variable* global_param;
+    Variable* local_param;
+    void* local_param_ptr;
+    if (ast->variable != NULL) {
+        global_param = getVariable(data->variable_table, ast->variable->name);
+        if (global_param != NULL) {
+            removeVariable(data->variable_table, ast->variable->name);
+        }
+        Value none = {.type=VALUE_NONE};
+        Value var_gen = generateMCVariableEntry(ast->variable, data, none);
+        if (var_gen.type == VALUE_ERROR) {
+            return var_gen;
+        }
+        local_param = getVariable(data->variable_table, ast->variable->name);
+        if (local_param->type == VARIABLE_INT) {
+            local_param_ptr = (void*)&((VariableInt*)local_param)->value;
+        } else if (local_param->type == VARIABLE_FLOAT) {
+            local_param_ptr = &((VariableFloat*)local_param)->value;
+        } else if (local_param->type == VARIABLE_STRING) {
+            local_param_ptr = &((VariableString*)local_param)->str;
+        } else if (local_param->type == VARIABLE_BOOLEAN) {
+            local_param_ptr = &((VariableBoolean*)local_param)->value;
+        } else {
+            Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
+            return ret;
+        }
+        Register param_reg;
+        if (local_param->type == VARIABLE_FLOAT) {
+            param_reg = getFirstFRegister();
+        } else {
+            param_reg = getFirstRegister();
+        }
+        data->registers |= param_reg;
+        Register old_val = getFreeRegister(data->registers);
+        data->registers |= old_val;
+        addInstMovMemToReg(data->inst_mem, data->registers, old_val, local_param_ptr);
+        addInstPush(data->inst_mem, data->registers, old_val);
+        data->registers &= ~old_val;
+        if (local_param->type == VARIABLE_FLOAT) {
+            addInstMovFRegToMem(data->inst_mem, data->registers, param_reg, local_param_ptr);
+        } else {
+            addInstMovRegToMem(data->inst_mem, data->registers, param_reg, local_param_ptr);
+        }
+        data->registers &= ~param_reg;
+    }
+    Value retur = generateMCForAst(ast->function, data);
+    if (retur.type == VALUE_ERROR) {
+        return retur;
+    }
+    if (retur.type == VALUE_FLOAT) {
+        Register return_reg = getFirstFRegister();
+        addInstMovFRegToFReg(data->inst_mem, data->registers, return_reg, retur.reg);
+    } else if (retur.type == VALUE_INT || retur.type == VALUE_STRING || retur.type == VALUE_BOOLEAN) {
+        Register return_reg = getFirstRegister();
+        addInstMovRegToReg(data->inst_mem, data->registers, return_reg, retur.reg);
+    } else {
+        Value ret = { .type = VALUE_ERROR, .error = ERROR_TYPE };
+        return ret;
+    }
+    if (ast->variable != NULL) {
+        Register old_val = getFreeRegister(data->registers);
+        data->registers |= old_val;
+        addInstPop(data->inst_mem, data->registers, old_val);
+        addInstMovRegToMem(data->inst_mem, data->registers, old_val, local_param_ptr);
+        data->registers &= ~old_val;
+        removeVariable(data->variable_table, ast->variable->name);
+        if (global_param != NULL) {
+            addVariable(data->variable_table, ast->variable->name, global_param, data->variable_mem);
+        }
+    }
+    addInstReturn(data->inst_mem, data->registers);
+    data->registers = old_regs;
+    updateRelativeJumpTarget(data->inst_mem, jump, data->inst_mem->occupied);
+    VariableFunc* function = (VariableFunc*)allocAligned(data->variable_mem, sizeof(VariableFunc));
+    function->type = VARIABLE_FUNC;
+    function->pos = call_target;
+    function->function = ast;
+    function->return_type = retur.type;
+    addVariable(data->func_table, ast->name, (Variable*)function, data->variable_mem);
+    Value ret = { .type = VALUE_NONE, };
+    return ret;
+}
+
+static Value generateMCFn(AstFn* ast, MCGenerationData* data) {
+    VariableFunc* function = (VariableFunc*)getVariable(data->func_table, ast->name);
+    if (function == NULL || function->type != VARIABLE_FUNC) {
+        Value ret = { .type = VALUE_ERROR, .error = ERROR_FUNC_NOT_DEF };
+        return ret;
+    }
+    Register ret_reg;
+    if (function->return_type == VALUE_FLOAT) {
+        ret_reg = getFreeFRegister(data->registers);
+    } else {
+        ret_reg = getFreeRegister(data->registers);
+    }
+    addInstPushAll(data->inst_mem, data->registers, data->registers);
+    RegisterSet old_regs = data->registers;
+    data->registers = 0;
+    data->registers |= ret_reg;
+    Value a = generateMCForAst(ast->value, data);
+    if (a.type == VALUE_ERROR) {
+        return a;
+    } else {
+        if (
+            (a.type == VALUE_INT && function->function->variable->var_type == VAR_INT)
+            || (a.type == VALUE_STRING && function->function->variable->var_type == VAR_STR)
+            || (a.type == VALUE_BOOLEAN && function->function->variable->var_type == VAR_BOOL)
+        ) {
+            Register param_reg = getFirstRegister();
+            data->registers |= param_reg;
+            addInstMovRegToReg(data->inst_mem, data->registers, param_reg, a.reg);
+        } else if (a.type == VALUE_FLOAT && (function->function->variable->var_type == VAR_FLOAT || function->function->variable->var_type == VAR_UNDEF)) {
+            Register param_reg = getFirstFRegister();
+            data->registers |= param_reg;
+            addInstMovFRegToFReg(data->inst_mem, data->registers, param_reg, a.reg);
+        } else if (a.type == VALUE_INT && (function->function->variable->var_type == VAR_FLOAT || function->function->variable->var_type == VAR_UNDEF)) {
+            Register param_reg = getFirstFRegister();
+            data->registers |= param_reg;
+            addInstMovRegToFReg(data->inst_mem, data->registers, param_reg, a.reg);
+        } else {
+            Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
+            return ret;
+        }
+    }
+    addInstCallRel(data->inst_mem, data->registers, function->pos);
+    if (function->return_type == VALUE_FLOAT) {
+        addInstMovFRegToFReg(data->inst_mem, data->registers, ret_reg, getFirstFRegister());
+    } else {
+        addInstMovRegToReg(data->inst_mem, data->registers, ret_reg, getFirstRegister());
+    }
+    data->registers = old_regs;
+    addInstPopAll(data->inst_mem, data->registers, data->registers);
+    data->registers |= ret_reg;
+    Value ret = { .type = function->return_type, .reg = ret_reg };
+    return ret;
+}
+
 Value generateMCForAst(Ast* ast, MCGenerationData* data) {
     Value value = {.type = VALUE_NONE};
     switch (ast->type) {
@@ -1504,6 +1630,12 @@ Value generateMCForAst(Ast* ast, MCGenerationData* data) {
     case AST_TRUE:
     case AST_FALSE:
         value = generateMCBoolean(ast, data);
+        break;
+    case AST_DEF:
+        value = generateMCDef((AstDef*)ast, data);
+        break;
+    case AST_FN:
+        value = generateMCFn((AstFn*)ast, data);
         break;
     default:
         value = generateMCForFunctions(ast, data);

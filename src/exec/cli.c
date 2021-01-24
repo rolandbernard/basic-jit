@@ -32,6 +32,7 @@ static VariableTable var_table = VARIABLE_TABLE_INITIALIZER;
 static StackAllocator jit_memory = STACK_ALLOCATOR_INITIALIZER;
 static VariableTable label_table = VARIABLE_TABLE_INITIALIZER;
 static UnhandeledLabelList label_list = UNHANDLED_LABEL_LIST_INITIALIZER;
+static VariableTable func_table = VARIABLE_TABLE_INITIALIZER;
             
 static int exit_code = EXIT_SUCCESS;
 
@@ -124,6 +125,7 @@ static void runProgram() {
     resetDataList(&data_list);
     resetVariableTable(&var_table);
     resetVariableTable(&label_table);
+    resetVariableTable(&func_table);
     resetStack(&var_memory);
     resetStack(&ast_memory);
     resetStack(&jit_memory);
@@ -135,6 +137,7 @@ static void runProgram() {
         .label_table = &label_table,
         .label_list = &label_list,
         .data_mem = &data_list,
+        .func_table = &func_table,
         .registers = 0,
         .line = 1,
     };
@@ -252,6 +255,7 @@ static bool executeLine(const char* line) {
     resetDataList(&data_list);
     resetVariableTable(&var_table);
     resetVariableTable(&label_table);
+    resetVariableTable(&func_table);
     resetStack(&var_memory);
     resetStack(&ast_memory);
     resetStack(&jit_memory);
@@ -263,6 +267,7 @@ static bool executeLine(const char* line) {
         .label_table = &label_table,
         .label_list = &label_list,
         .data_mem = &data_list,
+        .func_table = &func_table,
         .registers = 0,
         .line = 1,
     };
@@ -358,6 +363,7 @@ int executeCli() {
     freeDataList(&data_list);
     freeVariableTable(&var_table);
     freeVariableTable(&label_table);
+    freeVariableTable(&func_table);
     freeStack(&var_memory);
     freeStack(&ast_memory);
     freeStack(&jit_memory);

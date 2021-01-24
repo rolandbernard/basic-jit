@@ -96,6 +96,8 @@ typedef enum {
     AST_FOR,
     AST_VAR,
     AST_LINENUM,
+    AST_DEF,
+    AST_FN,
     
     // switch
     AST_ON_GOTO,
@@ -206,5 +208,18 @@ typedef struct {
     int count;
     Ast** size;
 } AstIndex;
+
+typedef struct {
+    AST_BASE
+    char* name;
+    AstVar* variable;
+    Ast* function;
+} AstDef;
+
+typedef struct {
+    AST_BASE
+    char* name;
+    Ast* value;
+} AstFn;
 
 #endif

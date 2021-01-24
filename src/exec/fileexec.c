@@ -31,6 +31,7 @@ int executeFile(const char* filename) {
         StackAllocator jit_memory = STACK_ALLOCATOR_INITIALIZER;
         VariableTable label_table = VARIABLE_TABLE_INITIALIZER;
         UnhandeledLabelList label_list = UNHANDLED_LABEL_LIST_INITIALIZER;
+        VariableTable func_table = VARIABLE_TABLE_INITIALIZER;
         MCGenerationData data = {
             .inst_mem = &jit_memory,
             .variable_mem = &var_memory,
@@ -38,6 +39,7 @@ int executeFile(const char* filename) {
             .label_table = &label_table,
             .label_list = &label_list,
             .data_mem = &data_list,
+            .func_table = &func_table,
             .registers = 0,
             .line = 1,
         };
@@ -122,6 +124,7 @@ int executeFile(const char* filename) {
         freeDataList(&data_list);
         freeVariableTable(&var_table);
         freeVariableTable(&label_table);
+        freeVariableTable(&func_table);
         freeStack(&var_memory);
         freeStack(&ast_memory);
         freeStack(&jit_memory);

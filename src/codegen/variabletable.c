@@ -3,6 +3,8 @@
 
 #include "codegen/variabletable.h"
 
+#define DELETED ((void*)1)
+
 static unsigned long hashString(const char* str) {
     unsigned long hash = 6151;
     while(*str) {
@@ -15,7 +17,7 @@ static unsigned long hashString(const char* str) {
 static void insertIntoData(VariableTableEntry* data, int capacity, char* key, Variable* value) {
     // capacity will always be a power of two, meaning `& (capacity - 1)` is equal to `% capacity`
     int index = hashString(key) & (capacity - 1);
-    while(data[index].key != NULL) {
+    while(data[index].key != NULL && data[index].key != DELETED) {
         index = (index + 1) & (capacity - 1);
     }
     data[index].key = key;
@@ -26,7 +28,7 @@ static int findEntry(const VariableTableEntry* data, int capacity, const char* k
     if(capacity != 0) {
         int index = hashString(key) & (capacity - 1);
         while (data[index].key != NULL) {
-            if (strcmp(data[index].key, key) == 0) {
+            if (data[index].key != DELETED && strcmp(data[index].key, key) == 0) {
                 return index;
             }
             index = (index + 1) & (capacity - 1);
@@ -66,6 +68,13 @@ void addVariable(VariableTable* table, const char* name, Variable* variable, Sta
         table->count++;
     } else {
         table->data[index].value = variable;
+    }
+}
+
+void removeVariable(VariableTable* table, const char* name) {
+    int index = findEntry(table->data, table->capacity, name);
+    if (index != -1) {
+        table->data[index].key = DELETED;
     }
 }
 
