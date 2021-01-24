@@ -1405,9 +1405,9 @@ static Value generateMCDef(AstDef* ast, MCGenerationData* data) {
     size_t call_target = data->inst_mem->occupied;
     RegisterSet old_regs = data->registers;
     data->registers = 0;
-    Variable* global_param;
-    Variable* local_param;
-    void* local_param_ptr;
+    Variable* global_param = NULL;
+    Variable* local_param = NULL;
+    void* local_param_ptr = NULL;
     if (ast->variable != NULL) {
         global_param = getVariable(data->variable_table, ast->variable->name);
         if (global_param != NULL) {
