@@ -1,0 +1,12 @@
+
+X = 42
+
+Def Fn order(X%, Y%, Z%) = (X < Y) And (Y < Z)
+
+Assert Fn order(1, 2, 3)
+Assert Fn order(1, 3, 5)
+Assert Fn order(1, 4, 7)
+Assert Not Fn order(3, 2, 1)
+Assert Not Fn order(1, 3, 2)
+Assert Not Fn order(2, 3, 1)
+Assert X = 42

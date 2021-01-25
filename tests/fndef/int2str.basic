@@ -1,0 +1,7 @@
+
+X = 42
+
+Def Fn double(X%) = Str(X) + Str(X)
+
+Assert Fn double(5) = "55"
+Assert X = 42

@@ -1,0 +1,7 @@
+
+X = 42
+
+Def Fn half(X) = X * 0.5
+
+Assert Fn half(5.5) = 2.75
+Assert X = 42

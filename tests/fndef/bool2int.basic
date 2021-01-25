@@ -1,0 +1,8 @@
+
+X = 42
+
+Def Fn ten(X?) = Int(X) * 10
+
+Assert Fn ten(False) = 0
+Assert Fn ten(True) = 10
+Assert X = 42

@@ -1,0 +1,17 @@
+
+X = 42
+
+Def Fn add(A, B) = A + B
+Def Fn mul(A, B) = A * B
+Def Fn fma(A, B, C) = Fn add(Fn mul(A, B), C)
+Def Fn sadd(A, B) = Fn fma(A, A, Fn mul(B, B))
+Def Fn dist(A, B) = sqr(Fn sadd(A, B))
+
+Assert Fn dist(3, 4) = 5
+Assert Fn dist(3, 4) = 5
+Assert Fn dist(20, 21) = 29
+Assert Fn dist(12, 35) = 37
+Assert Fn dist(9, 40) = 41
+Assert Fn dist(28, 45) = 53
+Assert Fn dist(11, 60) = 61
+Assert X = 42

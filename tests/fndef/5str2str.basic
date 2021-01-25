@@ -1,0 +1,9 @@
+
+A = 42
+
+Def Fn concat(A$, B$, C$, D$, E$) = A + B + C + D + E
+
+Assert Fn concat("H", "e", "l", "l", "o") = "Hello"
+Assert Fn concat("He", "ll", "o ", "Wo", "rld") = "Hello World"
+Assert Fn concat("1", "2", "3", "4", "5") = "12345"
+Assert A = 42

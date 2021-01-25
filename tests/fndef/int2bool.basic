@@ -1,0 +1,8 @@
+
+X = 42
+
+Def Fn even(X%) = (X mod 2 = 0)
+
+Assert Fn even(4)
+Assert Not Fn even(5)
+Assert X = 42

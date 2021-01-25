@@ -1,0 +1,8 @@
+
+X = 42
+
+Def Fn tostr(X?) = Str(X)
+
+Assert Fn tostr(False) = "False"
+Assert Fn tostr(True) = "True"
+Assert X = 42

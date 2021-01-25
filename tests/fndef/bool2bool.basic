@@ -1,0 +1,8 @@
+
+X = 42
+
+Def Fn mynot(X?) = (X = False) 
+
+Assert Fn mynot(False)
+Assert Not Fn mynot(True)
+Assert X = 42

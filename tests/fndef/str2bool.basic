@@ -1,0 +1,8 @@
+
+X = 42
+
+Def Fn ishello(X$) = (X = "Hello")
+
+Assert Fn ishello("Hello")
+Assert Not Fn ishello("Helo")
+Assert X = 42

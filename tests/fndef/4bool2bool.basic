@@ -1,0 +1,11 @@
+
+A = 42
+
+Def Fn alltrue(A?, B?, C?, D?) = A And B And C And D
+
+Assert Fn alltrue(True, True, True, True)
+Assert Not Fn alltrue(True, True, True, False)
+Assert Not Fn alltrue(True, True, False, True)
+Assert Not Fn alltrue(True, False, True, True)
+Assert Not Fn alltrue(False, True, True, True)
+Assert A = 42

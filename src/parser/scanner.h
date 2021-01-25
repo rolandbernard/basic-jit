@@ -70,6 +70,8 @@ typedef enum {
     TOKEN_ASC,
     TOKEN_SAVE,
     TOKEN_LOAD,
+    TOKEN_DEF,
+    TOKEN_FN,
     TOKEN_KEYWORDS_END,
     
     TOKEN_PLUS,

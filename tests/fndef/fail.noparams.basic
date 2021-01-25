@@ -1,0 +1,4 @@
+
+Def Fn double(X%) = 2 * X
+
+Assert Fn double() = 10

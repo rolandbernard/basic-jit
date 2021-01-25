@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include "common/stackalloc.h"
+#include "codegen/value.h"
 
 #define VARIABLE_BASE VariableType type;
 
@@ -17,6 +18,7 @@ typedef enum {
     VARIABLE_STRING_ARRAY,
     VARIABLE_BOOLEAN_ARRAY,
     VARIABLE_LABEL,
+    VARIABLE_FUNC,
 } VariableType;
 
 typedef struct {
@@ -82,6 +84,14 @@ typedef struct {
 } VariableLabel;
 
 typedef struct {
+    VARIABLE_BASE
+    size_t pos;
+    int param_count;
+    Variable** params;
+    ValueType return_type;
+} VariableFunc;
+
+typedef struct {
     char* key;
     Variable* value;
 } VariableTableEntry;
@@ -95,6 +105,8 @@ typedef struct {
 #define VARIABLE_TABLE_INITIALIZER { .count = 0, .capacity = 0, .data = NULL }
 
 void addVariable(VariableTable* table, const char* name, Variable* variable, StackAllocator* mem);
+
+void removeVariable(VariableTable* table, const char* name);
 
 Variable* getVariable(VariableTable* table, const char* name);
 
