@@ -1,0 +1,14 @@
+
+X = 42
+
+Def Fn dist(X, Y) = sqr(X * X + Y * Y)
+
+Assert Fn dist(3, 4) = 5
+Assert Fn dist(3, 4) = 5
+Assert Fn dist(20, 21) = 29
+Assert Fn dist(12, 35) = 37
+Assert Fn dist(9, 40) = 41
+Assert Fn dist(28, 45) = 53
+Assert Fn dist(11, 60) = 61
+Assert X = 42
+    
