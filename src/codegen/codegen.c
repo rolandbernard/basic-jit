@@ -1405,19 +1405,19 @@ static Value generateMCDef(AstDef* ast, MCGenerationData* data) {
     size_t call_target = data->inst_mem->occupied;
     RegisterSet old_regs = data->registers;
     data->registers = 0;
-    Variable* global_param = NULL;
-    Variable* local_param = NULL;
-    if (ast->variable != NULL) {
-        global_param = getVariable(data->variable_table, ast->variable->name);
-        if (global_param != NULL) {
-            removeVariable(data->variable_table, ast->variable->name);
+    Variable* global_params[ast->variable_count + 1];
+    Variable* local_params[ast->variable_count + 1];
+    for (int i = 0; i < ast->variable_count; i++) {
+        global_params[i] = getVariable(data->variable_table, ast->variables[i]->name);
+        if (global_params[i] != NULL) {
+            removeVariable(data->variable_table, ast->variables[i]->name);
         }
         Value none = {.type=VALUE_NONE};
-        Value var_gen = generateMCVariableEntry(ast->variable, data, none);
+        Value var_gen = generateMCVariableEntry(ast->variables[i], data, none);
         if (var_gen.type == VALUE_ERROR) {
             return var_gen;
         }
-        local_param = getVariable(data->variable_table, ast->variable->name);
+        local_params[i] = getVariable(data->variable_table, ast->variables[i]->name);
     }
     Value retur = generateMCForAst(ast->function, data);
     if (retur.type == VALUE_ERROR) {
@@ -1433,10 +1433,10 @@ static Value generateMCDef(AstDef* ast, MCGenerationData* data) {
         Value ret = { .type = VALUE_ERROR, .error = ERROR_TYPE };
         return ret;
     }
-    if (ast->variable != NULL) {
-        removeVariable(data->variable_table, ast->variable->name);
-        if (global_param != NULL) {
-            addVariable(data->variable_table, ast->variable->name, global_param, data->variable_mem);
+    for (int i = 0; i < ast->variable_count; i++) {
+        removeVariable(data->variable_table, ast->variables[i]->name);
+        if (global_params[i] != NULL) {
+            addVariable(data->variable_table, ast->variables[i]->name, global_params[i], data->variable_mem);
         }
     }
     addInstReturn(data->inst_mem, data->registers);
@@ -1445,7 +1445,11 @@ static Value generateMCDef(AstDef* ast, MCGenerationData* data) {
     VariableFunc* function = (VariableFunc*)allocAligned(data->variable_mem, sizeof(VariableFunc));
     function->type = VARIABLE_FUNC;
     function->pos = call_target;
-    function->param = local_param;
+    function->param_count = ast->variable_count;
+    function->params = (Variable**)allocAligned(data->variable_mem, sizeof(Variable*) * ast->variable_count);
+    for (int i = 0; i < ast->variable_count; i++) {
+        function->params[i] = local_params[i];
+    }
     function->return_type = retur.type;
     addVariable(data->func_table, ast->name, (Variable*)function, data->variable_mem);
     Value ret = { .type = VALUE_NONE, };
@@ -1468,46 +1472,49 @@ static Value generateMCFn(AstFn* ast, MCGenerationData* data) {
     RegisterSet old_regs = data->registers;
     data->registers = 0;
     data->registers |= ret_reg;
-    void* param_ptr = NULL;
-    if (ast->value != NULL) {
-        if (function->param == NULL) {
-            Value ret = {.type = VALUE_ERROR, .error = ERROR_TO_MANY_PARAMS};
-            return ret;
-        }
-        Value a = generateMCForAst(ast->value, data);
+    if (ast->value_count < function->param_count) {
+        Value ret = {.type = VALUE_ERROR, .error = ERROR_TO_FEW_PARAMS};
+        return ret;
+    } else if (ast->value_count > function->param_count) {
+        Value ret = {.type = VALUE_ERROR, .error = ERROR_TO_MANY_PARAMS};
+        return ret;
+    }
+    void* param_ptrs[function->param_count + 1];
+    for (int i = 0; i < ast->value_count; i++) {
+        Value a = generateMCForAst(ast->values[i], data);
         if (a.type == VALUE_ERROR) {
             return a;
         } else {
-            if (function->param->type == VARIABLE_INT) {
-                param_ptr = (void*)&((VariableInt*)function->param)->value;
-            } else if (function->param->type == VARIABLE_FLOAT) {
-                param_ptr = &((VariableFloat*)function->param)->value;
-            } else if (function->param->type == VARIABLE_STRING) {
-                param_ptr = &((VariableString*)function->param)->str;
-            } else if (function->param->type == VARIABLE_BOOLEAN) {
-                param_ptr = &((VariableBoolean*)function->param)->value;
+            if (function->params[i]->type == VARIABLE_INT) {
+                param_ptrs[i] = (void*)&((VariableInt*)function->params[i])->value;
+            } else if (function->params[i]->type == VARIABLE_FLOAT) {
+                param_ptrs[i] = &((VariableFloat*)function->params[i])->value;
+            } else if (function->params[i]->type == VARIABLE_STRING) {
+                param_ptrs[i] = &((VariableString*)function->params[i])->str;
+            } else if (function->params[i]->type == VARIABLE_BOOLEAN) {
+                param_ptrs[i] = &((VariableBoolean*)function->params[i])->value;
             } else {
                 Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
                 return ret;
             }
             Register old_val = getFreeRegister(data->registers);
             data->registers |= old_val;
-            addInstMovMemToReg(data->inst_mem, data->registers, old_val, param_ptr);
+            addInstMovMemToReg(data->inst_mem, data->registers, old_val, param_ptrs[i]);
             addInstPush(data->inst_mem, data->registers, old_val);
             data->registers &= ~old_val;
             if (
-                (a.type == VALUE_INT && function->param->type == VARIABLE_INT)
-                || (a.type == VALUE_STRING && function->param->type == VARIABLE_STRING)
-                || (a.type == VALUE_BOOLEAN && function->param->type == VARIABLE_BOOLEAN)
+                (a.type == VALUE_INT && function->params[i]->type == VARIABLE_INT)
+                || (a.type == VALUE_STRING && function->params[i]->type == VARIABLE_STRING)
+                || (a.type == VALUE_BOOLEAN && function->params[i]->type == VARIABLE_BOOLEAN)
             ) {
-                addInstMovRegToMem(data->inst_mem, data->registers, a.reg, param_ptr);
-            } else if (a.type == VALUE_FLOAT && function->param->type == VARIABLE_FLOAT) {
-                addInstMovFRegToMem(data->inst_mem, data->registers, a.reg, param_ptr);
-            } else if (a.type == VALUE_INT && function->param->type == VARIABLE_FLOAT) {
+                addInstMovRegToMem(data->inst_mem, data->registers, a.reg, param_ptrs[i]);
+            } else if (a.type == VALUE_FLOAT && function->params[i]->type == VARIABLE_FLOAT) {
+                addInstMovFRegToMem(data->inst_mem, data->registers, a.reg, param_ptrs[i]);
+            } else if (a.type == VALUE_INT && function->params[i]->type == VARIABLE_FLOAT) {
                 Register tmp_reg = getFreeFRegister(data->registers);
                 data->registers |= tmp_reg;
                 addInstMovRegToFReg(data->inst_mem, data->registers, tmp_reg, a.reg);
-                addInstMovFRegToMem(data->inst_mem, data->registers, tmp_reg, param_ptr);
+                addInstMovFRegToMem(data->inst_mem, data->registers, tmp_reg, param_ptrs[i]);
                 data->registers &= ~tmp_reg;
             } else {
                 Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
@@ -1515,16 +1522,13 @@ static Value generateMCFn(AstFn* ast, MCGenerationData* data) {
             }
             data->registers &= ~a.reg;
         }
-    } else if (function->param != NULL) {
-        Value ret = {.type = VALUE_ERROR, .error = ERROR_TO_FEW_PARAMS};
-        return ret;
     }
     addInstCallRel(data->inst_mem, data->registers, function->pos);
-    if (ast->value) {
+    for (int i = ast->value_count - 1; i >= 0; i--) {
         Register old_val = getFreeRegister(data->registers);
         data->registers |= old_val;
         addInstPop(data->inst_mem, data->registers, old_val);
-        addInstMovRegToMem(data->inst_mem, data->registers, old_val, param_ptr);
+        addInstMovRegToMem(data->inst_mem, data->registers, old_val, param_ptrs[i]);
         data->registers &= ~old_val;
     }
     if (function->return_type == VALUE_FLOAT) {

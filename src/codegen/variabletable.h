@@ -86,7 +86,8 @@ typedef struct {
 typedef struct {
     VARIABLE_BASE
     size_t pos;
-    Variable* param;
+    int param_count;
+    Variable** params;
     ValueType return_type;
 } VariableFunc;
 
