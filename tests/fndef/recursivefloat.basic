@@ -1,0 +1,6 @@
+
+Def Fn some(N) = If N < 1 Then N Else N + Fn some(N / 10)
+
+Assert Abs(Fn some(10.5) - 11.655) < 1e-7
+Assert Abs(Fn some(111) - 123.321) < 1e-7
+Assert Abs(Fn some(512) - 568.832) < 1e-7

@@ -1,0 +1,6 @@
+
+Def Fn mul$(S$, N%) = If N = 0 Then "" Else S + Fn mul(S, N - 1)
+
+Assert Fn mul("a", 5) = "aaaaa"
+Assert Fn mul("Ha", 4) = "HaHaHaHa"
+Assert Fn mul("Hello ", 3) = "Hello Hello Hello "
