@@ -92,12 +92,15 @@ typedef enum {
     AST_FLOAT,
     AST_INTEGER,
     AST_LET,
-    AST_IF_THEN_ELSE,
     AST_FOR,
     AST_VAR,
     AST_LINENUM,
     AST_DEF,
     AST_FN,
+
+    // If/else
+    AST_IF_THEN_ELSE,
+    AST_EXPR_IF_ELSE,
     
     // switch
     AST_ON_GOTO,
@@ -213,7 +216,7 @@ typedef struct {
 
 typedef struct {
     AST_BASE
-    char* name;
+    AstVar* name;
     int variable_count;
     AstVar** variables;
     Ast* function;
@@ -221,7 +224,7 @@ typedef struct {
 
 typedef struct {
     AST_BASE
-    char* name;
+    AstVar* name;
     int value_count;
     Ast** values;
 } AstFn;

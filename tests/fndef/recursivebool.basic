@@ -1,0 +1,9 @@
+
+Def Fn even?(N%) = If N = 0 Then True Else If N = 1 Then False Else Fn even(N - 2)
+
+Assert Fn even(2)
+Assert Fn even(16)
+Assert Fn even(720)
+Assert Not Fn even(1)
+Assert Not Fn even(17)
+Assert Not Fn even(727)
