@@ -216,7 +216,7 @@ typedef struct {
 
 typedef struct {
     AST_BASE
-    char* name;
+    AstVar* name;
     int variable_count;
     AstVar** variables;
     Ast* function;
@@ -224,7 +224,7 @@ typedef struct {
 
 typedef struct {
     AST_BASE
-    char* name;
+    AstVar* name;
     int value_count;
     Ast** values;
 } AstFn;

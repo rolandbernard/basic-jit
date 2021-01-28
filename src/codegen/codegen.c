@@ -1435,7 +1435,26 @@ static Value generateMCDef(AstDef* ast, MCGenerationData* data) {
         }
         local_params[i] = getVariable(data->variable_table, ast->variables[i]->name);
     }
+    VariableFunc* function = (VariableFunc*)allocAligned(data->variable_mem, sizeof(VariableFunc));
+    function->type = VARIABLE_FUNC;
+    function->pos = call_target;
+    function->param_count = ast->variable_count;
+    function->params = (Variable**)allocAligned(data->variable_mem, sizeof(Variable*) * ast->variable_count);
+    for (int i = 0; i < ast->variable_count; i++) {
+        function->params[i] = local_params[i];
+    }
+    if (ast->name->var_type == VAR_UNDEF || ast->name->var_type == VAR_FLOAT) {
+        function->return_type = VALUE_FLOAT;
+    } else if (ast->name->var_type == VAR_INT) {
+        function->return_type = VALUE_INT;
+    } else if (ast->name->var_type == VAR_STR) {
+        function->return_type = VALUE_STRING;
+    } else if (ast->name->var_type == VAR_BOOL) {
+        function->return_type = VALUE_BOOLEAN;
+    }
+    addVariable(data->func_table, ast->name->name, (Variable*)function, data->variable_mem);
     Value retur = generateMCForAst(ast->function, data);
+    function->return_type = retur.type;
     if (retur.type == VALUE_ERROR) {
         return retur;
     }
@@ -1458,22 +1477,12 @@ static Value generateMCDef(AstDef* ast, MCGenerationData* data) {
     addInstReturn(data->inst_mem, data->registers);
     data->registers = old_regs;
     updateRelativeJumpTarget(data->inst_mem, jump, data->inst_mem->occupied);
-    VariableFunc* function = (VariableFunc*)allocAligned(data->variable_mem, sizeof(VariableFunc));
-    function->type = VARIABLE_FUNC;
-    function->pos = call_target;
-    function->param_count = ast->variable_count;
-    function->params = (Variable**)allocAligned(data->variable_mem, sizeof(Variable*) * ast->variable_count);
-    for (int i = 0; i < ast->variable_count; i++) {
-        function->params[i] = local_params[i];
-    }
-    function->return_type = retur.type;
-    addVariable(data->func_table, ast->name, (Variable*)function, data->variable_mem);
     Value ret = { .type = VALUE_NONE, };
     return ret;
 }
 
 static Value generateMCFn(AstFn* ast, MCGenerationData* data) {
-    VariableFunc* function = (VariableFunc*)getVariable(data->func_table, ast->name);
+    VariableFunc* function = (VariableFunc*)getVariable(data->func_table, ast->name->name);
     if (function == NULL || function->type != VARIABLE_FUNC) {
         Value ret = { .type = VALUE_ERROR, .error = ERROR_FUNC_NOT_DEF };
         return ret;
