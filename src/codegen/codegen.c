@@ -1549,17 +1549,17 @@ static Value generateMCFn(AstFn* ast, MCGenerationData* data) {
         }
     }
     addInstCallRel(data->inst_mem, data->registers, function->pos);
+    if (function->return_type == VALUE_FLOAT) {
+        addInstMovFRegToFReg(data->inst_mem, data->registers, ret_reg, getFirstFRegister());
+    } else {
+        addInstMovRegToReg(data->inst_mem, data->registers, ret_reg, getFirstRegister());
+    }
     for (int i = ast->value_count - 1; i >= 0; i--) {
         Register old_val = getFreeRegister(data->registers);
         data->registers |= old_val;
         addInstPop(data->inst_mem, data->registers, old_val);
         addInstMovRegToMem(data->inst_mem, data->registers, old_val, param_ptrs[i]);
         data->registers &= ~old_val;
-    }
-    if (function->return_type == VALUE_FLOAT) {
-        addInstMovFRegToFReg(data->inst_mem, data->registers, ret_reg, getFirstFRegister());
-    } else {
-        addInstMovRegToReg(data->inst_mem, data->registers, ret_reg, getFirstRegister());
     }
     data->registers = old_regs;
     addInstPopAll(data->inst_mem, data->registers, data->registers);
