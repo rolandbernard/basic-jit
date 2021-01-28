@@ -1,0 +1,3 @@
+
+Assert (If False Then 10 Else 20) = 20
+Assert (If True Then 10 Else 20) = 10

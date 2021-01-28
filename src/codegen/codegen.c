@@ -177,7 +177,9 @@ static Value generateMCRestoreAfterFreeReg(AstUnary* ast, MCGenerationData* data
     return ret;
 }
 
-static Value generateMCRestore(AstUnary* ast, MCGenerationData* data) { return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCRestoreAfterFreeReg, 1, 0); }
+static Value generateMCRestore(AstUnary* ast, MCGenerationData* data) {
+    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCRestoreAfterFreeReg, 1, 0);
+}
 
 static char* concatStrings(char* a, char* b) {
     int a_len = a == NULL ? 0 : strlen(a);
@@ -345,7 +347,9 @@ static Value generateMCBinarayOperationAfterFreeReg(AstBinary* ast, MCGeneration
     }
 }
 
-static Value generateMCBinaryOperation(AstBinary* ast, MCGenerationData* data) { return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCBinarayOperationAfterFreeReg, 2, 2); }
+static Value generateMCBinaryOperation(AstBinary* ast, MCGenerationData* data) {
+    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCBinarayOperationAfterFreeReg, 2, 2);
+}
 
 static Value generateMCUnaryAfterFreeReg(AstUnary* ast, MCGenerationData* data) {
     Value a = generateMCForAst(ast->value, data);
@@ -408,7 +412,9 @@ static Value generateMCUnaryAfterFreeReg(AstUnary* ast, MCGenerationData* data) 
     }
 }
 
-static Value generateMCUnaryOperation(AstUnary* ast, MCGenerationData* data) { return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCUnaryAfterFreeReg, 2, 2); }
+static Value generateMCUnaryOperation(AstUnary* ast, MCGenerationData* data) {
+    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCUnaryAfterFreeReg, 2, 2);
+}
 
 static Value generateMCString(AstString* ast, MCGenerationData* data) {
     int len = strlen(ast->str);
@@ -818,7 +824,9 @@ static Value generateMCLet(AstLet* ast, MCGenerationData* data) {
     return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCLetAfterFreeReg, 1, 1);
 }
 
-static int64_t compareStrings(char* a, char* b) { return strcmp(a == NULL ? "" : a, b == NULL ? "" : b); }
+static int64_t compareStrings(char* a, char* b) {
+    return strcmp(a == NULL ? "" : a, b == NULL ? "" : b);
+}
 
 static Value generateMCConditionAfterFreeReg(AstBinary* ast, MCGenerationData* data) {
     size_t ifendjmp = 0;
@@ -908,7 +916,9 @@ static Value generateMCConditionAfterFreeReg(AstBinary* ast, MCGenerationData* d
     }
 }
 
-static Value generateMCCondition(AstBinary* ast, MCGenerationData* data) { return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCConditionAfterFreeReg, 2, 2); }
+static Value generateMCCondition(AstBinary* ast, MCGenerationData* data) {
+    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCConditionAfterFreeReg, 2, 2);
+}
 
 static Value generateMCIfThenElseAfterFreeReg(AstIfThenElse* ast, MCGenerationData* data) {
     size_t ifendjmp = 0;
@@ -953,7 +963,9 @@ static Value generateMCIfThenElseAfterFreeReg(AstIfThenElse* ast, MCGenerationDa
     }
 }
 
-static Value generateMCIfThenElse(AstIfThenElse* ast, MCGenerationData* data) { return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCIfThenElseAfterFreeReg, 2, 2); }
+static Value generateMCIfThenElse(AstIfThenElse* ast, MCGenerationData* data) {
+    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCIfThenElseAfterFreeReg, 2, 2);
+}
 
 static Value generateMCForAfterFreeReg(AstFor* ast, MCGenerationData* data) {
     Value initial = generateMCForAst(ast->start, data);
@@ -1088,7 +1100,9 @@ static Value generateMCForAfterFreeReg(AstFor* ast, MCGenerationData* data) {
     }
 }
 
-static Value generateMCFor(AstFor* ast, MCGenerationData* data) { return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCForAfterFreeReg, 2, 2); }
+static Value generateMCFor(AstFor* ast, MCGenerationData* data) {
+    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCForAfterFreeReg, 2, 2);
+}
 
 static Value generateMCVarAfterFreeReg(AstVar* ast, MCGenerationData* data) {
     Value none = {.type=VALUE_NONE};
@@ -1189,7 +1203,9 @@ static Value generateMCOnGoAfterFreeReg(AstSwitch* ast, MCGenerationData* data) 
     return ret;
 }
 
-static Value generateMCOnGo(AstSwitch* ast, MCGenerationData* data) { return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCOnGoAfterFreeReg, 2, 0); }
+static Value generateMCOnGo(AstSwitch* ast, MCGenerationData* data) {
+    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCOnGoAfterFreeReg, 2, 0);
+}
 
 static Value generateMCDim(AstIndex* ast, MCGenerationData* data) {
     AstVar* var = ast->name;
@@ -1543,6 +1559,55 @@ static Value generateMCFn(AstFn* ast, MCGenerationData* data) {
     return ret;
 }
 
+static Value generateMCExprIfElseAfterFreeReg(AstIfThenElse* ast, MCGenerationData* data) {
+    size_t ifendjmp = 0;
+    size_t elsejmp = 0;
+    Value cond = generateMCForAst(ast->condition, data);
+    if (cond.type == VALUE_ERROR) {
+        return cond;
+    } else if (cond.type == VALUE_NONE) {
+        Value ret = {.type = VALUE_ERROR, .error = ERROR_SYNTAX};
+        return ret;
+    } else if (cond.type != VALUE_BOOLEAN) {
+        Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
+        return ret;
+    } else {
+        Register zero = getFreeRegister(data->registers);
+        data->registers |= zero;
+        addInstMovImmToReg(data->inst_mem, data->registers, zero, 0);
+        elsejmp = addInstCondJmpRel(data->inst_mem, data->registers, COND_EQ, cond.reg, zero, 0);
+        data->registers &= ~cond.reg;
+        data->registers &= ~zero;
+        Value if_block = generateMCForAst(ast->if_true, data);
+        if (if_block.type == VALUE_ERROR) {
+            return if_block;
+        } else {
+            ifendjmp = addInstJmpRel(data->inst_mem, data->registers, 0);
+            updateRelativeJumpTarget(data->inst_mem, elsejmp, data->inst_mem->occupied);
+            Value else_block = generateMCForAst(ast->if_false, data);
+            if (else_block.type == VALUE_ERROR) {
+                return else_block;
+            } else if (else_block.type != if_block.type) {
+                Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
+                return ret;
+            } else {
+                if (else_block.type == VALUE_FLOAT) {
+                    addInstMovFRegToFReg(data->inst_mem, data->registers, if_block.reg, else_block.reg);
+                } else {
+                    addInstMovRegToReg(data->inst_mem, data->registers, if_block.reg, else_block.reg);
+                }
+                data->registers &= ~else_block.reg;
+                updateRelativeJumpTarget(data->inst_mem, ifendjmp, data->inst_mem->occupied);
+                return if_block;
+            }
+        }
+    }
+}
+
+static Value generateMCExprIfElse(AstIfThenElse* ast, MCGenerationData* data) {
+    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCExprIfElseAfterFreeReg, 2, 2);
+}
+
 Value generateMCForAst(Ast* ast, MCGenerationData* data) {
     Value value = {.type = VALUE_NONE};
     switch (ast->type) {
@@ -1590,6 +1655,9 @@ Value generateMCForAst(Ast* ast, MCGenerationData* data) {
         break;
     case AST_IF_THEN_ELSE:
         value = generateMCIfThenElse((AstIfThenElse*)ast, data);
+        break;
+    case AST_EXPR_IF_ELSE:
+        value = generateMCExprIfElse((AstIfThenElse*)ast, data);
         break;
     case AST_FOR:
         value = generateMCFor((AstFor*)ast, data);

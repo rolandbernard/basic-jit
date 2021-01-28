@@ -352,6 +352,43 @@ static Ast* parseBaseExpression(Scanner* scanner, StackAllocator* mem) {
                 }
             }
         }
+    } else if(acceptToken(scanner, TOKEN_IF)) {
+        Ast* condition = parseExpression(scanner, mem);
+        if (condition == NULL) {
+            return (Ast*)createError(getScannerOffset(scanner), mem);
+        } else if (condition->type == AST_ERROR) {
+            return condition;
+        } else {
+            if(!acceptToken(scanner, TOKEN_THEN)) {
+                return (Ast*)createError(getScannerOffset(scanner), mem);
+            } else {
+                Ast* if_true = parseExpression(scanner, mem);
+                if(if_true == NULL) {
+                    int error_offset = getScannerOffset(scanner);
+                    return (Ast*)createError(error_offset, mem);
+                } else if (if_true->type == AST_ERROR) {
+                    return if_true;
+                }
+                Ast* if_false = NULL;
+                if(!acceptToken(scanner, TOKEN_ELSE)) {
+                    return (Ast*)createError(getScannerOffset(scanner), mem);
+                } else {
+                    if_false = parseExpression(scanner, mem);
+                    if (if_false == NULL) {
+                        int error_offset = getScannerOffset(scanner);
+                        return (Ast*)createError(error_offset, mem);
+                    } else if (if_false->type == AST_ERROR) {
+                        return if_false;
+                    }
+                    AstIfThenElse* ret = (AstIfThenElse*)allocAligned(mem, sizeof(AstIfThenElse));
+                    ret->type = AST_EXPR_IF_ELSE;
+                    ret->condition = condition;
+                    ret->if_true = if_true;
+                    ret->if_false = if_false;
+                    return (Ast*)ret;
+                }
+            }
+        }
     } else {
         return NULL;
     }
