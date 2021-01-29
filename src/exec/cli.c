@@ -184,8 +184,19 @@ static void runProgram() {
 #ifdef DEBUG
             printMemoryContent(stderr, jit_memory.memory, jit_memory.occupied);
 #endif
-            if(executeFunctionInMemory(jit_memory.memory, jit_memory.occupied, &ret)) {
-                perror("error: Failed to execute");
+            executeFunctionInMemory(jit_memory.memory, jit_memory.occupied, &ret);
+            switch (ret) {
+            case EXIT_FORK_ERROR:
+                perror("error: Failed to fork");
+                break;
+            case EXIT_MEM_ERROR:
+                perror("error: Failed to set memory protection");
+                break;
+            case EXIT_SEGV_ERROR:
+                fprintf(stderr, "error: Child recieved a SEGV\n");
+                break;
+            default:
+                break;
             }
             signal(SIGINT, SIG_DFL);
         }
@@ -340,12 +351,24 @@ static bool executeLine(const char* line) {
 #ifdef DEBUG
                     printMemoryContent(stderr, jit_memory.memory, jit_memory.occupied);
 #endif
-                    if(executeFunctionInMemory(jit_memory.memory, jit_memory.occupied, &ret)) {
-                        perror("error: Failed to execute");
-                    } else if(ret != EXIT_NORMAL) {
+                    executeFunctionInMemory(jit_memory.memory, jit_memory.occupied, &ret);
+                    switch (ret) {
+                    case EXIT_FORK_ERROR:
+                        perror("error: Failed to fork");
+                        break;
+                    case EXIT_MEM_ERROR:
+                        perror("error: Failed to set memory protection");
+                        break;
+                    case EXIT_SEGV_ERROR:
+                        fprintf(stderr, "error: Child recieved a SEGV\n");
+                        break;
+                    case EXIT_NORMAL:
+                        break;
+                    default:
                         end = true;
-                        exit_code = ret;
+                        break;
                     }
+                    exit_code = ret;
                 }
             }
         }

@@ -112,12 +112,24 @@ int executeFile(const char* filename) {
 #ifdef DEBUG
                 printMemoryContent(stderr, jit_memory.memory, jit_memory.occupied);
 #endif
-                if(executeFunctionInMemory(jit_memory.memory, jit_memory.occupied, &ret)) {
-                    perror("error: Failed to execute");
-                    exit_code = EXIT_FAILURE;
-                } else if (ret != EXIT_NORMAL) {
-                    exit_code = ret;
+                executeFunctionInMemory(jit_memory.memory, jit_memory.occupied, &ret);
+                switch (ret) {
+                case EXIT_FORK_ERROR:
+                    perror("error: Failed to fork");
+                    break;
+                case EXIT_MEM_ERROR:
+                    perror("error: Failed to set memory protection");
+                    break;
+                case EXIT_SEGV_ERROR:
+                    fprintf(stderr, "error: Child recieved a SEGV\n");
+                    break;
+                case EXIT_NORMAL:
+                    ret = 0;
+                    break;
+                default:
+                    break;
                 }
+                exit_code = ret;
             }
         }
         freeLabelList(&label_list);

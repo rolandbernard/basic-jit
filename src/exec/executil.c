@@ -11,10 +11,14 @@
 
 typedef int (*JitFunction)();
 
-bool executeFunctionInMemory(void* mem, size_t len, int* ret) {
+void segvSignal(int sig) {
+    exit(EXIT_SEGV_ERROR);
+}
+
+void executeFunctionInMemory(void* mem, size_t len, int* ret) {
     int pid = fork();
     if(pid == -1) {
-        return true;
+        *ret = EXIT_FORK_ERROR;
     } else if(pid == 0) {
         JitFunction entry = (JitFunction)mem;
         size_t pagesize = sysconf(_SC_PAGESIZE);
@@ -22,16 +26,16 @@ bool executeFunctionInMemory(void* mem, size_t len, int* ret) {
         uintptr_t end = start + len;
         uintptr_t pagestart = start & -pagesize;
         if (mprotect((void*)pagestart, end - pagestart, PROT_EXEC | PROT_READ | PROT_WRITE)) {
-            exit(EXIT_ERROR);
+            exit(EXIT_MEM_ERROR);
         } else {
             signal(SIGINT, SIG_DFL);
+            signal(SIGSEGV, segvSignal);
             entry();
             exit(EXIT_NORMAL);
         }
     } else {
         waitpid(pid, ret, 0);
         *ret = WEXITSTATUS(*ret);
-        return *ret == EXIT_ERROR;
     }
 }
 
