@@ -131,7 +131,7 @@ void addInstMovRegToMem(StackAllocator* mem, RegisterSet regs, Register reg, voi
     }
 }
 
-void addInstMovMemRegToReg(StackAllocator* mem, RegisterSet regs, Register addr, Register reg) {
+void addInstMovMemRegToReg(StackAllocator* mem, RegisterSet regs, Register reg, Register addr) {
     Aarch64Instruction instr = { .instruction = 0, };
     instr.load_store_reg_unsi_imm.cnst0 = LOAD_STORE_REG_UNSI_IMM_CNST0;
     instr.load_store_reg_unsi_imm.cnst1 = LOAD_STORE_REG_UNSI_IMM_CNST1;

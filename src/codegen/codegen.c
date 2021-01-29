@@ -554,7 +554,7 @@ static Value generateMCIndexPositionAfterFreeReg(AstIndex* ast, MCGenerationData
 }
 
 static Value generateMCIndexPosition(AstIndex* ast, MCGenerationData* data) {
-    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCIndexPositionAfterFreeReg, 2, 0);
+    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCIndexPositionAfterFreeReg, 3, 0);
 }
 
 static Value generateMCDataPositionAfterFreeReg(AstVar* ast, MCGenerationData* data) {
