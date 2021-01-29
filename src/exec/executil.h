@@ -5,10 +5,12 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-#define EXIT_ERROR 200
-#define EXIT_NORMAL 201
+#define EXIT_NORMAL 200
+#define EXIT_FORK_ERROR 201
+#define EXIT_MEM_ERROR 202
+#define EXIT_SEGV_ERROR 203
 
-bool executeFunctionInMemory(void* mem, size_t len, int* ret);
+void executeFunctionInMemory(void* mem, size_t len, int* ret);
 
 void printMemoryContent(FILE* file, void* mem, size_t len);
 
