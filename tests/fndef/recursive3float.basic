@@ -1,0 +1,6 @@
+
+Def Fn fib(N, A, B) = If N <= 0 Then A Else Fn fib(N - 1, B, A + B)
+
+Assert Fn fib(10, 0, 1) = 55
+Assert Fn fib(50, 0, 1) = 12586269025
+Assert Fn fib(10, 5, 5) = 445

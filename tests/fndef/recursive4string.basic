@@ -1,0 +1,6 @@
+
+Def Fn concat$(A$, B$, C$, D$) = If B = "" And C = "" And D = "" Then A Else Fn concat(A + B, C, D, "")
+
+Assert Fn concat("H", "e", "ll", "o") = "Hello"
+Assert Fn concat("", "Ha", "HA", "hA") = "HaHAhA"
+Assert Fn concat("", "", "", "Hello world!") = "Hello world!"
