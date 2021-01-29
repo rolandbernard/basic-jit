@@ -1506,40 +1506,41 @@ static Value generateMCFn(AstFn* ast, MCGenerationData* data) {
     }
     void* param_ptrs[function->param_count + 1];
     for (int i = 0; i < ast->value_count; i++) {
+        if (function->params[i]->type == VARIABLE_INT) {
+            param_ptrs[i] = (void*)&((VariableInt*)function->params[i])->value;
+        } else if (function->params[i]->type == VARIABLE_FLOAT) {
+            param_ptrs[i] = &((VariableFloat*)function->params[i])->value;
+        } else if (function->params[i]->type == VARIABLE_STRING) {
+            param_ptrs[i] = &((VariableString*)function->params[i])->str;
+        } else if (function->params[i]->type == VARIABLE_BOOLEAN) {
+            param_ptrs[i] = &((VariableBoolean*)function->params[i])->value;
+        } else {
+            Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
+            return ret;
+        }
+        Register old_val = getFreeRegister(data->registers);
+        data->registers |= old_val;
+        addInstMovMemToReg(data->inst_mem, data->registers, old_val, param_ptrs[i]);
+        addInstPush(data->inst_mem, data->registers, old_val);
+        data->registers &= ~old_val;
+    }
+    for (int i = 0; i < ast->value_count; i++) {
         Value a = generateMCForAst(ast->values[i], data);
         if (a.type == VALUE_ERROR) {
             return a;
         } else {
-            if (function->params[i]->type == VARIABLE_INT) {
-                param_ptrs[i] = (void*)&((VariableInt*)function->params[i])->value;
-            } else if (function->params[i]->type == VARIABLE_FLOAT) {
-                param_ptrs[i] = &((VariableFloat*)function->params[i])->value;
-            } else if (function->params[i]->type == VARIABLE_STRING) {
-                param_ptrs[i] = &((VariableString*)function->params[i])->str;
-            } else if (function->params[i]->type == VARIABLE_BOOLEAN) {
-                param_ptrs[i] = &((VariableBoolean*)function->params[i])->value;
-            } else {
-                Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
-                return ret;
-            }
-            Register old_val = getFreeRegister(data->registers);
-            data->registers |= old_val;
-            addInstMovMemToReg(data->inst_mem, data->registers, old_val, param_ptrs[i]);
-            addInstPush(data->inst_mem, data->registers, old_val);
-            data->registers &= ~old_val;
             if (
                 (a.type == VALUE_INT && function->params[i]->type == VARIABLE_INT)
                 || (a.type == VALUE_STRING && function->params[i]->type == VARIABLE_STRING)
                 || (a.type == VALUE_BOOLEAN && function->params[i]->type == VARIABLE_BOOLEAN)
+                || (a.type == VALUE_FLOAT && function->params[i]->type == VARIABLE_FLOAT)
             ) {
-                addInstMovRegToMem(data->inst_mem, data->registers, a.reg, param_ptrs[i]);
-            } else if (a.type == VALUE_FLOAT && function->params[i]->type == VARIABLE_FLOAT) {
-                addInstMovFRegToMem(data->inst_mem, data->registers, a.reg, param_ptrs[i]);
+                addInstPush(data->inst_mem, data->registers, a.reg);
             } else if (a.type == VALUE_INT && function->params[i]->type == VARIABLE_FLOAT) {
                 Register tmp_reg = getFreeFRegister(data->registers);
                 data->registers |= tmp_reg;
                 addInstMovRegToFReg(data->inst_mem, data->registers, tmp_reg, a.reg);
-                addInstMovFRegToMem(data->inst_mem, data->registers, tmp_reg, param_ptrs[i]);
+                addInstPush(data->inst_mem, data->registers, tmp_reg);
                 data->registers &= ~tmp_reg;
             } else {
                 Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
@@ -1547,6 +1548,13 @@ static Value generateMCFn(AstFn* ast, MCGenerationData* data) {
             }
             data->registers &= ~a.reg;
         }
+    }
+    for (int i = ast->value_count - 1; i >= 0; i--) {
+        Register new_val = getFreeRegister(data->registers);
+        data->registers |= new_val;
+        addInstPop(data->inst_mem, data->registers, new_val);
+        addInstMovRegToMem(data->inst_mem, data->registers, new_val, param_ptrs[i]);
+        data->registers &= ~new_val;
     }
     addInstCallRel(data->inst_mem, data->registers, function->pos);
     if (function->return_type == VALUE_FLOAT) {
