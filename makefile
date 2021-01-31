@@ -1,51 +1,63 @@
-ODIR=./build/objs
-BDIR=./build/bin
 
-IDIR=./src
-SDIR=./src
+CC       := clang
+LD       := clang
+CCFLAGS  := 
+LDFLAGS  := 
+LIBS     := -lm
 
-CC=gcc
-LINK=gcc
-DFLAGS=-g -O0 -fsanitize=address,undefined -DDEBUG
-RFLAGS=-O3
-CFLAGS=-I$(IDIR) -Wall $(RFLAGS)
-LIBS=-lm
+SANITIZE := -fsanitize=address,leak,undefined
+# SANITIZE := -fsanitize=thread,undefined
 
-_SRC=$(shell find $(SDIR) -type f -name '*.c')
-OBJ=$(patsubst $(SDIR)/%.c,$(ODIR)/%.o,$(_SRC))
+SRCDIR   := src
+BUILDDIR := build
+OBJDIR   := $(BUILDDIR)/obj
+BINDIR   := $(BUILDDIR)/bin
 
-DEPS=$(shell find $(IDIR) -type f -name '*.h')
+TARGETS := basicjit
+MAINS   := $(patsubst %, $(SRCDIR)/%.c, $(TARGETS))
+BINS    := $(patsubst %, $(BINDIR)/%, $(TARGETS))
 
-_BIN=basicjit
-BIN=$(patsubst %,$(BDIR)/%,$(_BIN))
+SRCS := $(filter-out $(MAINS), $(shell find $(SRCDIR) -type f -name '*.c'))
+HDRS := $(shell find $(SRCDIR) -type f -name '*.h')
+OBJS := $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(SRCS))
 
-.PHONY: all
-all: $(BIN) 
+TOTAL    := $(words $(OBJS) $(MAINS) $(BINS))
+COUNTER   = $(words $(HIDDEN_COUNT))$(eval HIDDEN_COUNT := x $(HIDDEN_COUNT))
+PROGRESS  = $(shell expr $(COUNTER) '*' 100 / $(TOTAL))
 
-.PHONY: install
-install: all
-	cp $(BIN) /usr/bin/
+CCFLAGS += -I$(SRCDIR)
 
-$(BDIR)/basicjit: $(OBJ)
-	mkdir -p `dirname $@`
-	$(LINK) $(CFLAGS) -o $@ $^ $(LIBS)
+release: CCFLAGS += -O3
+release: LDFLAGS += -O3
+release: build-binaries
 
-$(ODIR)/%.o: $(SDIR)/%.c $(DEPS)
-	mkdir -p `dirname $@`
-	$(CC) $(CFLAGS) -c -o $@ $<
-	
-.PHONY: new
-new: clean all
-	
-.PHONY: test
-test: all
+debug: CCFLAGS += -O0 -g $(SANITIZE)
+debug: LDFLAGS += -O0 -g $(SANITIZE)
+debug: build-binaries
+
+build-binaries: $(BINS)
+	@printf "[100%%] Build successful.\n"
+
+$(BINS): $(BINDIR)/%: $(OBJS) $(OBJDIR)/%.o
+	@printf "[%3i%%] Building $@\n" $(PROGRESS)
+	@mkdir -p $(shell dirname $@)
+	@$(LD) $(LDFLAGS) -o $@ $^ $(LIBS)
+
+$(OBJDIR)/%.o: $(SRCDIR)/%.c $(HDRS)
+	@printf "[%3i%%] Building $@\n" $(PROGRESS)
+	@mkdir -p $(shell dirname $@)
+	@$(CC) $(CCFLAGS) -c -o $@ $<
+
+new-release: clean release
+
+new-debug: clean debug
+
+test: debug
 	./tests/run-tests.sh tests ./build/bin/basicjit
-	
-.PHONY: clean
+
 clean:
-	rm -fr $(ODIR)/*
+	@echo Cleaning local files
+	@rm -rf $(OBJDIR)/*
+	@rm -rf $(BINDIR)/*
 
-.PHONY: cleanall
-cleanall:
-	rm -fr $(ODIR)/* $(BDIR)/*
-
+.PHONY: release debug build-binaries new-release new-debug clean test
