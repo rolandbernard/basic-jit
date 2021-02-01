@@ -1,63 +1,86 @@
 
-CC       := clang
-LD       := clang
-CCFLAGS  := 
-LDFLAGS  := 
+# == Defaults
+BUILD := debug
+# ==
+
+# == Targets (and sources relative to SOURCE_DIR/)
+TARGETS += basicjit
+SOURCES.basicjit := basicjit.c
+# ==
+
+# == Directories
+SOURCE_DIR := src
+BUILD_DIR  := build
+OBJECT_DIR := $(BUILD_DIR)/$(BUILD)/obj
+BINARY_DIR := $(BUILD_DIR)/$(BUILD)/bin
+# ==
+
+# == Files
+$(foreach TARGET, $(TARGETS), $(eval OBJECTS.$(TARGET) := $(patsubst %.c, $(OBJECT_DIR)/%.o, $(SOURCES.$(TARGET)))))
+TARGET_OBJECTS := $(foreach TARGET, $(TARGETS), $(OBJECTS.$(TARGET)))
+SOURCES := $(shell find $(SOURCE_DIR) -type f -name '*.c')
+OBJECTS := $(filter-out $(TARGET_OBJECTS), $(patsubst $(SOURCE_DIR)/%.c, $(OBJECT_DIR)/%.o, $(SOURCES)))
+HEADERS := $(shell find $(SOURCE_DIR) -type f -name '*.h')
+BINARYS := $(patsubst %, $(BINARY_DIR)/%, $(TARGETS))
+# ==
+
+# == Tools
+CC := clang
+LD := clang
+# ==
+
+# == Flags
+SANITIZE := address,leak,undefined
+# SANITIZE := thread,undefined
+
+CCFLAGS.debug   := -O0 -g -fsanitize=$(SANITIZE) -DDEBUG
+LDFLAGS.debug   := -O0 -g -fsanitize=$(SANITIZE)
+CCFLAGS.release := -O3
+LDFLAGS.release := -O3
+
+CCFLAGS  := $(CCFLAGS.$(BUILD)) -I$(SOURCE_DIR) 
+LDFLAGS  := $(LDFLAGS.$(BUILD))
 LIBS     := -lm
+# ==
 
-SANITIZE := -fsanitize=address,leak,undefined
-# SANITIZE := -fsanitize=thread,undefined
-
-SRCDIR   := src
-BUILDDIR := build
-OBJDIR   := $(BUILDDIR)/obj
-BINDIR   := $(BUILDDIR)/bin
-
-TARGETS := basicjit
-MAINS   := $(patsubst %, $(SRCDIR)/%.c, $(TARGETS))
-BINS    := $(patsubst %, $(BINDIR)/%, $(TARGETS))
-
-SRCS := $(filter-out $(MAINS), $(shell find $(SRCDIR) -type f -name '*.c'))
-HDRS := $(shell find $(SRCDIR) -type f -name '*.h')
-OBJS := $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(SRCS))
-
-TOTAL    := $(words $(OBJS) $(MAINS) $(BINS))
+# == Progress
+TOTAL    := $(words $(sort $(OBJECTS) $(TARGET_OBJECTS) $(BINARYS)))
 COUNTER   = $(words $(HIDDEN_COUNT))$(eval HIDDEN_COUNT := x $(HIDDEN_COUNT))
 PROGRESS  = $(shell expr $(COUNTER) '*' 100 / $(TOTAL))
+# ==
 
-CCFLAGS += -I$(SRCDIR)
+.SILENT:
+.SECONDEXPANSION:
+.PHONY: build release debug new new-release new-debug clean test
 
-release: CCFLAGS += -O3
-release: LDFLAGS += -O3
-release: build-binaries
+build: $(BINARYS)
+	printf "[100%%] Build successful.\n"
 
-debug: CCFLAGS += -O0 -g $(SANITIZE)
-debug: LDFLAGS += -O0 -g $(SANITIZE)
-debug: build-binaries
+release:
+	$(MAKE) BUILD=release
 
-build-binaries: $(BINS)
-	@printf "[100%%] Build successful.\n"
+debug:
+	$(MAKE) BUILD=debug
 
-$(BINS): $(BINDIR)/%: $(OBJS) $(OBJDIR)/%.o
-	@printf "[%3i%%] Building $@\n" $(PROGRESS)
-	@mkdir -p $(shell dirname $@)
-	@$(LD) $(LDFLAGS) -o $@ $^ $(LIBS)
+$(BINARYS): $(BINARY_DIR)/%: $(OBJECTS) $$(OBJECTS.$$*)
+	printf "[%3i%%] Building $@\n" $(PROGRESS)
+	mkdir -p $(shell dirname $@)
+	$(LD) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-$(OBJDIR)/%.o: $(SRCDIR)/%.c $(HDRS)
-	@printf "[%3i%%] Building $@\n" $(PROGRESS)
-	@mkdir -p $(shell dirname $@)
-	@$(CC) $(CCFLAGS) -c -o $@ $<
+$(OBJECT_DIR)/%.o: $(SOURCE_DIR)/%.c $(HEADERS) $(MAKEFILE_LIST)
+	printf "[%3i%%] Building $@\n" $(PROGRESS)
+	mkdir -p $(shell dirname $@)
+	$(CC) $(CCFLAGS) -c -o $@ $<
+
+new: clean build
 
 new-release: clean release
 
 new-debug: clean debug
 
-test: debug
-	./tests/run-tests.sh tests ./build/bin/basicjit
-
 clean:
-	@echo Cleaning local files
-	@rm -rf $(OBJDIR)/*
-	@rm -rf $(BINDIR)/*
+	echo Cleaning local files
+	rm -rf $(BUILD_DIR)/*
 
-.PHONY: release debug build-binaries new-release new-debug clean test
+test: build
+	./tests/run-tests.sh tests $(BINARY_DIR)/basicjit
