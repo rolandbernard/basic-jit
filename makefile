@@ -1,51 +1,76 @@
-ODIR=./build/objs
-BDIR=./build/bin
 
-IDIR=./src
-SDIR=./src
+# == Defaults
+BUILD := debug
+# ==
 
-CC=gcc
-LINK=gcc
-DFLAGS=-g -O0 -fsanitize=address,undefined -DDEBUG
-RFLAGS=-O3
-CFLAGS=-I$(IDIR) -Wall $(RFLAGS)
-LIBS=-lm
+# == Targets (and sources relative to SOURCE_DIR/)
+TARGETS += basicjit
+SOURCES.basicjit := basicjit.c
+# ==
 
-_SRC=$(shell find $(SDIR) -type f -name '*.c')
-OBJ=$(patsubst $(SDIR)/%.c,$(ODIR)/%.o,$(_SRC))
+# == Directories
+SOURCE_DIR := src
+BUILD_DIR  := build
+OBJECT_DIR := $(BUILD_DIR)/$(BUILD)/obj
+BINARY_DIR := $(BUILD_DIR)/$(BUILD)/bin
+# ==
 
-DEPS=$(shell find $(IDIR) -type f -name '*.h')
+# == Files
+$(foreach TARGET, $(TARGETS), $(eval OBJECTS.$(TARGET) := $(patsubst %.c, $(OBJECT_DIR)/%.o, $(SOURCES.$(TARGET)))))
+TARGET_OBJECTS := $(foreach TARGET, $(TARGETS), $(OBJECTS.$(TARGET)))
+SOURCES := $(shell find $(SOURCE_DIR) -type f -name '*.c')
+OBJECTS := $(filter-out $(TARGET_OBJECTS), $(patsubst $(SOURCE_DIR)/%.c, $(OBJECT_DIR)/%.o, $(SOURCES)))
+HEADERS := $(shell find $(SOURCE_DIR) -type f -name '*.h')
+BINARYS := $(patsubst %, $(BINARY_DIR)/%, $(TARGETS))
+# ==
 
-_BIN=basicjit
-BIN=$(patsubst %,$(BDIR)/%,$(_BIN))
+# == Tools
+CC := clang
+LD := clang
+# ==
 
-.PHONY: all
-all: $(BIN) 
+# == Flags
+SANITIZE := address,leak,undefined
+# SANITIZE := thread,undefined
 
-.PHONY: install
-install: all
-	cp $(BIN) /usr/bin/
+CCFLAGS.debug   := -O0 -g -fsanitize=$(SANITIZE) -DDEBUG
+LDFLAGS.debug   := -O0 -g -fsanitize=$(SANITIZE)
+CCFLAGS.release := -O3
+LDFLAGS.release := -O3
 
-$(BDIR)/basicjit: $(OBJ)
-	mkdir -p `dirname $@`
-	$(LINK) $(CFLAGS) -o $@ $^ $(LIBS)
+CCFLAGS := $(CCFLAGS.$(BUILD)) -I$(SOURCE_DIR) 
+LDFLAGS := $(LDFLAGS.$(BUILD))
+LIBS    := -lm
+# ==
 
-$(ODIR)/%.o: $(SDIR)/%.c $(DEPS)
-	mkdir -p `dirname $@`
-	$(CC) $(CFLAGS) -c -o $@ $<
-	
-.PHONY: new
-new: clean all
-	
-.PHONY: test
-test: all
-	./tests/run-tests.sh tests ./build/bin/basicjit
-	
-.PHONY: clean
+# == Progress
+TOTAL   := $(words $(sort $(OBJECTS) $(TARGET_OBJECTS) $(BINARYS)))
+COUNTER  = $(words $(HIDDEN_COUNT))$(eval HIDDEN_COUNT := x $(HIDDEN_COUNT))
+PROGRESS = $(shell expr $(COUNTER) '*' 100 / $(TOTAL))
+# ==
+
+.SILENT:
+.SECONDARY:
+.SECONDEXPANSION:
+.PHONY: build clean test
+
+build: $(BINARYS)
+	printf "[100%%] Build successful.\n"
+
+$(BINARYS): $(BINARY_DIR)/%: $(OBJECTS) $$(OBJECTS.$$*) | $$(dir $$@)
+	printf "[%3i%%] Building $@\n" $(PROGRESS)
+	$(LD) $(LDFLAGS) -o $@ $^ $(LIBS)
+
+$(OBJECT_DIR)/%.o: $(SOURCE_DIR)/%.c $(HEADERS) $(MAKEFILE_LIST) | $$(dir $$@)
+	printf "[%3i%%] Building $@\n" $(PROGRESS)
+	$(CC) $(CCFLAGS) -c -o $@ $<
+
+%/:
+	mkdir -p $@
+
 clean:
-	rm -fr $(ODIR)/*
+	echo Cleaning local files
+	rm -rf $(BUILD_DIR)/*
 
-.PHONY: cleanall
-cleanall:
-	rm -fr $(ODIR)/* $(BDIR)/*
-
+test: build
+	./tests/run-tests.sh tests $(BINARY_DIR)/basicjit

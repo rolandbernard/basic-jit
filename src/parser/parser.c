@@ -1328,7 +1328,7 @@ static Ast* parseSingleOperation(Scanner* scanner, StackAllocator* mem) {
        (ret = parseForStatement(scanner, mem)) != NULL ||
        (ret = parseDimStatement(scanner, mem)) != NULL ||
        (ret = parseInputOrPrintOrDataOrReadStatement(scanner, mem)) != NULL ||
-       (ret = parseLetStatementOrLabel(scanner, mem)) != NULL);
+       (ret = parseLetStatementOrLabel(scanner, mem)) != NULL) { }
     return ret;
 }
 

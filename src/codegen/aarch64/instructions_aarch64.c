@@ -650,7 +650,7 @@ void addInstMovMemToFReg(StackAllocator* mem, RegisterSet regs, Register reg, vo
 void addInstMovFRegToMem(StackAllocator* mem, RegisterSet regs, Register reg, void* addr) {
     int free_reg = getFreeRegister(regs);
     if(free_reg == 0) {
-        free_reg = getFirstRegister(regs);
+        free_reg = getFirstRegister();
         addInstPush(mem, regs, free_reg);
         addInstMovImmToReg(mem, regs, free_reg, (int64_t)addr);
         addInstMovFRegToMemReg(mem, regs, free_reg, reg);
