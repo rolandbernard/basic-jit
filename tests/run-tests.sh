@@ -46,6 +46,66 @@ function runTest {
                 fi
             fi            
         fi
+    elif [ ${1: -3} == .js ]
+    then
+        dir=$(dirname $1)
+        tmp_file=$dir/tmp.test.basic
+        unset failed
+        for i in $(seq 1 1000)
+        do
+            node $1 > $tmp_file
+            if timeout 1s $COMPILER $tmp_file &> /tmp/basic-test.out
+            then
+                if [ ${3::5} == fail. ]
+                then
+                    for i in $(seq 1 $2)
+                    do
+                        echo -n "  "
+                    done
+                    echo -e "\e[31mFailed\e[m test '$tmp_file' should have failed"
+                    failed=True
+                    break
+                fi
+            else
+                if [ $? == 124 ]
+                then
+                    if [ ! ${3::5} == fail. ]
+                    then
+                        for i in $(seq 1 $2)
+                        do
+                            echo -n "  "
+                        done
+                        echo -e "\e[31mFailed\e[m test '$tmp_file' by timeout"
+                        failed=True
+                        break
+                    fi
+                else
+                    if [ ! ${3::5} == fail. ]
+                    then
+                        for i in $(seq 1 $2)
+                        do
+                            echo -n "  "
+                        done
+                        echo -e "\e[31mFailed\e[m test '$tmp_file' at runtime"
+                        failed=True
+                        for i in $(seq 0 $2)
+                        do
+                            sed -i "s/^/  /" /tmp/basic-test.out
+                        done
+                        cat /tmp/basic-test.out
+                        break
+                    fi
+                fi            
+            fi
+        done
+        if [ failed ]
+        then
+            failed_count=$(expr $failed_count + 1)
+        else 
+            echo -e "\e[32mPassed\e[m test '$3'"
+            passed_count=$(expr $passed_count + 1)
+            rm $tmp_file
+        fi
     fi
 }
 
@@ -58,7 +118,7 @@ function runTests {
     for test in $(find $1 -mindepth 1 -maxdepth 1)
     do
         name=$(awk -F/ '{print $NF}' <<< $test)
-        if [ ${name::7} != ignore. ]
+        if [ ${name::7} != ignore. -a ${name::4} != tmp. ]
         then
             if [ -f $test ]
             then
