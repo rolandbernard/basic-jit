@@ -220,8 +220,13 @@ static bool inputLine(FILE* input) {
                 line_buffer = (char*)realloc(line_buffer, sizeof(char) * line_buffer_capacity);
             }
         }
-        line_buffer[len] = next_char;
-        len++;
+        if (next_char == '\n' && len > 0 && line_buffer[len - 1] == '\\') {
+            line_buffer[len - 1] = next_char;
+            next_char = '\\';
+        } else {
+            line_buffer[len] = next_char;
+            len++;
+        }
     } while (next_char != '\n' && next_char != EOF);
     len--;
     line_buffer[len] = 0;
