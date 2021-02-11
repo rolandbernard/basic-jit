@@ -6,5 +6,6 @@ callgrind.*
 perf.*
 gmon.*
 test.*
+tmp.*
 
 .gdb_history
