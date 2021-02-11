@@ -83,14 +83,16 @@ uint64_t getFirstFRegister() {
 }
 
 void addInstMovRegToReg(StackAllocator* mem, RegisterSet regs, Register dest, Register src) {
-    Aarch64Instruction instr = { .instruction = 0, };
-    instr.logical_shift_reg.cnst0 = LOGICAL_SHIFT_REG_CNST0;
-    instr.logical_shift_reg.opc = LOGICAL_SHIFT_REG_OPC_ORR;
-    instr.logical_shift_reg.sf = 1;
-    instr.logical_shift_reg.rd = regToNo(dest);
-    instr.logical_shift_reg.rn = REG_SPECIAL;
-    instr.logical_shift_reg.rm = regToNo(src);
-    addInstruction(mem, instr);
+    if (dest != src) {
+        Aarch64Instruction instr = { .instruction = 0, };
+        instr.logical_shift_reg.cnst0 = LOGICAL_SHIFT_REG_CNST0;
+        instr.logical_shift_reg.opc = LOGICAL_SHIFT_REG_OPC_ORR;
+        instr.logical_shift_reg.sf = 1;
+        instr.logical_shift_reg.rd = regToNo(dest);
+        instr.logical_shift_reg.rn = REG_SPECIAL;
+        instr.logical_shift_reg.rm = regToNo(src);
+        addInstruction(mem, instr);
+    }
 }
 
 size_t addInstMovImmToReg(StackAllocator* mem, RegisterSet regs, Register reg, int64_t value) {
@@ -662,18 +664,20 @@ void addInstMovFRegToMem(StackAllocator* mem, RegisterSet regs, Register reg, vo
 }
 
 void addInstMovFRegToFReg(StackAllocator* mem, RegisterSet regs, Register dest, Register src) {
-    Aarch64Instruction instr = { .instruction = 0, };
-    instr.proc_fp_one_source.cnst0 = PROC_FP_ONE_SOURCE_CNST0;
-    instr.proc_fp_one_source.cnst1 = PROC_FP_ONE_SOURCE_CNST1;
-    instr.proc_fp_one_source.cnst2 = PROC_FP_ONE_SOURCE_CNST2;
-    instr.proc_fp_one_source.cnst3 = PROC_FP_ONE_SOURCE_CNST3;
-    instr.proc_fp_one_source.ptype = PROC_FP_ONE_SOURCE_PTYPE_DOUBLE;
-    instr.proc_fp_one_source.opcode = PROC_FP_ONE_SOURCE_OPCODE_FMOV;
-    instr.proc_fp_one_source.m = 0;
-    instr.proc_fp_one_source.s = 0;
-    instr.proc_fp_one_source.rd = regToNo(dest);
-    instr.proc_fp_one_source.rn = regToNo(src);
-    addInstruction(mem, instr);
+    if (dest != src) {
+        Aarch64Instruction instr = { .instruction = 0, };
+        instr.proc_fp_one_source.cnst0 = PROC_FP_ONE_SOURCE_CNST0;
+        instr.proc_fp_one_source.cnst1 = PROC_FP_ONE_SOURCE_CNST1;
+        instr.proc_fp_one_source.cnst2 = PROC_FP_ONE_SOURCE_CNST2;
+        instr.proc_fp_one_source.cnst3 = PROC_FP_ONE_SOURCE_CNST3;
+        instr.proc_fp_one_source.ptype = PROC_FP_ONE_SOURCE_PTYPE_DOUBLE;
+        instr.proc_fp_one_source.opcode = PROC_FP_ONE_SOURCE_OPCODE_FMOV;
+        instr.proc_fp_one_source.m = 0;
+        instr.proc_fp_one_source.s = 0;
+        instr.proc_fp_one_source.rd = regToNo(dest);
+        instr.proc_fp_one_source.rn = regToNo(src);
+        addInstruction(mem, instr);
+    }
 }
 
 void addInstMovRegToFReg(StackAllocator* mem, RegisterSet regs, Register dest, Register src) {

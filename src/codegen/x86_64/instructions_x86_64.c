@@ -70,7 +70,9 @@ uint64_t getFirstFRegister() {
 }
 
 void addInstMovRegToReg(StackAllocator* mem, RegisterSet regs, Register dest, Register src) {
-    addMovRegToReg(mem, dest, src);
+    if (dest != src) {
+        addMovRegToReg(mem, dest, src);
+    }
 }
 
 size_t addInstMovImmToReg(StackAllocator* mem, RegisterSet regs, Register reg, int64_t value) {
@@ -298,10 +300,10 @@ void addInstDiv(StackAllocator* mem, RegisterSet regs, Register dest, Register a
                 free_reg = REG_B;
             } else if (a != REG_C && b != REG_C && dest != REG_C) {
                 free_reg = REG_C;
-            } else if (a != REG_8 && b != REG_8 && dest != REG_8) {
-                free_reg = REG_8;
+            } else if (a != REG_DI && b != REG_DI && dest != REG_DI) {
+                free_reg = REG_DI;
             } else {
-                free_reg = REG_9;
+                free_reg = REG_SI;
             }
             addPush(mem, free_reg);
             addMovRegToReg(mem, free_reg, b);
@@ -371,10 +373,10 @@ void addInstRem(StackAllocator* mem, RegisterSet regs, Register dest, Register a
                 free_reg = REG_B;
             } else if (a != REG_C && b != REG_C && dest != REG_C) {
                 free_reg = REG_C;
-            } else if (a != REG_8 && b != REG_8 && dest != REG_8) {
-                free_reg = REG_8;
+            } else if (a != REG_DI && b != REG_DI && dest != REG_DI) {
+                free_reg = REG_DI;
             } else {
-                free_reg = REG_9;
+                free_reg = REG_SI;
             }
             addPush(mem, free_reg);
             addMovRegToReg(mem, free_reg, b);
@@ -613,7 +615,9 @@ void addInstMovFRegToMem(StackAllocator* mem, RegisterSet regs, Register reg, vo
 }
 
 void addInstMovFRegToFReg(StackAllocator* mem, RegisterSet regs, Register dest, Register src) {
-    addMovFRegToFReg(mem, dest, src);
+    if (dest != src) {
+        addMovFRegToFReg(mem, dest, src);
+    }
 }
 
 void addInstMovRegToFReg(StackAllocator* mem, RegisterSet regs, Register dest, Register src) {
