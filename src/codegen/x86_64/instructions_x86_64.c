@@ -281,36 +281,59 @@ void addInstDiv(StackAllocator* mem, RegisterSet regs, Register dest, Register a
     if (((regs & REG_D) != 0) && dest != REG_D) {
         addPush(mem, REG_D);
     }
-    if(b == REG_D) {
-        int free_reg = getFreeRegister(regs);
+    if (a == REG_D) {
+        addPush(mem, a);
+        addPush(mem, b);
+        Register tmp = a;
+        a = b;
+        b = tmp;
+        addPop(mem, b);
+        addPop(mem, a);
+    }
+    RegisterSet internal_regs = regs | REG_A | REG_D;
+    if(b == REG_D || b == REG_A) {
+        int free_reg = getFreeRegister(internal_regs);
         if(free_reg == 0) {
-            addPush(mem, REG_B);
-            addMovRegToReg(mem, REG_B, b);
+            if (a != REG_B && b != REG_B && dest != REG_B) {
+                free_reg = REG_B;
+            } else if (a != REG_C && b != REG_C && dest != REG_C) {
+                free_reg = REG_C;
+            } else if (a != REG_8 && b != REG_8 && dest != REG_8) {
+                free_reg = REG_8;
+            } else {
+                free_reg = REG_9;
+            }
+            addPush(mem, free_reg);
+            addMovRegToReg(mem, free_reg, b);
+            addInstMovImmToReg(mem, internal_regs, REG_D, 1);
             if(a != REG_A) {
                 addMovRegToReg(mem, REG_A, a);
             }
-            addXor(mem, REG_D, REG_D);
-            addIDiv(mem, REG_B);
+            addIMulRax(mem, REG_D);
+            addIDiv(mem, free_reg);
             if(dest != REG_A) {
                 addMovRegToReg(mem, dest, REG_A);
             }
-            addPop(mem, REG_B);
+            addPop(mem, free_reg);
         } else {
+            internal_regs |= free_reg;
             addMovRegToReg(mem, free_reg, b);
+            addInstMovImmToReg(mem, internal_regs, REG_D, 1);
             if(a != REG_A) {
                 addMovRegToReg(mem, REG_A, a);
             }
-            addXor(mem, REG_D, REG_D);
+            addIMulRax(mem, REG_D);
             addIDiv(mem, free_reg);
             if(dest != REG_A) {
                 addMovRegToReg(mem, dest, REG_A);
             }
         }
     } else {
+        addInstMovImmToReg(mem, internal_regs, REG_D, 1);
         if(a != REG_A) {
             addMovRegToReg(mem, REG_A, a);
         }
-        addXor(mem, REG_D, REG_D);
+        addIMulRax(mem, REG_D);
         addIDiv(mem, b);
         if(dest != REG_A) {
             addMovRegToReg(mem, dest, REG_A);
@@ -331,36 +354,59 @@ void addInstRem(StackAllocator* mem, RegisterSet regs, Register dest, Register a
     if (((regs & REG_D) != 0) && dest != REG_D) {
         addPush(mem, REG_D);
     }
-    if(b == REG_D) {
-        int free_reg = getFreeRegister(regs);
+    if (a == REG_D) {
+        addPush(mem, a);
+        addPush(mem, b);
+        Register tmp = a;
+        a = b;
+        b = tmp;
+        addPop(mem, b);
+        addPop(mem, a);
+    }
+    RegisterSet internal_regs = regs | REG_A | REG_D;
+    if(b == REG_D || b == REG_A) {
+        int free_reg = getFreeRegister(internal_regs);
         if(free_reg == 0) {
-            addPush(mem, REG_B);
-            addMovRegToReg(mem, REG_B, b);
+            if (a != REG_B && b != REG_B && dest != REG_B) {
+                free_reg = REG_B;
+            } else if (a != REG_C && b != REG_C && dest != REG_C) {
+                free_reg = REG_C;
+            } else if (a != REG_8 && b != REG_8 && dest != REG_8) {
+                free_reg = REG_8;
+            } else {
+                free_reg = REG_9;
+            }
+            addPush(mem, free_reg);
+            addMovRegToReg(mem, free_reg, b);
+            addInstMovImmToReg(mem, internal_regs, REG_D, 1);
             if(a != REG_A) {
                 addMovRegToReg(mem, REG_A, a);
             }
-            addXor(mem, REG_D, REG_D);
-            addIDiv(mem, REG_B);
+            addIMulRax(mem, REG_D);
+            addIDiv(mem, free_reg);
             if(dest != REG_D) {
                 addMovRegToReg(mem, dest, REG_D);
             }
-            addPop(mem, REG_B);
+            addPop(mem, free_reg);
         } else {
+            internal_regs |= free_reg;
             addMovRegToReg(mem, free_reg, b);
+            addInstMovImmToReg(mem, internal_regs, REG_D, 1);
             if(a != REG_A) {
                 addMovRegToReg(mem, REG_A, a);
             }
-            addXor(mem, REG_D, REG_D);
+            addIMulRax(mem, REG_D);
             addIDiv(mem, free_reg);
             if(dest != REG_D) {
                 addMovRegToReg(mem, dest, REG_D);
             }
         }
     } else {
+        addInstMovImmToReg(mem, internal_regs, REG_D, 1);
         if(a != REG_A) {
             addMovRegToReg(mem, REG_A, a);
         }
-        addXor(mem, REG_D, REG_D);
+        addIMulRax(mem, REG_D);
         addIDiv(mem, b);
         if(dest != REG_D) {
             addMovRegToReg(mem, dest, REG_D);
