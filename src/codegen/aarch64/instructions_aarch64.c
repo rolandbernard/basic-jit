@@ -37,7 +37,7 @@ uint64_t getFreeFRegister(RegisterSet regs) {
 }
 
 uint64_t getUsedRegister(RegisterSet regs) {
-    for(int i = 0; i < REG_COUNT; i++) {
+    for(int i = 0; i < USER_REG_COUNT; i++) {
         if((regs & REG_X(i)) != 0) {
             return REG_X(i);
         }
@@ -56,7 +56,7 @@ uint64_t getUsedFRegister(RegisterSet regs) {
 
 int countFreeRegister(RegisterSet regs) {
     int ret = 0;
-    for(int i = 0; i < REG_COUNT; i++) {
+    for(int i = 0; i < USER_REG_COUNT; i++) {
         if((regs & REG_X(i)) == 0) {
             ret++;
         }

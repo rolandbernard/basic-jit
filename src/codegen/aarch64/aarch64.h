@@ -5,7 +5,7 @@
 #include "common/stackalloc.h"
 
 #define REG_COUNT 32
-#define USER_REG_COUNT 32
+#define USER_REG_COUNT 30
 #define FREG_COUNT 32
 
 #define REG_X(X) (1UL << X)
