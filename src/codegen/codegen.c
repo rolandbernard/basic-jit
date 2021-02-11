@@ -31,6 +31,8 @@ static int int64ToString(char* str, int64_t v) {
 Value withFreeRegister(Ast* ast, MCGenerationData* data, GenerateMCFunction func, int num_regs, int num_fregs) {
     int free_regs = countFreeRegister(data->registers);
     int free_fregs = countFreeFRegister(data->registers);
+    Register ret_reg = getFreeRegister(data->registers);
+    Register ret_freg = getFreeFRegister(data->registers);
     uint64_t to_pop[num_regs + num_fregs];
     int to_pop_count = 0;
     while (free_regs < num_regs) {
@@ -39,6 +41,7 @@ Value withFreeRegister(Ast* ast, MCGenerationData* data, GenerateMCFunction func
         data->registers &= ~reg;
         to_pop[to_pop_count] = reg;
         to_pop_count++;
+        free_regs++;
     }
     while (free_fregs < num_fregs) {
         uint64_t freg = getUsedFRegister(data->registers);
@@ -46,8 +49,22 @@ Value withFreeRegister(Ast* ast, MCGenerationData* data, GenerateMCFunction func
         data->registers &= ~freg;
         to_pop[to_pop_count] = freg;
         to_pop_count++;
+        free_fregs++;
     }
     Value ret = func(ast, data);
+    if (ret.type != VALUE_NONE && ret.type != VALUE_ERROR) {
+        if (ret.type == VALUE_FLOAT) {
+            addInstMovFRegToFReg(data->inst_mem, data->registers, ret_freg, ret.reg);
+            data->registers &= ~ret.reg;
+            ret.reg = ret_freg;
+            data->registers |= ret.reg;
+        } else {
+            addInstMovRegToReg(data->inst_mem, data->registers, ret_reg, ret.reg);
+            data->registers &= ~ret.reg;
+            ret.reg = ret_reg;
+            data->registers |= ret.reg;
+        }
+    }
     while (to_pop_count > 0) {
         to_pop_count--;
         uint64_t reg = to_pop[to_pop_count];
