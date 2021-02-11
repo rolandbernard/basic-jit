@@ -1,5 +1,4 @@
 
-const EXPECTED_DEPTH = 2;
 const MAX_NUM = 1e5;
 const MIN_NUM = -1e5;
 
@@ -11,10 +10,10 @@ function between(a, low, high) {
     return a <= high && a >= low;
 }
 
-function generateOutput(detph) {
-    if (detph > 0) {
-        const [out_a, exp_a] = generateOutput(detph - 1);
-        const [out_b, exp_b] = generateOutput(detph - 1);
+function generateOutput(ldetph, rdetph, maxdetph) {
+    if (ldetph > 0 && rdetph > 0 && maxdetph > 0) {
+        const [out_a, exp_a] = generateOutput(ldetph - 1, rdetph, maxdetph - 1);
+        const [out_b, exp_b] = generateOutput(ldetph, rdetph - 1, maxdetph - 1);
         for (;;) {
             let rand = Math.random();
             if (rand < 0.2 && between(exp_a + exp_b, MIN_NUM, MAX_NUM)) {
@@ -35,5 +34,6 @@ function generateOutput(detph) {
     }
 }
 
-const [calc, expected] = generateOutput(12);
-console.log('\nAssert ' + calc + ' = ' + expected.toString() + '\n');
+module.exports = {
+    generateOutput: generateOutput
+};

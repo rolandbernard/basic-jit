@@ -112,7 +112,7 @@ function runTests {
     for test in $(find $1 -mindepth 1 -maxdepth 1)
     do
         name=$(awk -F/ '{print $NF}' <<< $test)
-        if [ ${name::7} != ignore. -a ${name::4} != tmp. ]
+        if [ ${name::7} != ignore. -a ${name::4} != tmp. -a ${name::8} != include. ]
         then
             if [ -f $test ]
             then
