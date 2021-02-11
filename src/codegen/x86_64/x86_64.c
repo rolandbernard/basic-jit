@@ -106,7 +106,7 @@ void addMovImm64ToReg(StackAllocator* mem, X86Register reg, int64_t value) {
         ptr[0] = 0x48;
     }
     ptr[1] = 0xb8 + regToOpcodeNo(reg);
-    ptr[2] = (value)&0xff;
+    ptr[2] = (value) & 0xff;
     ptr[3] = (value >> 8) & 0xff;
     ptr[4] = (value >> 16) & 0xff;
     ptr[5] = (value >> 24) & 0xff;
@@ -221,6 +221,13 @@ void addIMul(StackAllocator* mem, X86Register dest, X86Register src) {
     ptr[1] = 0x0f;
     ptr[2] = 0xaf;
     ptr[3] = 0xc0 + (regToOpcodeNo(dest) * 8) + regToOpcodeNo(src);
+}
+
+void addIMulRax(StackAllocator* mem, X86Register src) {
+    uint8_t* ptr = (uint8_t*)allocUnaligned(mem, 3);
+    ptr[0] = 0x48 + (src >= REG_8 ? 1 : 0);
+    ptr[1] = 0xf7;
+    ptr[2] = 0xe8 + regToOpcodeNo(src);
 }
 
 void addIDiv(StackAllocator* mem, X86Register by) {
