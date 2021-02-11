@@ -48,14 +48,14 @@ function runTest {
                 fi
             fi            
         fi
-    elif [ ${1: -3} == .js ]
+    elif [ ${1: -3} == .js -a -z $NO_GEN ]
     then
         for i in $(seq 1 $2)
         do
             echo -n "  "
         done
         dir=$(dirname $1)
-        tmp_file=$dir/tmp.test.basic
+        tmp_file=$dir/tmp.$3.basic
         unset failed
         for i in $(seq 1 $GENERATOR_COUNT)
         do
@@ -64,7 +64,7 @@ function runTest {
             then
                 if [ ${3::5} == fail. ]
                 then
-                    echo -e "\e[31mFailed\e[m test '$tmp_file' should have failed"
+                    echo -e "\e[31mFailed\e[m test '$3' should have failed"
                     failed=True
                     break
                 fi
@@ -73,14 +73,14 @@ function runTest {
                 then
                     if [ ! ${3::5} == fail. ]
                     then
-                        echo -e "\e[31mFailed\e[m test '$tmp_file' by timeout"
+                        echo -e "\e[31mFailed\e[m test '$3' by timeout"
                         failed=True
                         break
                     fi
                 else
                     if [ ! ${3::5} == fail. ]
                     then
-                        echo -e "\e[31mFailed\e[m test '$tmp_file' at runtime"
+                        echo -e "\e[31mFailed\e[m test '$3' at runtime"
                         failed=True
                         for i in $(seq 0 $2)
                         do
