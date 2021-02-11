@@ -2,6 +2,8 @@
 passed_count=0
 failed_count=0
 
+GENERATOR_COUNT=20
+
 function runTest {
     if [ ${1: -6} == .basic ]
     then
@@ -48,20 +50,20 @@ function runTest {
         fi
     elif [ ${1: -3} == .js ]
     then
+        for i in $(seq 1 $2)
+        do
+            echo -n "  "
+        done
         dir=$(dirname $1)
         tmp_file=$dir/tmp.test.basic
         unset failed
-        for i in $(seq 1 1000)
+        for i in $(seq 1 $GENERATOR_COUNT)
         do
             node $1 > $tmp_file
             if timeout 1s $COMPILER $tmp_file &> /tmp/basic-test.out
             then
                 if [ ${3::5} == fail. ]
                 then
-                    for i in $(seq 1 $2)
-                    do
-                        echo -n "  "
-                    done
                     echo -e "\e[31mFailed\e[m test '$tmp_file' should have failed"
                     failed=True
                     break
@@ -71,10 +73,6 @@ function runTest {
                 then
                     if [ ! ${3::5} == fail. ]
                     then
-                        for i in $(seq 1 $2)
-                        do
-                            echo -n "  "
-                        done
                         echo -e "\e[31mFailed\e[m test '$tmp_file' by timeout"
                         failed=True
                         break
@@ -82,10 +80,6 @@ function runTest {
                 else
                     if [ ! ${3::5} == fail. ]
                     then
-                        for i in $(seq 1 $2)
-                        do
-                            echo -n "  "
-                        done
                         echo -e "\e[31mFailed\e[m test '$tmp_file' at runtime"
                         failed=True
                         for i in $(seq 0 $2)
@@ -98,7 +92,7 @@ function runTest {
                 fi            
             fi
         done
-        if [ failed ]
+        if [ $failed ]
         then
             failed_count=$(expr $failed_count + 1)
         else 
