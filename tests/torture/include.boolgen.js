@@ -1,13 +1,6 @@
 
-const MAX_NUM = 1e10;
-const MIN_NUM = -1e10;
-
 function getRandomBool() {
     return Math.random() < 0.5;
-}
-
-function between(a, low, high) {
-    return a <= high && a >= low;
 }
 
 function generateOutput(ldetph, rdetph, maxdetph) {
@@ -16,13 +9,13 @@ function generateOutput(ldetph, rdetph, maxdetph) {
         const [out_b, exp_b] = generateOutput(ldetph, rdetph - 1, maxdetph - 1);
         for (;;) {
             let rand = Math.random();
-            if (rand < 0.25 && between(exp_a + exp_b, MIN_NUM, MAX_NUM)) {
+            if (rand < 0.25) {
                 return [`(${out_a} And ${out_b})`, exp_a && exp_b];
-            } else if (rand < 0.5 && between(exp_a - exp_b, MIN_NUM, MAX_NUM)) {
+            } else if (rand < 0.5) {
                 return [`(${out_a} Or ${out_b})`, exp_a || exp_b];
-            } else if (rand < 0.75 && between(exp_a * exp_b, MIN_NUM, MAX_NUM)) {
+            } else if (rand < 0.75) {
                 return [`(${out_a} Xor ${out_b})`, exp_a !== exp_b];
-            } else if (between(exp_a / exp_b, MIN_NUM, MAX_NUM)) {
+            } else {
                 return [`(Not ${out_b})`, !exp_b];
             }
         }
