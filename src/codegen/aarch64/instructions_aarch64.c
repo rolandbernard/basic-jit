@@ -786,10 +786,10 @@ void addInstFunctionCallBinary(StackAllocator* mem, RegisterSet regs, Register r
         if(a != REG_X(0)) {
             if(b == REG_X(0)) {
                 if(a == REG_X(1)) {
-                    addInstMovFRegToFReg(mem, regs, REG_X(2), b);
+                    addInstMovRegToReg(mem, regs, REG_X(2), b);
                     b = REG_X(2);
                 } else {
-                    addInstMovFRegToFReg(mem, regs, REG_X(1), b);
+                    addInstMovRegToReg(mem, regs, REG_X(1), b);
                     b = REG_X(1);
                 }
             }
