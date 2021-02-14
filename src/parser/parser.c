@@ -1345,7 +1345,9 @@ static Ast* parseMultiple(Scanner* scanner, StackAllocator* mem) {
         tmp_data[count] = parseSingleOperation(scanner, mem);
         if (tmp_data[count] != NULL) {
             if (tmp_data[count]->type == AST_ERROR) {
-                return tmp_data[count];
+                Ast* ret = tmp_data[count];
+                free(tmp_data);
+                return ret;
             }
             count++;
             open_end = false;

@@ -72,6 +72,8 @@ void addCmp(StackAllocator* mem, X86Register dest, X86Register src);
 
 void addIMul(StackAllocator* mem, X86Register dest, X86Register src);
 
+void addIMulRax(StackAllocator* mem, X86Register src);
+
 void addIDiv(StackAllocator* mem, X86Register by);
 
 void addCallRel(StackAllocator* mem, int32_t value);

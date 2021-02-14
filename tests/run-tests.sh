@@ -2,6 +2,8 @@
 passed_count=0
 failed_count=0
 
+GENERATOR_COUNT=20
+
 function runTest {
     if [ ${1: -6} == .basic ]
     then
@@ -46,6 +48,58 @@ function runTest {
                 fi
             fi            
         fi
+    elif [ ${1: -3} == .js -a -z $NO_GEN ]
+    then
+        for i in $(seq 1 $2)
+        do
+            echo -n "  "
+        done
+        dir=$(dirname $1)
+        tmp_file=$dir/tmp.$3.basic
+        unset failed
+        for i in $(seq 1 $GENERATOR_COUNT)
+        do
+            node $1 > $tmp_file
+            if timeout 1s $COMPILER $tmp_file &> /tmp/basic-test.out
+            then
+                if [ ${3::5} == fail. ]
+                then
+                    echo -e "\e[31mFailed\e[m test '$3' should have failed"
+                    failed=True
+                    break
+                fi
+            else
+                if [ $? == 124 ]
+                then
+                    if [ ! ${3::5} == fail. ]
+                    then
+                        echo -e "\e[31mFailed\e[m test '$3' by timeout"
+                        failed=True
+                        break
+                    fi
+                else
+                    if [ ! ${3::5} == fail. ]
+                    then
+                        echo -e "\e[31mFailed\e[m test '$3' at runtime"
+                        failed=True
+                        for i in $(seq 0 $2)
+                        do
+                            sed -i "s/^/  /" /tmp/basic-test.out
+                        done
+                        cat /tmp/basic-test.out
+                        break
+                    fi
+                fi            
+            fi
+        done
+        if [ $failed ]
+        then
+            failed_count=$(expr $failed_count + 1)
+        else 
+            echo -e "\e[32mPassed\e[m test '$3'"
+            passed_count=$(expr $passed_count + 1)
+            rm $tmp_file
+        fi
     fi
 }
 
@@ -58,7 +112,7 @@ function runTests {
     for test in $(find $1 -mindepth 1 -maxdepth 1)
     do
         name=$(awk -F/ '{print $NF}' <<< $test)
-        if [ ${name::7} != ignore. ]
+        if [ ${name::7} != ignore. -a ${name::4} != tmp. -a ${name::8} != include. ]
         then
             if [ -f $test ]
             then

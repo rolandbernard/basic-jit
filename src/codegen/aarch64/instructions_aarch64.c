@@ -37,7 +37,7 @@ uint64_t getFreeFRegister(RegisterSet regs) {
 }
 
 uint64_t getUsedRegister(RegisterSet regs) {
-    for(int i = 0; i < REG_COUNT; i++) {
+    for(int i = 0; i < USER_REG_COUNT; i++) {
         if((regs & REG_X(i)) != 0) {
             return REG_X(i);
         }
@@ -56,7 +56,7 @@ uint64_t getUsedFRegister(RegisterSet regs) {
 
 int countFreeRegister(RegisterSet regs) {
     int ret = 0;
-    for(int i = 0; i < REG_COUNT; i++) {
+    for(int i = 0; i < USER_REG_COUNT; i++) {
         if((regs & REG_X(i)) == 0) {
             ret++;
         }
@@ -83,14 +83,16 @@ uint64_t getFirstFRegister() {
 }
 
 void addInstMovRegToReg(StackAllocator* mem, RegisterSet regs, Register dest, Register src) {
-    Aarch64Instruction instr = { .instruction = 0, };
-    instr.logical_shift_reg.cnst0 = LOGICAL_SHIFT_REG_CNST0;
-    instr.logical_shift_reg.opc = LOGICAL_SHIFT_REG_OPC_ORR;
-    instr.logical_shift_reg.sf = 1;
-    instr.logical_shift_reg.rd = regToNo(dest);
-    instr.logical_shift_reg.rn = REG_SPECIAL;
-    instr.logical_shift_reg.rm = regToNo(src);
-    addInstruction(mem, instr);
+    if (dest != src) {
+        Aarch64Instruction instr = { .instruction = 0, };
+        instr.logical_shift_reg.cnst0 = LOGICAL_SHIFT_REG_CNST0;
+        instr.logical_shift_reg.opc = LOGICAL_SHIFT_REG_OPC_ORR;
+        instr.logical_shift_reg.sf = 1;
+        instr.logical_shift_reg.rd = regToNo(dest);
+        instr.logical_shift_reg.rn = REG_SPECIAL;
+        instr.logical_shift_reg.rm = regToNo(src);
+        addInstruction(mem, instr);
+    }
 }
 
 size_t addInstMovImmToReg(StackAllocator* mem, RegisterSet regs, Register reg, int64_t value) {
@@ -662,18 +664,20 @@ void addInstMovFRegToMem(StackAllocator* mem, RegisterSet regs, Register reg, vo
 }
 
 void addInstMovFRegToFReg(StackAllocator* mem, RegisterSet regs, Register dest, Register src) {
-    Aarch64Instruction instr = { .instruction = 0, };
-    instr.proc_fp_one_source.cnst0 = PROC_FP_ONE_SOURCE_CNST0;
-    instr.proc_fp_one_source.cnst1 = PROC_FP_ONE_SOURCE_CNST1;
-    instr.proc_fp_one_source.cnst2 = PROC_FP_ONE_SOURCE_CNST2;
-    instr.proc_fp_one_source.cnst3 = PROC_FP_ONE_SOURCE_CNST3;
-    instr.proc_fp_one_source.ptype = PROC_FP_ONE_SOURCE_PTYPE_DOUBLE;
-    instr.proc_fp_one_source.opcode = PROC_FP_ONE_SOURCE_OPCODE_FMOV;
-    instr.proc_fp_one_source.m = 0;
-    instr.proc_fp_one_source.s = 0;
-    instr.proc_fp_one_source.rd = regToNo(dest);
-    instr.proc_fp_one_source.rn = regToNo(src);
-    addInstruction(mem, instr);
+    if (dest != src) {
+        Aarch64Instruction instr = { .instruction = 0, };
+        instr.proc_fp_one_source.cnst0 = PROC_FP_ONE_SOURCE_CNST0;
+        instr.proc_fp_one_source.cnst1 = PROC_FP_ONE_SOURCE_CNST1;
+        instr.proc_fp_one_source.cnst2 = PROC_FP_ONE_SOURCE_CNST2;
+        instr.proc_fp_one_source.cnst3 = PROC_FP_ONE_SOURCE_CNST3;
+        instr.proc_fp_one_source.ptype = PROC_FP_ONE_SOURCE_PTYPE_DOUBLE;
+        instr.proc_fp_one_source.opcode = PROC_FP_ONE_SOURCE_OPCODE_FMOV;
+        instr.proc_fp_one_source.m = 0;
+        instr.proc_fp_one_source.s = 0;
+        instr.proc_fp_one_source.rd = regToNo(dest);
+        instr.proc_fp_one_source.rn = regToNo(src);
+        addInstruction(mem, instr);
+    }
 }
 
 void addInstMovRegToFReg(StackAllocator* mem, RegisterSet regs, Register dest, Register src) {
@@ -782,10 +786,10 @@ void addInstFunctionCallBinary(StackAllocator* mem, RegisterSet regs, Register r
         if(a != REG_X(0)) {
             if(b == REG_X(0)) {
                 if(a == REG_X(1)) {
-                    addInstMovFRegToFReg(mem, regs, REG_X(2), b);
+                    addInstMovRegToReg(mem, regs, REG_X(2), b);
                     b = REG_X(2);
                 } else {
-                    addInstMovFRegToFReg(mem, regs, REG_X(1), b);
+                    addInstMovRegToReg(mem, regs, REG_X(1), b);
                     b = REG_X(1);
                 }
             }

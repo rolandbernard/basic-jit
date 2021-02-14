@@ -33,10 +33,10 @@ LD := clang
 SANITIZE := address,leak,undefined
 # SANITIZE := thread,undefined
 
-CCFLAGS.debug   := -O0 -g -fsanitize=$(SANITIZE) -DDEBUG
+CCFLAGS.debug   := -O0 -g -fsanitize=$(SANITIZE) #-DDEBUG
 LDFLAGS.debug   := -O0 -g -fsanitize=$(SANITIZE)
-CCFLAGS.release := -O3
-LDFLAGS.release := -O3
+CCFLAGS.release := -O3 -flto
+LDFLAGS.release := -O3 -flto
 
 CCFLAGS := $(CCFLAGS.$(BUILD)) -I$(SOURCE_DIR) 
 LDFLAGS := $(LDFLAGS.$(BUILD))
