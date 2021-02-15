@@ -1,7 +1,7 @@
 
 
-const MAX_NUM = 1e10;
-const MIN_NUM = -1e10;
+const MAX_NUM = 1e5;
+const MIN_NUM = -1e5;
 
 function getRandomFloat() {
     return Math.random() * (MAX_NUM - MIN_NUM) + MIN_NUM;
