@@ -1,0 +1,9 @@
+
+Assert "ABC" = "ABC"
+Assert "Abc" != "ABC"
+Assert "ABC" > "AAA"
+Assert "ABC" >= "ABC"
+Assert "ABC" >= "AAA"
+Assert "ABC" < "XYZ"
+Assert "ABC" <= "ABC"
+Assert "ABC" <= "XYZ"
