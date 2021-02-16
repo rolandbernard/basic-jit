@@ -1,0 +1,5 @@
+
+Assert (False XOR False) = False
+Assert (False XOR True) = True
+Assert (True XOR False) = True
+Assert (True XOR True) = False

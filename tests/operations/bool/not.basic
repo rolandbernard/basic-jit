@@ -1,0 +1,3 @@
+
+Assert NOT False = True
+Assert NOT True = False

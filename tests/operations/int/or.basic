@@ -1,0 +1,6 @@
+
+Assert (0b1001 OR 0b0011) = 0b1011
+Assert (5 OR 3) = 7
+Assert (5 OR -3) = -3
+Assert (-5 OR 3) = -5
+Assert (-5 OR -3) = -1
