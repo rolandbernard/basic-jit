@@ -1,0 +1,5 @@
+
+Assert ("Hello world!" != "Hello world") = True
+Assert ("ABC" != "ABCD") = True
+Assert ("_1_2_" != "_1_2_") = False
+Assert ("12345" != "12345") = False

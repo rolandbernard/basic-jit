@@ -1,0 +1,5 @@
+
+Assert ("A" <= "A") = True
+Assert ("A" <= "AA") = True
+Assert ("ABC" <= "AAA") = False
+Assert ("AA" <= "A") = False

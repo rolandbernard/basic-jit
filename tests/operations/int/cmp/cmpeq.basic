@@ -1,0 +1,5 @@
+
+Assert (6 = 6) = True
+Assert (1000 = 1000) = True
+Assert (6 = 7) = False
+Assert (1001 = 1000) = False

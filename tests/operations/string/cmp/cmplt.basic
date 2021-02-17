@@ -1,0 +1,5 @@
+
+Assert ("ÄÄÄ" < "ÄÖÜ") = True
+Assert ("€€€" < "€€€€") = True
+Assert ("LLL" < "LL") = False
+Assert ("A" < "A") = False

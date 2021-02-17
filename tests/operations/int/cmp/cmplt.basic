@@ -1,0 +1,5 @@
+
+Assert (1 < 3) = True
+Assert (-2 < 0) = True
+Assert (0 < 0) = False
+Assert (-3 < -4) = False
