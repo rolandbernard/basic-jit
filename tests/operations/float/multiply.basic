@@ -1,0 +1,7 @@
+
+Assert 1.0 * 1e10 = 1e10
+Assert 0.0 * 1e10 = 0.0
+Assert 1e10 * 1e-10 = 1.0
+Assert (-1e10) * 1e-10 = -1.0
+Assert 1e10 * (-1e-10) = -1.0
+Assert (-1e10) * (-1e-10) = 1.0

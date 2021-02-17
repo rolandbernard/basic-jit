@@ -1,3 +1,0 @@
-
-Assert NOT 0b0011 = 0xfffffffffffffffc
-Assert NOT 3 = -4

@@ -1,0 +1,12 @@
+
+Assert Sgn(-1000) = -1
+Assert Sgn(-100) = -1
+Assert Sgn(-10) = -1
+Assert Sgn(-5) = -1
+Assert Sgn(-1) = -1
+Assert Sgn(0) = 0
+Assert Sgn(1) = 1
+Assert Sgn(5) = 1
+Assert Sgn(10) = 1
+Assert Sgn(100) = 1
+Assert Sgn(1000) = 1

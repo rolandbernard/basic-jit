@@ -1,0 +1,9 @@
+
+Assert 3 * 5 = 15
+Assert 3 * (-5) = -15
+Assert (-3) * 5 = -15
+Assert (-3) * (-5) = 15
+Assert 0 * 0 = 0
+Assert 0 * 5 = 0
+Assert (-0) * (-5) = 0
+Assert (-0) * 5 = 0

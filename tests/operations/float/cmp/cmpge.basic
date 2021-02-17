@@ -1,0 +1,5 @@
+
+Assert (2.5 >= 2.5) = True
+Assert (1e10 >= -1e20) = True
+Assert (5.5 >= 10.2) = False
+Assert (1.0 >= 1.10) = False

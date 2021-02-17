@@ -1,0 +1,5 @@
+
+Assert (False OR False) = False
+Assert (False OR True) = True
+Assert (True OR False) = True
+Assert (True OR True) = True

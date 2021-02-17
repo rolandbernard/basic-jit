@@ -1,0 +1,8 @@
+
+Assert (True AND False AND True) = ((True AND False) AND True)
+Assert (True OR False OR True) = ((True OR False) OR True)
+Assert (True XOR False XOR True) = ((True XOR False) XOR True)
+
+Assert (False And True OR False AND True) = ((False And True) OR (False And True))
+Assert (False And True XOR False AND True) = ((False And True) XOR (False And True))
+Assert (False XOR True OR False XOR True) = ((False XOR True) OR (False XOR True))

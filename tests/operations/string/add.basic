@@ -1,0 +1,6 @@
+
+Assert "A" + "B" = "AB"
+Assert "AC" + "BC" = "ACBC"
+Assert "ADD" + "B0" = "ADDB0"
+Assert "ADD" + "B1" = "ADDB1"
+Assert "ADD" + "B2" = "ADDB2"

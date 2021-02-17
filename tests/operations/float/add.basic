@@ -1,0 +1,6 @@
+
+Assert 1e10 + 1e10 = 2e10
+Assert 1e10 + 1e-10 = 1e10
+Assert 1e10 + (-1e10) = 0.0
+Assert (-1e10) + 1e10 = 0.0
+Assert (-1e10) + (-1e10) = -2e10

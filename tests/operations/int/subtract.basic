@@ -1,0 +1,5 @@
+
+Assert 1 - 5 = -4
+Assert (-5) - (-5) = 0
+Assert (-5) - 5 = -10
+Assert 5 - (-5) = 10

@@ -1,5 +1,0 @@
-
-Assert Spc(1) = " "
-Assert Spc(2) = "  "
-Assert Spc(4) = "    "
-Assert Spc(8) = "        "

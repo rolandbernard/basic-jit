@@ -1,0 +1,5 @@
+
+Assert ("_A_" = "_A_") = True
+Assert ("ABC" = "ABC") = True
+Assert ("ABC" = "AB") = False
+Assert ("_A_" = "_A_B_") = False

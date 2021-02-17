@@ -1,0 +1,5 @@
+
+Assert (2.3 != 3.2) = True
+Assert (-3.2 != -3.19) = True
+Assert (5.4 != 5.4) = False
+Assert (-7.2 != -7.2) = False

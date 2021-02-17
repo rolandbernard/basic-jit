@@ -1,0 +1,19 @@
+
+Assert True = True
+Assert False = False
+
+Assert True != False
+Assert False != True
+
+Assert True > False
+Assert False < True
+
+Assert False >= False
+Assert True >= False
+Assert True >= True
+
+Assert False <= False
+Assert False <= True
+Assert True <= True
+
+Assert True

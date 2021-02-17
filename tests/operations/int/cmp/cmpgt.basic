@@ -1,0 +1,5 @@
+
+Assert (11 > 10) = True
+Assert (-100 > -111) = True
+Assert (5 > 5) = False
+Assert (11 > 12) = False
