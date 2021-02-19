@@ -1,0 +1,15 @@
+
+A = 0
+GoSub sub0
+Assert A = 1
+End
+
+sub0:
+GoSub sub1
+Return
+End 1
+
+sub1:
+A = 1
+Return
+End 1

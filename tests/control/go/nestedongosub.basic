@@ -1,0 +1,27 @@
+
+A = 1
+B = 1
+
+On A GoSub sub0, sub1
+
+Assert A = 2
+Assert B = 0
+End
+
+sub0:
+B = 1
+On B GoSub sub2, sub3
+Return
+
+sub1:
+B = 0
+On B GoSub sub2, sub3
+Return
+
+sub2:
+A = 2
+Return
+
+sub3:
+A = 3
+Return
