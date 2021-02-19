@@ -1,0 +1,13 @@
+
+A = 1
+B = 2
+C = 3
+
+X = 0
+
+If A = 1 Then \
+    If B = 2 Then \
+        If C = 3 Then \
+            X = 4
+
+Assert X = 4
