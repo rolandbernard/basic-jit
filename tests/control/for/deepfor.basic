@@ -1,0 +1,11 @@
+
+sum = 0
+For A% = 1 To 5
+    For B% = 1 To 5
+        For C% = 1 To 5
+            sum = sum + A + B + C
+        Next C
+    Next B
+Next A
+
+Assert sum = 1125

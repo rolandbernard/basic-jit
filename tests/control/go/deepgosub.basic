@@ -1,0 +1,50 @@
+
+A = 0
+GoSub sub0
+Assert A = 1
+End
+
+sub0:
+GoSub sub1
+Return
+End 1
+
+sub1:
+GoSub sub2
+Return
+End 1
+
+sub2:
+GoSub sub3
+Return
+End 1
+
+sub3:
+GoSub sub4
+Return
+End 1
+
+sub4:
+GoSub sub5
+Return
+End 1
+
+sub5:
+GoSub sub6
+Return
+End 1
+
+sub6:
+GoSub sub7
+Return
+End 1
+
+sub7:
+GoSub sub8
+Return
+End 1
+
+sub8:
+A = 1
+Return
+End 1
