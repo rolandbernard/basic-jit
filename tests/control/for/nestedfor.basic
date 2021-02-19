@@ -1,0 +1,9 @@
+
+sum = 0
+For X% = 1 To 5
+    For Y% = 1 To 5
+        sum = sum + X + Y
+    Next Y
+Next X
+
+Assert sum = 150

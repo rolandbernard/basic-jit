@@ -1,0 +1,9 @@
+
+sum = 0.0
+For X = 1.0 To 2 Step 0.5
+    For Y = 1.0 To 2 Step 0.5
+        sum = sum + X + Y
+    Next Y
+Next X
+
+Assert sum = 27.0
