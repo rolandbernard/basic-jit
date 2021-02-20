@@ -11,13 +11,9 @@
 
 typedef int (*JitFunction)();
 
-void segvSignal(int sig) {
-    exit(EXIT_SEGV_ERROR);
-}
-
 void executeFunctionInMemory(void* mem, size_t len, int* ret) {
     int pid = fork();
-    if(pid == -1) {
+        if(pid == -1) {
         *ret = EXIT_FORK_ERROR;
     } else if(pid == 0) {
         JitFunction entry = (JitFunction)mem;
@@ -29,13 +25,16 @@ void executeFunctionInMemory(void* mem, size_t len, int* ret) {
             exit(EXIT_MEM_ERROR);
         } else {
             signal(SIGINT, SIG_DFL);
-            signal(SIGSEGV, segvSignal);
             entry();
             exit(EXIT_NORMAL);
         }
     } else {
         waitpid(pid, ret, 0);
-        *ret = WEXITSTATUS(*ret);
+        if (WIFEXITED(*ret)) {
+            *ret = WEXITSTATUS(*ret);
+        } else if (WIFSIGNALED(*ret)) {
+            *ret = EXIT_SIGNAL_ERROR_START + WTERMSIG(*ret);
+        }
     }
 }
 

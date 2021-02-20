@@ -8,7 +8,9 @@
 #define EXIT_NORMAL 200
 #define EXIT_FORK_ERROR 201
 #define EXIT_MEM_ERROR 202
-#define EXIT_SEGV_ERROR 203
+#define EXIT_OTHER_ERROR 203
+
+#define EXIT_SIGNAL_ERROR_START 1000
 
 void executeFunctionInMemory(void* mem, size_t len, int* ret);
 
