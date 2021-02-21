@@ -92,7 +92,7 @@ int executeFile(const char* filename) {
                         had_error = true;
                         exit_code = EXIT_FAILURE;
                     } else {
-                        Error error = generateMC(ast, &data);
+                        Error error= generateMC(ast, &data);
                         if (error != ERROR_NONE) {
                             fprintf(stderr, "error: %s at line %i\n", getErrorName(error), data.line);
                             had_error = true;
@@ -118,21 +118,25 @@ int executeFile(const char* filename) {
                 printMemoryContent(stderr, jit_memory.memory, jit_memory.occupied);
 #endif
                 executeFunctionInMemory(jit_memory.memory, jit_memory.occupied, &ret);
-                switch (ret) {
-                case EXIT_FORK_ERROR:
-                    perror("error: Failed to fork");
-                    break;
-                case EXIT_MEM_ERROR:
-                    perror("error: Failed to set memory protection");
-                    break;
-                case EXIT_SEGV_ERROR:
-                    fprintf(stderr, "error: Child recieved a SEGV\n");
-                    break;
-                case EXIT_NORMAL:
-                    ret = 0;
-                    break;
-                default:
-                    break;
+                if (ret > EXIT_SIGNAL_ERROR_START) {
+                    fprintf(stderr, "error: Child terminated: %s\n", strsignal(ret - EXIT_SIGNAL_ERROR_START));
+                } else {
+                    switch (ret) {
+                    case EXIT_FORK_ERROR:
+                        perror("error: Failed to fork");
+                        break;
+                    case EXIT_MEM_ERROR:
+                        perror("error: Failed to set memory protection");
+                        break;
+                    case EXIT_OTHER_ERROR:
+                        fprintf(stderr, "error: Child terminated unexpectedly\n");
+                        break;
+                    case EXIT_NORMAL:
+                        ret = 0;
+                        break;
+                    default:
+                        break;
+                    }
                 }
                 exit_code = ret;
             }

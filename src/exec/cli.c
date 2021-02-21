@@ -185,18 +185,22 @@ static void runProgram() {
             printMemoryContent(stderr, jit_memory.memory, jit_memory.occupied);
 #endif
             executeFunctionInMemory(jit_memory.memory, jit_memory.occupied, &ret);
-            switch (ret) {
-            case EXIT_FORK_ERROR:
-                perror("error: Failed to fork");
-                break;
-            case EXIT_MEM_ERROR:
-                perror("error: Failed to set memory protection");
-                break;
-            case EXIT_SEGV_ERROR:
-                fprintf(stderr, "error: Child recieved a SEGV\n");
-                break;
-            default:
-                break;
+            if (ret > EXIT_SIGNAL_ERROR_START) {
+                fprintf(stderr, "error: Child terminated: %s\n", strsignal(ret - EXIT_SIGNAL_ERROR_START));
+            } else {
+                switch (ret) {
+                case EXIT_FORK_ERROR:
+                    perror("error: Failed to fork");
+                    break;
+                case EXIT_MEM_ERROR:
+                    perror("error: Failed to set memory protection");
+                    break;
+                case EXIT_OTHER_ERROR:
+                    fprintf(stderr, "error: Child terminated unexpectedly\n");
+                    break;
+                default:
+                    break;
+                }
             }
             signal(SIGINT, SIG_DFL);
         }
@@ -357,21 +361,26 @@ static bool executeLine(const char* line) {
                     printMemoryContent(stderr, jit_memory.memory, jit_memory.occupied);
 #endif
                     executeFunctionInMemory(jit_memory.memory, jit_memory.occupied, &ret);
-                    switch (ret) {
-                    case EXIT_FORK_ERROR:
-                        perror("error: Failed to fork");
-                        break;
-                    case EXIT_MEM_ERROR:
-                        perror("error: Failed to set memory protection");
-                        break;
-                    case EXIT_SEGV_ERROR:
-                        fprintf(stderr, "error: Child recieved a SEGV\n");
-                        break;
-                    case EXIT_NORMAL:
-                        break;
-                    default:
-                        end = true;
-                        break;
+                    if (ret > EXIT_SIGNAL_ERROR_START) {
+                        fprintf(stderr, "error: Child terminated: %s\n", strsignal(ret - EXIT_SIGNAL_ERROR_START));
+                    } else {
+                        switch (ret) {
+                        case EXIT_FORK_ERROR:
+                            perror("error: Failed to fork");
+                            break;
+                        case EXIT_MEM_ERROR:
+                            perror("error: Failed to set memory protection");
+                            break;
+                        case EXIT_OTHER_ERROR:
+                            fprintf(stderr, "error: Child terminated unexpectedly\n");
+                            break;
+                        case EXIT_NORMAL:
+                            ret = 0;
+                            break;
+                        default:
+                            end = true;
+                            break;
+                        }
                     }
                     exit_code = ret;
                 }
