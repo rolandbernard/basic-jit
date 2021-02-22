@@ -469,15 +469,20 @@ static Value generateMCData(AstVariable* ast, MCGenerationData* data) {
             AstInt* value = (AstInt*)ast->values[i];
             data_element.integer = value->value;
             data_element.real = (double)value->value;
+            data_element.string = NULL;
         } else if (ast->values[i]->type == AST_FLOAT) {
             AstFloat* value = (AstFloat*)ast->values[i];
             data_element.integer = (int64_t)value->value;
             data_element.real = value->value;
+            data_element.string = NULL;
         } else if (ast->values[i]->type == AST_TRUE || ast->values[i]->type == AST_FALSE) {
             int64_t value = ast->values[i]->type == AST_TRUE ? 1 : 0;
             data_element.integer = value;
             data_element.real = value;
+            data_element.string = NULL;
         } else {
+            data_element.integer = 0;
+            data_element.real = 0;
             AstString* value = (AstString*)ast->values[i];
             int len = strlen(value->str);
             char* v = (char*)allocAligned(data->variable_mem, len + 1);
