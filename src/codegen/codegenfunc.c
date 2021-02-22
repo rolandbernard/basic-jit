@@ -309,8 +309,10 @@ static Value generateMCUnaryIntOrFloat(AstUnary* ast, MCGenerationData* data) {
 }
 
 static double parseString(char* str) {
-    double ret;
-    sscanf(str, " %lf", &ret);
+    double ret = 0.0;
+    if (str != NULL) {
+        sscanf(str, " %lf", &ret);
+    }
     return ret;
 }
 
@@ -343,7 +345,9 @@ static Value generateMCVal(AstUnary* ast, MCGenerationData* data) {
 
 static int64_t ascFunction(char* str) {
     uint64_t ret = 0;
-    parseUTF8(str, &ret);
+    if (str != NULL) {
+        parseUTF8(str, &ret);
+    }
     return ret;
 }
 
@@ -741,7 +745,7 @@ static Value generateMCSimpleCall(Ast* ast, MCGenerationData* data) {
 }
 
 static char* left(char* str, int64_t num) {
-    size_t len = strlen(str);
+    size_t len = (str == NULL ? 0 : strlen(str));
     if (num < 0) {
         num = 0;
     } else if (len < num) {
@@ -754,7 +758,7 @@ static char* left(char* str, int64_t num) {
 }
 
 static char* right(char* str, int64_t num) {
-    size_t len = strlen(str);
+    size_t len = (str == NULL ? 0 : strlen(str));
     if (num < 0) {
         num = 0;
     } else if (len < num) {
