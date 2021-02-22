@@ -1,0 +1,10 @@
+
+Data true, false, true, false, true
+
+Read A, B., C, D., E
+
+Assert A = 1.0
+Assert B = 0.0
+Assert C = 1.0
+Assert D.= 0.0
+Assert E.= 1.0

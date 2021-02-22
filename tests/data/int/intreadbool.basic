@@ -1,0 +1,10 @@
+
+Data true, false, true, false, true
+
+Read A%, B%, C%, D%, E%
+
+Assert A = 1
+Assert B = 0
+Assert C = 1
+Assert D%= 0
+Assert E%= 1

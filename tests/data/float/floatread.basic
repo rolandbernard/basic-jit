@@ -1,0 +1,10 @@
+
+Data -1.0, -1.5, 2.0, 2.5, 3.0
+
+Read A, B., C, D., E
+
+Assert A = -1.0
+Assert B = -1.5
+Assert C = 2.0
+Assert D.= 2.5
+Assert E.= 3.0
