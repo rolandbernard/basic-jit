@@ -107,30 +107,43 @@ static Token getToken(const char* input) {
             ret.type = TOKEN_IDENTIFIER;
         }
         ret.len = len;
-    } else if ((input[0] >= '0' && input[0] <= '9') || (input[0] == '.' && (input[1] >= '0' && input[1] <= '9'))) {
-        if (input[1] == 'b') {
-            int len = 2;
+    } else if (
+        (input[0] >= '0' && input[0] <= '9')
+        || (input[0] == '.' && input[1] >= '0' && input[1] <= '9')
+        || (
+            (input[0] == '-' || input[0] == '+')
+            && (
+                (input[1] >= '0' && input[1] <= '9')
+                || (input[1] == '.' && input[2] >= '0' && input[2] <= '9')
+            )
+        )
+    ) {
+        int len = 0;
+        if (input[0] == '-' || input[0] == '+') {
+            len++;
+        }
+        if (input[len + 1] == 'b') {
+            len += 2;
             while (input[len] == '0' || input[len] == '1' || input[len] == '_') {
                 len++;
             }
             ret.type = TOKEN_INTEGER;
             ret.len = len;
-        } else if (input[1] == 'o') {
-            int len = 2;
+        } else if (input[len + 1] == 'o') {
+            len += 2;
             while ((input[len] >= '0' && input[len] <= '7') || input[len] == '_') {
                 len++;
             }
             ret.type = TOKEN_INTEGER;
             ret.len = len;
-        } else if (input[1] == 'h' || input[1] == 'x') {
-            int len = 2;
+        } else if (input[len + 1] == 'h' || input[len + 1] == 'x') {
+            len += 2;
             while (isHexChar(input[len]) || input[len] == '_') {
                 len++;
             }
             ret.type = TOKEN_INTEGER;
             ret.len = len;
         } else {
-            int len = 0;
             bool is_float = false;
             while ((input[len] >= '0' && input[len] <= '9') || input[len] == '_') {
                 len++;

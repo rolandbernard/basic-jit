@@ -103,6 +103,15 @@ static Ast* parseMultiple(Scanner* scanner, StackAllocator* mem);
 static Ast* parseExpression(Scanner* scanner, StackAllocator* mem);
 
 static long stringToInt(const char* str, int len) {
+    bool negative = false;
+    if (str[0] == '-') {
+        negative = true;
+        str++;
+        len--;
+    } else if (str[0] == '+') {
+        str++;
+        len--;
+    }
     long ret = 0;
     int base = 10;
     if (str[0] == '0') {
@@ -128,10 +137,19 @@ static long stringToInt(const char* str, int len) {
         str++; 
         len--;
     }
-    return ret;
+    return negative ? -ret : ret;
 }
 
 static double stringToFloat(const char* str, int len) {
+    bool negative = false;
+    if (str[0] == '-') {
+        negative = true;
+        str++;
+        len--;
+    } else if (str[0] == '+') {
+        str++;
+        len--;
+    }
     double ret = 0;
     while (len > 0 && *str != '.' && *str != 'e') {
         if(*str != '_') {
@@ -177,7 +195,7 @@ static double stringToFloat(const char* str, int len) {
         }
         ret *= pow(10, exp * sign);
     }
-    return ret;
+    return negative ? -ret : ret;
 }
 
 static char* copyEscapedString(const char* str, int len, StackAllocator* mem) {
