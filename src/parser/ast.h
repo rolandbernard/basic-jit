@@ -56,6 +56,7 @@ typedef enum {
     AST_ASC,
     AST_SAVE,
     AST_LOAD,
+    AST_LEN,
 
     // binary
     AST_ADD,

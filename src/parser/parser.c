@@ -503,6 +503,8 @@ static Ast* parseUnaryExpression(Scanner* scanner, StackAllocator* mem) {
             type = AST_CHR;
         } else if (acceptToken(scanner, TOKEN_ASC)) {
             type = AST_ASC;
+        } else if (acceptToken(scanner, TOKEN_LEN)) {
+            type = AST_LEN;
         }
     }
     if(type != AST_NONE) {

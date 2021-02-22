@@ -923,6 +923,33 @@ static Value generateMCAssert(AstUnary* ast, MCGenerationData* data) {
     return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCAssertAfterFreeReg, 2, 2);
 }
 
+static int64_t stringLength(char* str) {
+    return str == NULL ? 0 : strlen(str);
+}
+
+static Value generateMCLenAfterFreeReg(AstUnary* ast, MCGenerationData* data) {
+    Value a = generateMCForAst(ast->value, data);
+    if (a.type == VALUE_ERROR) {
+        return a;
+    } else if (a.type == VALUE_NONE) {
+        Value ret = {.type = VALUE_ERROR, .error = ERROR_SYNTAX};
+        return ret;
+    } else {
+        if (a.type != VALUE_STRING) {
+            Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
+            return ret;
+        } else {
+            addInstFunctionCallUnary(data->inst_mem, data->registers, a.reg, a.reg, stringLength);
+            a.type = VALUE_INT;
+            return a;
+        }
+    }
+}
+
+static Value generateMCLen(AstUnary* ast, MCGenerationData* data) {
+    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCLenAfterFreeReg, 1, 1);
+}
+
 Value generateMCForFunctions(Ast* ast, MCGenerationData* data) {
     Value value = {.type = VALUE_NONE};
     if (ast != NULL) {
@@ -992,6 +1019,9 @@ Value generateMCForFunctions(Ast* ast, MCGenerationData* data) {
             break;
         case AST_ASSERT:
             value = generateMCAssert((AstUnary*)ast, data);
+            break;
+        case AST_LEN:
+            value = generateMCLen((AstUnary*)ast, data);
             break;
         default:
             value.type = VALUE_ERROR;

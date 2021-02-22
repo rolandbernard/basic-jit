@@ -72,6 +72,7 @@ typedef enum {
     TOKEN_LOAD,
     TOKEN_DEF,
     TOKEN_FN,
+    TOKEN_LEN,
     TOKEN_KEYWORDS_END,
     
     TOKEN_PLUS,
