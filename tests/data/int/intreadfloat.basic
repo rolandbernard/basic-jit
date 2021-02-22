@@ -1,0 +1,10 @@
+
+Data -10.6, -15.1, 20.7, 25.2, 30.9
+
+Read A%, B%, C%, D%, E%
+
+Assert A = -10
+Assert B = -15
+Assert C = 20
+Assert D%= 25
+Assert E%= 30

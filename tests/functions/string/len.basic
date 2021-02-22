@@ -1,0 +1,9 @@
+
+Assert Len("") = 0
+Assert Len(" ") = 1
+Assert Len("  ") = 2
+Assert Len(" _ ") = 3
+Assert Len("_      _") = 8
+Assert Len("  _     -    _    ") = 18
+Assert Len("      .-.                .-   ") = 30
+Assert Len("      -.-       --               +-+     ") = 41

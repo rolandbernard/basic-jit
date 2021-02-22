@@ -1,0 +1,8 @@
+
+Data "1", "2", "3"
+
+Read A, B, C.
+
+Assert A = 0.0
+Assert B = 0.0
+Assert C = 0.0

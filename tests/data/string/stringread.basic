@@ -1,0 +1,8 @@
+
+Data "A", "B2", "C3_"
+
+Read A$, B$, C$
+
+Assert A = "A"
+Assert B = "B2"
+Assert C = "C3_"

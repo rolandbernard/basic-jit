@@ -1,0 +1,11 @@
+
+Data 1, 2, 3
+
+Read A$, B$, C$
+
+Assert A = ""
+Assert A + B = ""
+Assert A + B + C = ""
+Assert Left(A + B + C, 12) = ""
+Assert Right(A + B + C, 12) = ""
+Assert Len(A + B + C) = 0

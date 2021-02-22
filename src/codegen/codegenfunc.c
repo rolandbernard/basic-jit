@@ -309,8 +309,10 @@ static Value generateMCUnaryIntOrFloat(AstUnary* ast, MCGenerationData* data) {
 }
 
 static double parseString(char* str) {
-    double ret;
-    sscanf(str, " %lf", &ret);
+    double ret = 0.0;
+    if (str != NULL) {
+        sscanf(str, " %lf", &ret);
+    }
     return ret;
 }
 
@@ -343,7 +345,9 @@ static Value generateMCVal(AstUnary* ast, MCGenerationData* data) {
 
 static int64_t ascFunction(char* str) {
     uint64_t ret = 0;
-    parseUTF8(str, &ret);
+    if (str != NULL) {
+        parseUTF8(str, &ret);
+    }
     return ret;
 }
 
@@ -741,7 +745,7 @@ static Value generateMCSimpleCall(Ast* ast, MCGenerationData* data) {
 }
 
 static char* left(char* str, int64_t num) {
-    size_t len = strlen(str);
+    size_t len = (str == NULL ? 0 : strlen(str));
     if (num < 0) {
         num = 0;
     } else if (len < num) {
@@ -754,7 +758,7 @@ static char* left(char* str, int64_t num) {
 }
 
 static char* right(char* str, int64_t num) {
-    size_t len = strlen(str);
+    size_t len = (str == NULL ? 0 : strlen(str));
     if (num < 0) {
         num = 0;
     } else if (len < num) {
@@ -919,6 +923,33 @@ static Value generateMCAssert(AstUnary* ast, MCGenerationData* data) {
     return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCAssertAfterFreeReg, 2, 2);
 }
 
+static int64_t stringLength(char* str) {
+    return str == NULL ? 0 : strlen(str);
+}
+
+static Value generateMCLenAfterFreeReg(AstUnary* ast, MCGenerationData* data) {
+    Value a = generateMCForAst(ast->value, data);
+    if (a.type == VALUE_ERROR) {
+        return a;
+    } else if (a.type == VALUE_NONE) {
+        Value ret = {.type = VALUE_ERROR, .error = ERROR_SYNTAX};
+        return ret;
+    } else {
+        if (a.type != VALUE_STRING) {
+            Value ret = {.type = VALUE_ERROR, .error = ERROR_TYPE};
+            return ret;
+        } else {
+            addInstFunctionCallUnary(data->inst_mem, data->registers, a.reg, a.reg, stringLength);
+            a.type = VALUE_INT;
+            return a;
+        }
+    }
+}
+
+static Value generateMCLen(AstUnary* ast, MCGenerationData* data) {
+    return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCLenAfterFreeReg, 1, 1);
+}
+
 Value generateMCForFunctions(Ast* ast, MCGenerationData* data) {
     Value value = {.type = VALUE_NONE};
     if (ast != NULL) {
@@ -988,6 +1019,9 @@ Value generateMCForFunctions(Ast* ast, MCGenerationData* data) {
             break;
         case AST_ASSERT:
             value = generateMCAssert((AstUnary*)ast, data);
+            break;
+        case AST_LEN:
+            value = generateMCLen((AstUnary*)ast, data);
             break;
         default:
             value.type = VALUE_ERROR;

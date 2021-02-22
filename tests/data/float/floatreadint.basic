@@ -1,0 +1,10 @@
+
+Data -10, -15, 20, 25, 30
+
+Read A, B., C, D., E
+
+Assert A = -10.0
+Assert B = -15.0
+Assert C = 20.0
+Assert D.= 25.0
+Assert E.= 30.0

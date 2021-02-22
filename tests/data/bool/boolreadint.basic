@@ -1,0 +1,10 @@
+
+Data 1, 0, 1, 0, 1
+
+Read A?, B?, C?, D?, E?
+
+Assert A = True
+Assert B = False
+Assert C = True
+Assert D = False
+Assert E = True

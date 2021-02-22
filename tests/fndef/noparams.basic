@@ -1,0 +1,4 @@
+
+Def Fn double() = 10
+
+Assert Fn double() = 10
