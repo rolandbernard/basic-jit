@@ -48,7 +48,7 @@ function runTest {
                 fi
             fi            
         fi
-    elif [ ${1: -3} == .js -a -z $NO_GEN ]
+    elif [ ${1: -3} == .js -a -z "$NO_GEN" ]
     then
         for i in $(seq 1 $2)
         do

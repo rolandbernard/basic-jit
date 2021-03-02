@@ -73,4 +73,4 @@ clean:
 	rm -rf $(BUILD_DIR)/*
 
 test: build
-	./tests/run-tests.sh tests $(BINARY_DIR)/basicjit
+	bash ./tests/run-tests.sh tests $(BINARY_DIR)/basicjit
