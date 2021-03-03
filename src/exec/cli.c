@@ -5,6 +5,12 @@
 #include <signal.h>
 #include <errno.h>
 
+#ifndef NOREADLINE
+#include <unistd.h>
+#include <readline/readline.h>
+#include <readline/history.h>
+#endif
+
 #include "exec/cli.h"
 #include "common/stackalloc.h"
 #include "codegen/codegen.h"
@@ -213,26 +219,52 @@ static bool inputLine(FILE* input) {
     bool end = false;
     int next_char;
     int len = 0;
-    do {
-        next_char = fgetc(input);
-        if (len == line_buffer_capacity) {
-            if (line_buffer_capacity == 0) {
-                line_buffer_capacity = INITIAL_LINE_BUFFER;
-                line_buffer = (char*)malloc(sizeof(char) * line_buffer_capacity);
-            } else {
-                line_buffer_capacity *= 2;
-                line_buffer = (char*)realloc(line_buffer, sizeof(char) * line_buffer_capacity);
-            }
-        }
-        if (next_char == '\n' && len > 0 && line_buffer[len - 1] == '\\') {
-            line_buffer[len - 1] = next_char;
-            next_char = '\\';
+#ifndef NOREADLINE
+    if (isatty(fileno(input))) {
+        char* line = readline(">");
+        if (line == NULL) {
+            next_char = EOF;
+            len = 0;
         } else {
-            line_buffer[len] = next_char;
-            len++;
+            len = strlen(line);
+            while (len >= line_buffer_capacity) {
+                if (line_buffer_capacity == 0) {
+                    line_buffer_capacity = INITIAL_LINE_BUFFER;
+                    line_buffer = (char*)malloc(sizeof(char) * line_buffer_capacity);
+                } else {
+                    line_buffer_capacity *= 2;
+                    line_buffer = (char*)realloc(line_buffer, sizeof(char) * line_buffer_capacity);
+                }
+            }
+            memcpy(line_buffer, line, len);
+            add_history(line);
+            free(line);
         }
-    } while (next_char != '\n' && next_char != EOF);
-    len--;
+    } else {
+#endif
+        do {
+            next_char = fgetc(input);
+            if (len == line_buffer_capacity) {
+                if (line_buffer_capacity == 0) {
+                    line_buffer_capacity = INITIAL_LINE_BUFFER;
+                    line_buffer = (char*)malloc(sizeof(char) * line_buffer_capacity);
+                } else {
+                    line_buffer_capacity *= 2;
+                    line_buffer = (char*)realloc(line_buffer, sizeof(char) * line_buffer_capacity);
+                }
+            }
+            if (next_char == '\n' && len > 0 && line_buffer[len - 1] == '\\') {
+                line_buffer[len - 1] = next_char;
+                next_char = '\\';
+            } else {
+                line_buffer[len] = next_char;
+                len++;
+            }
+        } while (next_char != '\n' && next_char != EOF);
+        len--;
+#ifndef NOREADLINE
+    }
+#endif
     line_buffer[len] = 0;
     if (next_char != EOF || len != 0) {
         int i = 0;
@@ -393,7 +425,9 @@ static bool executeLine(const char* line) {
 int executeCli() {
     bool end = false;
     while(!end) {
+#ifdef NOREADLINE
         fprintf(stdout, ">");
+#endif
         end = inputLine(stdin);
     }
     freeLabelList(&label_list);
@@ -407,6 +441,9 @@ int executeCli() {
     freeStack(&global_exec_alloc);
     removeAllLines();
     free(line_buffer);
+#ifndef NOREADLINE
+    clear_history();
+#endif
     line_buffer = NULL;
     line_buffer_capacity = 0;
     return exit_code;
