@@ -1,6 +1,7 @@
 
 # == Defaults
 BUILD := debug
+NOREADLINE := False
 # ==
 
 # == Targets (and sources relative to SOURCE_DIR/)
@@ -41,6 +42,11 @@ LDFLAGS.release := -O3 -flto
 CCFLAGS := $(CCFLAGS.$(BUILD)) -I$(SOURCE_DIR) 
 LDFLAGS := $(LDFLAGS.$(BUILD))
 LIBS    := -lm
+ifneq ($(NOREADLINE),True)
+LIBS += -lreadline
+else
+CCFLAGS += -DNOREADLINE
+endif
 # ==
 
 # == Progress
