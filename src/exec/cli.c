@@ -8,6 +8,7 @@
 #ifndef NOREADLINE
 #include <unistd.h>
 #include <readline/readline.h>
+#include <readline/history.h>
 #endif
 
 #include "exec/cli.h"
@@ -236,6 +237,7 @@ static bool inputLine(FILE* input) {
                 }
             }
             memcpy(line_buffer, line, len);
+            add_history(line);
             free(line);
         }
     } else {
@@ -439,6 +441,9 @@ int executeCli() {
     freeStack(&global_exec_alloc);
     removeAllLines();
     free(line_buffer);
+#ifndef NOREADLINE
+    clear_history();
+#endif
     line_buffer = NULL;
     line_buffer_capacity = 0;
     return exit_code;
