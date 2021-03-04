@@ -825,6 +825,8 @@ static Ast* parseUnaryStatement(Scanner* scanner, StackAllocator* mem) {
         type = AST_RESTORE;
     } else if(acceptToken(scanner, TOKEN_LIST)) {
         type = AST_LIST;
+    } else if(acceptToken(scanner, TOKEN_EDIT)) {
+        type = AST_EDIT;
     }
     if(type != AST_NONE) {
         int error_offset = getScannerOffset(scanner);
@@ -837,7 +839,7 @@ static Ast* parseUnaryStatement(Scanner* scanner, StackAllocator* mem) {
             return value;
         } else if(value->type != AST_VAR && value->type != AST_INTEGER) {
             return (Ast*)createError(error_offset, mem);
-        } else if(type == AST_LIST && value->type != AST_INTEGER) {
+        } else if((type == AST_LIST || type == AST_EDIT) && value->type != AST_INTEGER) {
             return (Ast*)createError(error_offset, mem);
         } else if(value->type != AST_VAR && type == AST_NEXT) {
             return (Ast*)createError(error_offset, mem);

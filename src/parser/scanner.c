@@ -74,6 +74,7 @@ static const char* tokenTypeToString[] = {
     [TOKEN_DEF] = "DEF",
     [TOKEN_FN] = "FN",
     [TOKEN_LEN] = "LEN",
+    [TOKEN_EDIT] = "EDIT",
 };
 
 bool isHexChar(char c) {
