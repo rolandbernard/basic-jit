@@ -215,6 +215,16 @@ static void runProgram() {
 
 static bool executeLine(const char* line);
 
+#ifndef NOREADLINE
+static const char* readline_init = NULL;
+static int readlineHook() {
+    if (readline_init != NULL) {
+        rl_insert_text(readline_init);
+    }
+    return 0;
+}
+#endif
+
 static bool inputLine(FILE* input) {
     bool end = false;
     int next_char;
@@ -264,6 +274,7 @@ static bool inputLine(FILE* input) {
         len--;
 #ifndef NOREADLINE
     }
+    readline_init = NULL;
 #endif
     line_buffer[len] = 0;
     if (next_char != EOF || len != 0) {
@@ -376,6 +387,17 @@ static bool executeLine(const char* line) {
                 AstInt* line = (AstInt*)list->value;
                 listLine(line->value);
             }
+        } else if(ast->type == AST_EDIT) {
+#ifndef NOREADLINE
+            AstUnary* list = (AstUnary*)ast;
+            AstInt* line = (AstInt*)list->value;
+            int i = findLine(line->value);
+            if(i < num_lines && line_numbers[i] == line->value) {
+                readline_init = lines[i];
+            }
+#else
+            fprintf(stderr, "error: Readline support is disabled\n");
+#endif
         } else {
             addInstPushCallerRegs(data.inst_mem, data.registers);
             Error error = generateMC(ast, &data);
@@ -423,6 +445,9 @@ static bool executeLine(const char* line) {
 }
 
 int executeCli() {
+#ifndef NOREADLINE
+    rl_startup_hook = readlineHook;
+#endif
     bool end = false;
     while(!end) {
 #ifdef NOREADLINE
