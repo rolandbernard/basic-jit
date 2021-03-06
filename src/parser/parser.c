@@ -112,7 +112,7 @@ static long stringToInt(const char* str, int len) {
         str++;
         len--;
     }
-    long ret = 0;
+    unsigned long ret = 0;
     int base = 10;
     if (str[0] == '0') {
         if (str[1] == 'x' || str[1] == 'h') {

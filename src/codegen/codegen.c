@@ -202,8 +202,12 @@ static char* concatStrings(char* a, char* b) {
     int a_len = a == NULL ? 0 : strlen(a);
     int b_len = b == NULL ? 0 : strlen(b);
     char* ret = (char*)allocAligned(&global_exec_alloc, a_len + b_len + 1);
-    memcpy(ret, a, a_len);
-    memcpy(ret + a_len, b, b_len);
+    if (a != NULL) {
+        memcpy(ret, a, a_len);
+    }
+    if (b != NULL) {
+        memcpy(ret + a_len, b, b_len);
+    }
     ret[a_len + b_len] = 0;
     return ret;
 }
