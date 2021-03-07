@@ -39,7 +39,7 @@ LDFLAGS.debug   := -O0 -g -fsanitize=$(SANITIZE)
 CCFLAGS.release := -O3 -flto
 LDFLAGS.release := -O3 -flto
 
-CCFLAGS := $(CCFLAGS.$(BUILD)) -I$(SOURCE_DIR) -Wall -Wextra
+CCFLAGS := $(CCFLAGS.$(BUILD)) -I$(SOURCE_DIR) -Wall -Wextra -Wno-unused-parameter
 LDFLAGS := $(LDFLAGS.$(BUILD))
 LIBS    := -lm
 ifneq ($(NOREADLINE),True)
