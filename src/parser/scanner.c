@@ -95,7 +95,7 @@ static Token getToken(const char* input) {
         ret.type = TOKEN_EOF;
         ret.len = 0;
     } else if ((input[0] >= 'a' && input[0] <= 'z') || (input[0] >= 'A' && input[0] <= 'Z') || input[0] == '_') {
-        int len = 1;
+        size_t len = 1;
         while ((input[len] >= 'a' && input[len] <= 'z') || (input[len] >= 'A' && input[len] <= 'Z') || (input[len] >= '0' && input[len] <= '9') || input[len] == '_') {
             len++;
         }

@@ -23,13 +23,13 @@
 
 #define INITIAL_LINE_BUFFER 32
 static char* line_buffer;
-static size_t line_buffer_capacity = 0;
+static int line_buffer_capacity = 0;
 
 #define INITIAL_LINE_COUNT 32
 static int64_t* line_numbers;
 static char** lines;
-static size_t num_lines = 0;
-static size_t line_capacity = 0;
+static int num_lines = 0;
+static int line_capacity = 0;
     
 static StackAllocator ast_memory = STACK_ALLOCATOR_INITIALIZER;
 static DataList data_list = DATA_LIST_INITIALIZER;
@@ -158,7 +158,7 @@ static void runProgram() {
                 fprintf(stderr, "error: Syntax error at line %i:%i\n", data.line, error->offset + 1);
                 fprintf(stderr, " | %s\n", lines[i]);
                 fprintf(stderr, " | ");
-                for(size_t j = 0; j < error->offset; j++) {
+                for(int j = 0; j < error->offset; j++) {
                     if(lines[i][j] == '\t') {
                         fputc('\t', stderr);
                     } else {
@@ -227,7 +227,7 @@ static int readlineHook() {
 
 static bool inputLine(FILE* input) {
     bool end = false;
-    int next_char;
+    int next_char = 0;
     int len = 0;
 #ifndef NOREADLINE
     if (isatty(fileno(input))) {
@@ -342,7 +342,7 @@ static bool executeLine(const char* line) {
             fprintf(stderr, "error: Syntax error at line %i:%i\n", data.line, error->offset + 1);
             fprintf(stderr, " | %s\n", line);
             fprintf(stderr, " | ");
-            for(size_t i = 0; i < error->offset; i++) {
+            for(int i = 0; i < error->offset; i++) {
                 if(line[i] == '\t') {
                     fputc('\t', stderr);
                 } else {

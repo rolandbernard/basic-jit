@@ -134,7 +134,7 @@ static Value generateMCNext(AstUnary* ast, MCGenerationData* data) {
         jmp_for_cond = varib->for_call_loc;
         jmp_for_pos = varib->for_jmp_loc;
     }
-    if (jmp_for_cond == ~0 || jmp_for_pos == ~0) {
+    if (jmp_for_cond == ~0UL || jmp_for_pos == ~0UL) {
         Value ret = {.type = VALUE_ERROR, .error = ERROR_NO_MATCHING_FOR};
         return ret;
     }
@@ -1250,7 +1250,7 @@ static Value generateMCDim(AstIndex* ast, MCGenerationData* data) {
             varib->size[i] = ds->value;
         }
         varib->value = (double*)allocAligned(data->variable_mem, sizeof(double) * size);
-        for (int i = 0; i < size; i++) {
+        for (size_t i = 0; i < size; i++) {
             varib->value[i] = 0;
         }
         addVariable(data->variable_table, var->name, (Variable*)varib, data->variable_mem);
@@ -1264,7 +1264,7 @@ static Value generateMCDim(AstIndex* ast, MCGenerationData* data) {
             varib->size[i] = ds->value;
         }
         varib->value = (int64_t*)allocAligned(data->variable_mem, sizeof(int64_t) * size);
-        for (int i = 0; i < size; i++) {
+        for (size_t i = 0; i < size; i++) {
             varib->value[i] = 0;
         }
         addVariable(data->variable_table, var->name, (Variable*)varib, data->variable_mem);
@@ -1278,7 +1278,7 @@ static Value generateMCDim(AstIndex* ast, MCGenerationData* data) {
             varib->size[i] = ds->value;
         }
         varib->str = (char**)allocAligned(data->variable_mem, sizeof(char*) * size);
-        for (int i = 0; i < size; i++) {
+        for (size_t i = 0; i < size; i++) {
             varib->str[i] = NULL;
         }
         addVariable(data->variable_table, var->name, (Variable*)varib, data->variable_mem);
@@ -1292,7 +1292,7 @@ static Value generateMCDim(AstIndex* ast, MCGenerationData* data) {
             varib->size[i] = ds->value;
         }
         varib->value = (int64_t*)allocAligned(data->variable_mem, sizeof(int64_t) * size);
-        for (int i = 0; i < size; i++) {
+        for (size_t i = 0; i < size; i++) {
             varib->value[i] = 0;
         }
         addVariable(data->variable_table, var->name, (Variable*)varib, data->variable_mem);

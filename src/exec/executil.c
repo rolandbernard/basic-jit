@@ -40,7 +40,7 @@ void executeFunctionInMemory(void* mem, size_t len, int* ret) {
 
 void printMemoryContent(FILE* file, void* mem, size_t len) {
     fprintf(file, "memory at %p:\n", mem);
-    for (int i = 0; i < len; i++) {
+    for (size_t i = 0; i < len; i++) {
         if (i % 16 == 0) {
             fprintf(file, "  ");
         }

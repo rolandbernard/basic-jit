@@ -748,7 +748,7 @@ static char* left(char* str, int64_t num) {
     size_t len = (str == NULL ? 0 : strlen(str));
     if (num < 0) {
         num = 0;
-    } else if (len < num) {
+    } else if (len < (size_t)num) {
         num = len;
     }
     char* ret = (char*)allocAligned(&global_exec_alloc, num + 1);
@@ -761,7 +761,7 @@ static char* right(char* str, int64_t num) {
     size_t len = (str == NULL ? 0 : strlen(str));
     if (num < 0) {
         num = 0;
-    } else if (len < num) {
+    } else if (len < (size_t)num) {
         num = len;
     }
     char* ret = (char*)allocAligned(&global_exec_alloc, num + 1);
