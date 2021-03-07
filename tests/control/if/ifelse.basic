@@ -1,3 +1,4 @@
+Rem test: if/else executes the if statement when the condition is true or the else statement otherwise
 
 A = 0
 If A = 0 Then A = 1 Else A = 0

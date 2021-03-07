@@ -1,3 +1,4 @@
+Rem test: recursive function taking integers and returning booleans
 
 Def Fn even?(N%) = If N = 0 Then True Else If N = 1 Then False Else Fn even(N - 2)
 

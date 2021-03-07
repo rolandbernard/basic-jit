@@ -1,3 +1,4 @@
+Rem test: testing the + operation
 
 Assert "A" + "B" = "AB"
 Assert "AC" + "BC" = "ACBC"

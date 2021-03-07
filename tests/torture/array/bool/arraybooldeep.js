@@ -1,3 +1,4 @@
+// test: boolean arrays should behave like expected
 
 const arraygen = require('../include.array.js');
 

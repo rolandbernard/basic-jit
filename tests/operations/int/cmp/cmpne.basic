@@ -1,3 +1,4 @@
+Rem test: testing the != operation
 
 Assert (2 != 3) = True
 Assert (-32 != -31) = True

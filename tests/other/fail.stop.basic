@@ -1,2 +1,5 @@
+Rem test: stop will wait
+Rem timesout: true
+Rem stderr: !=
 
 Stop

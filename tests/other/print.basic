@@ -1,2 +1,4 @@
+Rem test: print prints to stdout
+Rem stdout: = Hello world\n
 
 Print "Hello world"

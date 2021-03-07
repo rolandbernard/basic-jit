@@ -1,3 +1,4 @@
+Rem test: testing the <= operation
 
 Assert (0.5 <= 2.5) = True
 Assert (-1.1 <= -1.1) = True

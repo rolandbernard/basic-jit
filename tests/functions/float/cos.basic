@@ -1,3 +1,4 @@
+Rem test: testing the cos function
 
 Assert Abs(Cos(0.0) - 1.0) < 1e-7
 Assert Abs(Cos(1.0) - 0.5403023058681398) < 1e-7

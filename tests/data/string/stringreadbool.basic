@@ -1,3 +1,4 @@
+Rem test: testing reading boolean data to string variables
 
 Data true, false, true
 

@@ -1,3 +1,4 @@
+Rem test: recursive function taking and returning floats
 
 Def Fn fib(N, A, B) = If N <= 0 Then A Else Fn fib(N - 1, B, A + B)
 

@@ -1,2 +1,5 @@
+Rem test: asserting a false < comparison fails
+Rem exit: != 0
+Rem stderr: !=
 
 Assert 0.9 < 0.9

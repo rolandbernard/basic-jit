@@ -1,3 +1,4 @@
+Rem test: asserting a true comparison succeeds
 
 Assert "ABC" = "ABC"
 Assert "Abc" != "ABC"

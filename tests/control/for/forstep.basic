@@ -1,3 +1,4 @@
+Rem test: for loops can specify a step size
 
 sum = 0
 For A = 1 To 100 Step 3

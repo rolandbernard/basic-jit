@@ -1,3 +1,4 @@
+Rem test: testing the = operation
 
 Assert ("_A_" = "_A_") = True
 Assert ("ABC" = "ABC") = True

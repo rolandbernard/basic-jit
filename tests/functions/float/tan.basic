@@ -1,3 +1,4 @@
+Rem test: testing the tan function
 
 Assert Abs(Tan(0.0) - 0.0) < 1e-7
 Assert Abs(Tan(1.0) - 1.5574077246549023) < 1e-7

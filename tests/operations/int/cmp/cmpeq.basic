@@ -1,3 +1,4 @@
+Rem test: testing the = operation
 
 Assert (6 = 6) = True
 Assert (1000 = 1000) = True

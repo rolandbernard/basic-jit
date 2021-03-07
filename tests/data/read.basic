@@ -1,3 +1,4 @@
+Rem test: testing mixed type read to variables
 
 Data 1, 2.5, "Hello", True
 

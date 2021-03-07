@@ -1,3 +1,4 @@
+Rem test: testing the sgn function
 
 Assert Sgn(-1000) = -1
 Assert Sgn(-100) = -1

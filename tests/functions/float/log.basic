@@ -1,3 +1,4 @@
+Rem test: testing the log function
 
 Assert Abs(Log(0.01) - -2.0) < 1e-7
 Assert Abs(Log(0.1) - -1.0) < 1e-7

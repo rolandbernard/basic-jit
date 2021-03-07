@@ -1,3 +1,4 @@
+Rem test: testing boolean data read to an array
 
 Data True, False, True, False, True
 

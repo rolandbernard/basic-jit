@@ -1,3 +1,4 @@
+Rem test: testing the * operation
 
 Assert 3 * 5 = 15
 Assert 3 * (-5) = -15

@@ -1,3 +1,4 @@
+Rem test: gosub can be returned to using return
 
 A = 0
 GoSub sub

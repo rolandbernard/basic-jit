@@ -1,3 +1,4 @@
+Rem test: testing the asc function
 
 Assert ASC("") = 0
 Assert ASC("\x0a") = 0x0a

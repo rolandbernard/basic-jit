@@ -1,3 +1,4 @@
+Rem test: testing the or operation
 
 Assert (False OR False) = False
 Assert (False OR True) = True

@@ -1,2 +1,5 @@
+Rem test: asserting False fails
+Rem exit: != 0
+Rem stderr: !=
 
 Assert False

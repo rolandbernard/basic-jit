@@ -1,3 +1,4 @@
+// test: if should behave like expected
 
 const ifgen = require('./include.ifgen.js');
 

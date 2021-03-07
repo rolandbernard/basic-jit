@@ -1,3 +1,4 @@
+Rem test: lines can span multiple lines
 
 Assert 1 \
     = 1

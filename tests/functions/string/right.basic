@@ -1,3 +1,4 @@
+Rem test: testing the right function
 
 Assert Right("ABCD", 2) = "CD"
 Assert Right("ABCD", 5) = "ABCD"

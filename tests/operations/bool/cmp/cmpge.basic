@@ -1,3 +1,4 @@
+Rem test: testing the >= operation
 
 Assert (False >= False) = True
 Assert (False >= True) = False

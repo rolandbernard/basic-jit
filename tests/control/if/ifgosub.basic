@@ -1,3 +1,4 @@
+Rem test: gosub can be used in a if statement
 
 A = 0
 If A = 0 Then GoSub if1

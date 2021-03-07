@@ -1,3 +1,4 @@
+Rem test: testing the acs function
 
 Assert Abs(Acs(0.0) - 1.5707963267948966) < 1e-7
 Assert Abs(Acs(0.2) - 1.369438406004566) < 1e-7

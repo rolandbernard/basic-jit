@@ -1,3 +1,4 @@
+// test: strings should behave like expected
 
 const stringgen = require('./include.stringgen.js');
 

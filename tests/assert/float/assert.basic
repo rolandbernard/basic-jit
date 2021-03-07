@@ -1,3 +1,4 @@
+Rem test: asserting a true comparison succeeds
 
 Assert 1.5 = 1.5
 Assert 1.2 != 1.1

@@ -1,3 +1,4 @@
+Rem test: testing the val function
 
 Assert Abs(Val("-1000.0") - -1000.0) < 1e-7
 Assert Abs(Val("-100.0") - -100.0) < 1e-7

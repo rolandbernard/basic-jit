@@ -1,3 +1,4 @@
+Rem test: recursive function taking and returning floats
 
 Def Fn some(N) = If N < 1 Then N Else N + Fn some(N / 10)
 

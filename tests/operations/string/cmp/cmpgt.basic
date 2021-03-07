@@ -1,3 +1,4 @@
+Rem test: testing the > operation
 
 Assert ("AAAA" > "A") = True
 Assert ("B" > "AAAA") = True

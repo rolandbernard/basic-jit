@@ -1,3 +1,4 @@
+Rem test: gosub can be nested
 
 A = 0
 GoSub sub0

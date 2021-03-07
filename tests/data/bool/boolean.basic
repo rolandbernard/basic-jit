@@ -1,3 +1,4 @@
+Rem test: testing boolean literals
 
 Assert True = True
 Assert True != False

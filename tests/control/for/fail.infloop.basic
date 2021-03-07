@@ -1,0 +1,7 @@
+Rem test: infinite for loops should timeout
+Rem timesout: true
+
+sum = 0
+For A% = 1 To 5 Step 0
+    sum = sum + A
+Next A

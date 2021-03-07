@@ -1,3 +1,4 @@
+Rem test: if only executes when the condition is true
 
 A = 0
 If A = 1 OR A = 0 Then A = 1

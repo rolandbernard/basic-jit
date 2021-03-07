@@ -1,3 +1,4 @@
+Rem test: testing the frac function
 
 Assert Abs(Frac(0.01) - 0.01) < 1e-7
 Assert Abs(Frac(0.1) - 0.1) < 1e-7

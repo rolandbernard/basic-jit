@@ -1,3 +1,4 @@
+Rem test: asserting a true comparison succeeds
 
 Assert True = True
 Assert False = False

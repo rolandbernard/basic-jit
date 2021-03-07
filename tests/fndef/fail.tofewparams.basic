@@ -1,3 +1,6 @@
+Rem test: giving too few arguments to a function fails
+Rem exit: != 0
+Rem stderr: !=
 
 Def Fn double(X%, %Y) = X * Y
 

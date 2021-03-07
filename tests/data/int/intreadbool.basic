@@ -1,3 +1,4 @@
+Rem test: testing reading boolean data to integer variables
 
 Data true, false, true, false, true
 

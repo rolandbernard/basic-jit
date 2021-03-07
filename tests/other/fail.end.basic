@@ -1,2 +1,4 @@
+Rem test: the end statement finishes with the given status
+Rem exit: = 1
 
 End 1
