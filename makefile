@@ -2,6 +2,7 @@
 # == Defaults
 BUILD := debug
 NOREADLINE := False
+NUMTESTJOBS := 6
 # ==
 
 # == Targets (and sources relative to SOURCE_DIR/)
@@ -79,4 +80,5 @@ clean:
 	rm -rf $(BUILD_DIR)/*
 
 test: build
-	bash ./tests/run-tests.sh tests $(BINARY_DIR)/basicjit
+	$(MAKE) -C tested BUILD=release
+	BUILD=$(BUILD) ./tested/build/release/bin/tested -j$(NUMTESTJOBS) tests
