@@ -24,6 +24,14 @@ This implementation of the BASIC programming language has multiple limitations, 
 * Array dimentions must be constant
 * When loading files, lines will not be sorted by number
 
+## Building from source
+```
+$ git clone https://github.com/rolandbernard/basic-jit
+$ cd basic-jit
+$ make BUILD=release
+$ ./build/release/bin/basicjit
+```
+
 ## Hello world
 The classic "Hello world"-program for basic works just fine:
 ```

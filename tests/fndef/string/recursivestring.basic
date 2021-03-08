@@ -1,3 +1,4 @@
+Rem test: recursive function taking strings/integers and returning strings
 
 Def Fn mul$(S$, N%) = If N = 0 Then "" Else S + Fn mul(S, N - 1)
 

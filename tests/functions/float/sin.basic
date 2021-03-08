@@ -1,3 +1,4 @@
+Rem test: testing the sin function
 
 Assert Abs(Sin(0.0) - 0.0) < 1e-7
 Assert Abs(Sin(1.0) - 0.8414709848078965) < 1e-7

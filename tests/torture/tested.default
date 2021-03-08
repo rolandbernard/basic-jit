@@ -1,0 +1,7 @@
+
+build: node % > %.tmp.basic
+run: ./build/$BUILD/bin/basicjit %.tmp.basic
+cleanup: rm %.tmp.basic
+runs: 20
+
+time: < 1s

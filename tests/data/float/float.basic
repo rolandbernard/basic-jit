@@ -1,3 +1,4 @@
+Rem test: testing float literals
 
 Assert -0.0 = 0.0
 Assert 0.5 = 0.5

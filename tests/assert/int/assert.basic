@@ -1,3 +1,4 @@
+Rem test: asserting a true comparison succeeds
 
 Assert 1 = 1
 Assert 1 != 0

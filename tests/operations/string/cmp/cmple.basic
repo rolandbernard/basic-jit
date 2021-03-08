@@ -1,3 +1,4 @@
+Rem test: testing the <= operation
 
 Assert ("A" <= "A") = True
 Assert ("A" <= "AA") = True

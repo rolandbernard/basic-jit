@@ -1,3 +1,4 @@
+Rem test: testing the str function
 
 Assert Str(5.0) = "5"
 Assert Str(10.1) = "10.1"

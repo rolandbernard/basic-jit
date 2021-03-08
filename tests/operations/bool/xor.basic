@@ -1,3 +1,4 @@
+Rem test: testing the xor operation
 
 Assert (False XOR False) = False
 Assert (False XOR True) = True

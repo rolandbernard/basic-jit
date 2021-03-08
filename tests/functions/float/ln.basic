@@ -1,3 +1,4 @@
+Rem test: testing the ln function
 
 Assert Abs(Ln(0.01) - -4.605170185988091) < 1e-7
 Assert Abs(Ln(0.1) - -2.3025850929940455) < 1e-7

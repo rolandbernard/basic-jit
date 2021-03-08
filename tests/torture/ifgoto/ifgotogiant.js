@@ -1,3 +1,4 @@
+// test: ifgoto should behave like expected
 
 const ifgen = require('./include.ifgotogen.js');
 

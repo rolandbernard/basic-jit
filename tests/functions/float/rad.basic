@@ -1,3 +1,4 @@
+Rem test: testing the rad function
 
 Assert Abs(Rad(-1000.0) - -17.453292519943293) < 1e-7
 Assert Abs(Rad(-100.0) - -1.7453292519943293) < 1e-7

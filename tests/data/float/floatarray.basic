@@ -1,3 +1,4 @@
+Rem test: testing float arrays
 
 Dim A.(5, 5)
 

@@ -1,3 +1,4 @@
+Rem test: testing reading float data to boolean variables
 
 Data 1.1, 0.1, 1.6, 0.9, 1.5
 

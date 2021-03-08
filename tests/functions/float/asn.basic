@@ -1,3 +1,4 @@
+Rem test: testing the asn function
 
 Assert Abs(Asn(0.0) - 0.0) < 1e-7
 Assert Abs(Asn(0.2) - 0.2013579207903308) < 1e-7

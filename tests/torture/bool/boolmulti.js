@@ -1,3 +1,4 @@
+// test: booleans should behave like expected
 
 const boolgen = require('./include.boolgen.js');
 

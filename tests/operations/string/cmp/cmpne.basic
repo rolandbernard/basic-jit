@@ -1,3 +1,4 @@
+Rem test: testing the != operation
 
 Assert ("Hello world!" != "Hello world") = True
 Assert ("ABC" != "ABCD") = True

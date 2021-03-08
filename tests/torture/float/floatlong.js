@@ -1,3 +1,4 @@
+// test: floats should behave like expected
 
 const floatgen = require('./include.floatgen.js');
 

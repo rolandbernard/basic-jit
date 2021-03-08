@@ -1,3 +1,4 @@
+Rem test: testing boolean arrays
 
 Dim A?(5, 5)
 

@@ -1,3 +1,4 @@
+Rem test: variables can also be assigned using let
 
 Let A% = 1
 Let B  = 2

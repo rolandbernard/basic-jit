@@ -1,3 +1,4 @@
+Rem test: for loops run from one number to another, both inclusive
 
 sum = 0
 For A = 1 To 100

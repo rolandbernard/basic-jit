@@ -1,3 +1,4 @@
+Rem test: testing string arrays
 
 Dim A$(5, 5)
 

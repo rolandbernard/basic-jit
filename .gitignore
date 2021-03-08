@@ -7,5 +7,6 @@ perf.*
 gmon.*
 test.*
 tmp.*
+*.tmp.basic
 
 .gdb_history

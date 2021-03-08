@@ -1,3 +1,4 @@
+Rem test: testing the sgn function
 
 Assert Abs(Sgn(-1000.0) - -1.0) < 1e-7
 Assert Abs(Sgn(-100.0) - -1.0) < 1e-7

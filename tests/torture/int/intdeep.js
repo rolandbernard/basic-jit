@@ -1,3 +1,4 @@
+// test: integers should behave like expected
 
 const intgen = require('./include.intgen.js');
 

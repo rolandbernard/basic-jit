@@ -1,3 +1,4 @@
+Rem test: testing the spc function
 
 Assert Spc(1) = " "
 Assert Spc(2) = "  "

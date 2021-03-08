@@ -1,3 +1,4 @@
+Rem test: for loops can use float counting variables and steps
 
 sum = 0.0
 For A = 1.0 To 10 Step 0.5

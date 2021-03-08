@@ -1,3 +1,4 @@
+Rem test: nested for loops run independantly
 
 sum = 0
 For X% = 1 To 5

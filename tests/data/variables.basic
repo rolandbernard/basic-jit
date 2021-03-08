@@ -1,3 +1,4 @@
+Rem test: varaible names can contain letter, number and underscore characters
 
 _A_variable_NAME_42 = 1
 CaN_contain_FOR_IF_THEN_ELSE = 2

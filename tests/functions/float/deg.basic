@@ -1,3 +1,4 @@
+Rem test: testing the deg function
 
 Assert Abs(Deg(-1000.0) - -57295.77951308232) < 1e-7
 Assert Abs(Deg(-100.0) - -5729.577951308232) < 1e-7

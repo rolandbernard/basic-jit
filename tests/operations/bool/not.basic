@@ -1,3 +1,4 @@
+Rem test: testing the not operation
 
 Assert NOT False = True
 Assert NOT True = False

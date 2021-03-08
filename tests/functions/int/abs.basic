@@ -1,3 +1,4 @@
+Rem test: testing the abs function
 
 Assert Abs(5) = 5
 Assert Abs(-5) = 5

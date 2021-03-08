@@ -1,3 +1,4 @@
+Rem test: functions can call other functions
 
 X = 42
 

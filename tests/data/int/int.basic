@@ -1,3 +1,4 @@
+Rem test: testing integer literals
 
 Assert -0 = 0
 Assert 12 = 12

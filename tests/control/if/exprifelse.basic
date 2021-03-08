@@ -1,3 +1,4 @@
+Rem test: expression if/else returns the if value if the condition is true or else value otherwise
 
 Assert (If False Then 10 Else 20) = 20
 Assert (If True Then 10 Else 20) = 10

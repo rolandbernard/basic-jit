@@ -15,7 +15,7 @@
 
 #define INITIAL_LINE_BUFFER 32
 static char* line_buffer;
-static size_t line_buffer_capacity = 0;
+static int line_buffer_capacity = 0;
 
 int executeFile(const char* filename) {
     int exit_code = EXIT_SUCCESS;
@@ -80,7 +80,7 @@ int executeFile(const char* filename) {
                         fprintf(stderr, "error: Syntax error at line %i:%i\n", data.line, error->offset + 1);
                         fprintf(stderr, " | %s\n", line_buffer);
                         fprintf(stderr, " | ");
-                        for (size_t i = 0; i < error->offset; i++) {
+                        for (int i = 0; i < error->offset; i++) {
                             if (line_buffer[i] == '\t') {
                                 fputc('\t', stderr);
                             } else {

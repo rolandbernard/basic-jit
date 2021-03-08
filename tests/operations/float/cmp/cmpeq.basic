@@ -1,3 +1,4 @@
+Rem test: testing the = operation
 
 Assert (6.5 = 6.5) = True
 Assert (1e10 = 1e10) = True

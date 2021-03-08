@@ -1,3 +1,4 @@
+Rem test: function taking booleans and returning strings
 
 X = 42
 

@@ -1,3 +1,4 @@
+Rem test: testing the atn function
 
 Assert Abs(Atn(0.0) - 0.0) < 1e-7
 Assert Abs(Atn(0.2) - 0.19739555984988078) < 1e-7

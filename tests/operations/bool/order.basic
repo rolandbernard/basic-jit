@@ -1,3 +1,4 @@
+Rem test: testing the operation precedence
 
 Assert (True AND False AND True) = ((True AND False) AND True)
 Assert (True OR False OR True) = ((True OR False) OR True)

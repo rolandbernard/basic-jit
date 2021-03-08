@@ -1,3 +1,4 @@
+Rem test: testing the int function
 
 Assert Int(5.0) = 5
 Assert Int(10.1) = 10

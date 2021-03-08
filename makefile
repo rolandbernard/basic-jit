@@ -2,6 +2,7 @@
 # == Defaults
 BUILD := debug
 NOREADLINE := False
+NUMTESTJOBS := 6
 # ==
 
 # == Targets (and sources relative to SOURCE_DIR/)
@@ -39,7 +40,7 @@ LDFLAGS.debug   := -O0 -g -fsanitize=$(SANITIZE)
 CCFLAGS.release := -O3 -flto
 LDFLAGS.release := -O3 -flto
 
-CCFLAGS := $(CCFLAGS.$(BUILD)) -I$(SOURCE_DIR) 
+CCFLAGS := $(CCFLAGS.$(BUILD)) -I$(SOURCE_DIR) -Wall -Wextra -Wno-unused-parameter
 LDFLAGS := $(LDFLAGS.$(BUILD))
 LIBS    := -lm
 ifneq ($(NOREADLINE),True)
@@ -79,4 +80,5 @@ clean:
 	rm -rf $(BUILD_DIR)/*
 
 test: build
-	bash ./tests/run-tests.sh tests $(BINARY_DIR)/basicjit
+	$(MAKE) -C tested BUILD=release
+	BUILD=$(BUILD) ./tested/build/release/bin/tested -j$(NUMTESTJOBS) tests

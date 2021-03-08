@@ -1,3 +1,4 @@
+Rem test: goto jumps to a certain lable
 
 Goto exit
 End 1

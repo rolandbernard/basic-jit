@@ -1,3 +1,4 @@
+Rem test: testing string literals
 
 Assert "A" = "A"
 Assert "BB" = "B\B"

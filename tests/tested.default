@@ -1,0 +1,6 @@
+
+run: ./build/$BUILD/bin/basicjit %
+
+time: < 100ms
+exit: = 0
+stderr: = 

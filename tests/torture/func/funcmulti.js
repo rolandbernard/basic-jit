@@ -1,3 +1,4 @@
+// test: functions should behave like expected
 
 const funcgen = require('./include.funcgen.js');
 

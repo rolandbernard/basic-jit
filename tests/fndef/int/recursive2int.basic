@@ -1,3 +1,4 @@
+Rem test: recursive function taking and returning integers
 
 Def Fn fak_help%(N%, A%) = If N <= 1 Then A Else Fn fak_help(N - 1, A * N)
 

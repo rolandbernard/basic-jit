@@ -1,3 +1,4 @@
+Rem test: testing integer data reads to variables
 
 Data -10, -15, 20, 25, 30
 

@@ -1,3 +1,4 @@
+Rem test: testing the != operation
 
 Assert (2.3 != 3.2) = True
 Assert (-3.2 != -3.19) = True

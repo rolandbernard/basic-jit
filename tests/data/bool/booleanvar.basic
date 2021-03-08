@@ -1,3 +1,4 @@
+Rem test: testing boolean variables
 
 A? = True
 B  = False

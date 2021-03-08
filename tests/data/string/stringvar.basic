@@ -1,3 +1,4 @@
+Rem test: testing string variables
 
 A$ = "ABC"
 B  = "BCD"

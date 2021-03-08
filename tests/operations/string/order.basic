@@ -1,3 +1,4 @@
+Rem test: testing the operation precedence
 
 Assert "A" + "B" + "C" = ("A" + "B") + "C"
 Assert "A" + "B" + "C" + "D" = (("A" + "B") + "C") + "D"

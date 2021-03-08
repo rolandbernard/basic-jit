@@ -1,3 +1,4 @@
+Rem test: testing the sqr function
 
 Assert Abs(Sqr(0.01) - 0.1) < 1e-7
 Assert Abs(Sqr(0.1) - 0.31622776601683794) < 1e-7

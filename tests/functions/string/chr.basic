@@ -1,3 +1,4 @@
+Rem test: testing the chr function
 
 Assert CHR(0x0a) = "\x0a"
 Assert CHR(0x60) = "\x60"

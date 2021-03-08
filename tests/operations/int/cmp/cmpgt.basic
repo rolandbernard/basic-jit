@@ -1,3 +1,4 @@
+Rem test: testing the > operation
 
 Assert (11 > 10) = True
 Assert (-100 > -111) = True

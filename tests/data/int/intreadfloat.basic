@@ -1,3 +1,4 @@
+Rem test: testing reading float data to integer variables
 
 Data -10.6, -15.1, 20.7, 25.2, 30.9
 

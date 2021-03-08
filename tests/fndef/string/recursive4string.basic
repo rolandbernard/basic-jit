@@ -1,3 +1,4 @@
+Rem test: recursive function taking and returning strings
 
 Def Fn concat$(A$, B$, C$, D$) = If B = "" And C = "" And D = "" Then A Else Fn concat(A + B, C, D, "")
 

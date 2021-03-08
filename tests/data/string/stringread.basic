@@ -1,3 +1,4 @@
+Rem test: testing string data reads to variables
 
 Data "A", "B2", "C3_"
 
