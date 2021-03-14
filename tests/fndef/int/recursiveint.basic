@@ -1,4 +1,5 @@
 Rem test: recursive function taking and returning integers
+Rem time: < 500ms
 
 Def Fn fib%(N%) = (If N <= 1 Then N Else Fn fib(N - 1) + Fn fib(N - 2))
 
