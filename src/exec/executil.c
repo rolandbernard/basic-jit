@@ -6,16 +6,27 @@
 #include <sys/wait.h>
 #include <signal.h>
 #include <time.h>
+#include <sys/time.h>
 
 #include "exec/executil.h"
 
 typedef int (*JitFunction)();
+
+static uint64_t hash(uint64_t x) {
+    x = (x ^ (x >> 30)) * UINT64_C(0xbf58476d1ce4e5b9);
+    x = (x ^ (x >> 27)) * UINT64_C(0x94d049bb133111eb);
+    x = x ^ (x >> 31);
+    return x;
+}
 
 void executeFunctionInMemory(void* mem, size_t len, int* ret) {
     int pid = fork();
     if(pid == -1) {
         *ret = EXIT_FORK_ERROR;
     } else if(pid == 0) {
+        struct timeval time;
+        gettimeofday(&time, NULL);
+        srand(hash(time.tv_sec) ^ hash(time.tv_usec));
         JitFunction entry = (JitFunction)mem;
         size_t pagesize = sysconf(_SC_PAGESIZE);
         uintptr_t start = (uintptr_t)mem;
