@@ -2,7 +2,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
+#include <time.h>
 
 #include "codegenfunc.h"
 #include "exec/execalloc.h"
@@ -808,7 +808,11 @@ static Value generateMCLeftOrRight(AstBinary* ast, MCGenerationData* data) {
 }
 
 static void sleep_for(double sec) {
-    usleep((int)(sec * 1000000.0));
+    struct timespec time = {
+        .tv_sec = (time_t)sec,
+        .tv_nsec = (time_t)(sec * 1000000000) % 1000000000
+    };
+    nanosleep(&time, NULL);
 }
 
 static Value generateMCUnaryFloatNoRetAfterFreeReg(AstUnary* ast, MCGenerationData* data) {

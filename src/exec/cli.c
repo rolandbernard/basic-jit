@@ -283,18 +283,22 @@ static bool inputLine(FILE* input) {
             i++;
         }
         if (line_buffer[i] >= '0' && line_buffer[i] <= '9') {
-            int64_t line_num = 0;
-            for (; line_buffer[i] >= '0' && line_buffer[i] <= '9'; i++) {
-                line_num *= 10;
-                line_num += line_buffer[i] - '0';
-            }
-            while (isspace(line_buffer[i])) {
-                i++;
-            }
-            if (line_buffer[i] == 0) {
-                removeLine(line_num);
-            } else {
-                addLine(line_buffer, line_num);
+            resetStack(&ast_memory);
+            Ast* ast = parseLine(line_buffer, &ast_memory);
+            if(ast != NULL) {
+                if(ast->type == AST_ERROR || ast->type != AST_LINENUM) {
+                    if (executeLine(line_buffer)) {
+                        end = true;
+                    }
+                } else {
+                    AstLineNum* line = (AstLineNum*)ast;
+                    int64_t line_num = line->number;
+                    if (line->line == NULL) {
+                        removeLine(line_num);
+                    } else {
+                        addLine(line_buffer, line_num);
+                    }
+                }
             }
         } else {
             if (line_buffer[i] == '>') {
