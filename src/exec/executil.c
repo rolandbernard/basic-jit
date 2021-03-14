@@ -13,7 +13,7 @@ typedef int (*JitFunction)();
 
 void executeFunctionInMemory(void* mem, size_t len, int* ret) {
     int pid = fork();
-        if(pid == -1) {
+    if(pid == -1) {
         *ret = EXIT_FORK_ERROR;
     } else if(pid == 0) {
         JitFunction entry = (JitFunction)mem;
