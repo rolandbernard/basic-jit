@@ -1,5 +1,0 @@
-Rem test: divition by zero fails
-Rem exit: != 0
-Rem stderr: !=
-
-A = 1 / 0
