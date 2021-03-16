@@ -28,7 +28,11 @@ function generateOutput(ldetph, rdetph, maxdetph) {
         }
     } else {
         const val = getRandomFloat();
-        return [val.toString(), val];
+        let string = val.toString();
+        if (!string.includes('e') && !string.includes('.')) {
+            string += '.0';
+        }
+        return [string, val];
     }
 }
 
