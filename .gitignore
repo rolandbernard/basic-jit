@@ -1,6 +1,7 @@
 
 build/
 .vscode/
+compile_flags.txt
 
 callgrind.*
 perf.*
