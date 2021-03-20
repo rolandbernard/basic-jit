@@ -1,7 +1,9 @@
 
 build/
 .vscode/
+compile_flags.txt
 
+*.log
 callgrind.*
 perf.*
 gmon.*

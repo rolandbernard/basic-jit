@@ -533,10 +533,20 @@ static Ast* parseUnaryExpression(Scanner* scanner, StackAllocator* mem) {
         } else if (value->type == AST_ERROR) {
             return value;
         }
-        AstUnary* ret = (AstUnary*)allocAligned(mem, sizeof(AstUnary));
-        ret->type = type;
-        ret->value = value;
-        return (Ast*)ret;
+        if (type == AST_NEG && value->type == AST_INTEGER) {
+            AstInt* ret = (AstInt*)value;
+            ret->value = -ret->value;
+            return (Ast*)ret;
+        } else if (type == AST_NEG && value->type == AST_FLOAT) {
+            AstFloat* ret = (AstFloat*)value;
+            ret->value = -ret->value;
+            return (Ast*)ret;
+        } else {
+            AstUnary* ret = (AstUnary*)allocAligned(mem, sizeof(AstUnary));
+            ret->type = type;
+            ret->value = value;
+            return (Ast*)ret;
+        }
     } else {
         return parseFunctionLikeBinaryExpression(scanner, mem);
     }
