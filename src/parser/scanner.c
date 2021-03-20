@@ -111,18 +111,8 @@ static Token getToken(const char* input) {
     } else if (
         (input[0] >= '0' && input[0] <= '9')
         || (input[0] == '.' && input[1] >= '0' && input[1] <= '9')
-        || (
-            (input[0] == '-' || input[0] == '+')
-            && (
-                (input[1] >= '0' && input[1] <= '9')
-                || (input[1] == '.' && input[2] >= '0' && input[2] <= '9')
-            )
-        )
     ) {
         int len = 0;
-        if (input[0] == '-' || input[0] == '+') {
-            len++;
-        }
         if (input[len + 1] == 'b') {
             len += 2;
             while (input[len] == '0' || input[len] == '1' || input[len] == '_') {
