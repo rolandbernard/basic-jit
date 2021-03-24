@@ -26,10 +26,10 @@ This implementation of the BASIC programming language has multiple limitations, 
 
 ## Building from source
 ```
-$ git clone https://github.com/rolandbernard/basic-jit
-$ cd basic-jit
-$ make BUILD=release
-$ ./build/release/bin/basicjit
+git clone https://github.com/rolandbernard/basic-jit
+cd basic-jit
+make BUILD=release
+./build/release/bin/basicjit
 ```
 
 ## Hello world
