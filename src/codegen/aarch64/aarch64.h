@@ -149,6 +149,15 @@
 #define LOAD_STORE_REG_IMM_PRE_SIZE_WORD   0b10
 #define LOAD_STORE_REG_IMM_PRE_SIZE_DOUBLE 0b11
 
+#define LOAD_STORE_REG_PAIR_PRE_CNST0  0b101
+#define LOAD_STORE_REG_PAIR_PRE_CNST1  0b011
+
+#define LOAD_STORE_REG_PAIR_POST_CNST0  0b101
+#define LOAD_STORE_REG_PAIR_POST_CNST1  0b001
+
+#define LOAD_STORE_REG_PAIR_PRE_OPC_64B_FP 0b01
+#define LOAD_STORE_REG_PAIR_PRE_OPC_64B    0b10
+
 #define LOAD_STORE_REG_REG_CNST0 0b111
 #define LOAD_STORE_REG_REG_CNST1 0b00
 #define LOAD_STORE_REG_REG_CNST2 0b1
@@ -560,6 +569,17 @@ typedef union {
         uint32_t cnst0 : 3;
         uint32_t size : 2;
     } load_store_reg_imm_pre;
+    struct {
+        uint32_t rt : 5;
+        uint32_t rn : 5;
+        uint32_t rt2 : 5;
+        uint32_t imm7 : 7;
+        uint32_t l : 1;
+        uint32_t cnst1 : 3;
+        uint32_t v : 1;
+        uint32_t cnst0 : 3;
+        uint32_t opc : 2;
+    } load_store_reg_pair;
     struct {
         uint32_t rt : 5;
         uint32_t rn : 5;
