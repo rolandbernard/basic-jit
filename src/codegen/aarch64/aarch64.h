@@ -337,6 +337,11 @@
 #define PROC_FP_THREE_SOURCE_O0_FMADD 0b0
 #define PROC_FP_THREE_SOURCE_O0_FMSUB 0b1
 
+#define ADD_SUB_IMM_CNST0 0b100010
+
+#define ADD_SUB_IMM_OP_ADD 0b0
+#define ADD_SUB_IMM_OP_SUB 0b1
+
 typedef union {
     struct {
         uint32_t pad1 : 25;
@@ -355,6 +360,16 @@ typedef union {
         uint32_t cnst1 : 3;
         uint32_t pad0 : 3;
     } proc_imm;
+    struct {
+        uint32_t rd : 5;
+        uint32_t rn : 5;
+        uint32_t imm12 : 12;
+        uint32_t sh : 1;
+        uint32_t cnst0 : 6;
+        uint32_t s : 1;
+        uint32_t op : 1;
+        uint32_t sf : 1;
+    } add_sub_imm;
     struct {
         uint32_t rd : 5;
         uint32_t immhi : 19;
