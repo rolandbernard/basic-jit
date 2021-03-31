@@ -1,0 +1,15 @@
+Rem test: You can use malloc/free, but probably should not
+Rem stdout: = Hello\n
+
+Ext Fn malloc$(size%)
+Ext Fn strcpy(dest$, src$)
+Ext Fn free(prt$)
+
+old_str = "Hello"
+new_str = Fn malloc(1 + Len old_str)
+Fn strcpy(new_str, old_str)
+
+Print new_str
+
+Fn free(new_str)
+

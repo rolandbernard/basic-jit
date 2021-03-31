@@ -1,0 +1,7 @@
+Rem test: Native functions with many arguments can be called from basic
+Rem stdout: = 1a 2b 3c 4d\n
+
+Ext Fn printf%(fmt$, A%, B%, C%, D%)
+
+Assert Fn printf("%ia %ib %ic %id\n", 1, 2, 3, 4) = 12
+

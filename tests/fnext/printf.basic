@@ -1,0 +1,7 @@
+Rem test: Native functions can be called from basic
+Rem stdout: = Hello world!\n
+
+Ext Fn printf%(fmt$)
+
+Assert Fn printf("Hello world!\n") = 13
+

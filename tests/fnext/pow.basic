@@ -1,0 +1,9 @@
+Rem test: Native math functions can be called from basic
+
+Ext Fn pow(A, B)
+
+Assert Fn pow(2, 2) = 4
+Assert Fn pow(5, 2) = 25
+Assert Fn pow(10, 2) = 100
+Assert Fn pow(10, 10) = 1e10
+

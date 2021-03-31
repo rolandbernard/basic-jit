@@ -1,0 +1,7 @@
+Rem test: Functions can be called as a statement
+Rem stdout: = Hello world! 42\n
+
+Ext Fn printf%(fmt$, A$, B$, C%)
+
+Fn printf("%s %s! %i\n", "Hello", "world", 42)
+

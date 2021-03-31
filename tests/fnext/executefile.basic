@@ -1,0 +1,8 @@
+Rem test: Functions from the compiler itself can be used
+Rem stdout: = Hello world\n
+
+Ext Fn executeFile%(file$)
+
+Assert Fn executeFile("tests/other/fail.end.basic") = 1
+Assert Fn executeFile("tests/other/print.basic") = 0
+
