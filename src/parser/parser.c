@@ -230,6 +230,67 @@ static char* copyIdentifier(const char* str, int len, StackAllocator* mem) {
     return ret;
 }
 
+static Ast* parseFnCall(Scanner* scanner, StackAllocator* mem) {
+    if (acceptToken(scanner, TOKEN_FN)) {
+        Token name;
+        if (!consumeToken(scanner, TOKEN_IDENTIFIER, &name)) {
+            return (Ast*)createError(getScannerOffset(scanner), mem);
+        } else {
+            VarType type = VAR_UNDEF;
+            if(acceptToken(scanner, TOKEN_DOT)) {
+                type = VAR_FLOAT;
+            } else if(acceptToken(scanner, TOKEN_DOLLAR)) {
+                type = VAR_STR;
+            } else if(acceptToken(scanner, TOKEN_PERCENT)) {
+                type = VAR_INT;
+            } else if(acceptToken(scanner, TOKEN_QUESTION_MARK)) {
+                type = VAR_BOOL;
+            }
+            if (!acceptToken(scanner, TOKEN_BRAC_OPEN)) {
+                return (Ast*)createError(getScannerOffset(scanner), mem);
+            } else {
+                int count = 0;
+                int capacity = INITIAL_LIST_LENGTH;
+                Ast** tmp_data = (Ast**)malloc(sizeof(Ast*) * capacity);
+                do {
+                    if (count == capacity) {
+                        capacity *= 2;
+                        tmp_data = (Ast**)realloc(tmp_data, sizeof(Ast*) * capacity);
+                    }
+                    tmp_data[count] = parseExpression(scanner, mem);
+                    if (tmp_data[count] != NULL) {
+                        if (tmp_data[count]->type == AST_ERROR) {
+                            free(tmp_data);
+                            return tmp_data[count];
+                        }
+                        count++;
+                    }
+                } while (acceptToken(scanner, TOKEN_COMMA));
+                if (!acceptToken(scanner, TOKEN_BRAC_CLOSE)) {
+                    free(tmp_data);
+                    return (Ast*)createError(getScannerOffset(scanner), mem);
+                } else {
+                    AstFn* ret = (AstFn*)allocAligned(mem, sizeof(AstFn));
+                    ret->type = AST_FN;
+                    ret->name = (AstVar*)allocAligned(mem, sizeof(AstVar));
+                    ret->name->type = AST_VAR;
+                    ret->name->name = copyIdentifier(scanner->input + name.start, name.len, mem);
+                    ret->name->var_type = type;
+                    ret->value_count = count;
+                    ret->values = (Ast**)allocAligned(mem, sizeof(Ast*) * count);
+                    for (int i = 0; i < count; i++) {
+                        ret->values[i] = tmp_data[i];
+                    }
+                    free(tmp_data);
+                    return (Ast*)ret;
+                }
+            }
+        }
+    } else {
+        return NULL;
+    }
+}
+
 static Ast* parseBaseExpression(Scanner* scanner, StackAllocator* mem) {
     int error_offset = getScannerOffset(scanner);
     Token consumed;
@@ -328,61 +389,6 @@ static Ast* parseBaseExpression(Scanner* scanner, StackAllocator* mem) {
         Ast* ret = (Ast*)allocAligned(mem, sizeof(Ast*));
         ret->type = AST_FALSE;
         return ret;
-    } else if(acceptToken(scanner, TOKEN_FN)) {
-        Token name;
-        if (!consumeToken(scanner, TOKEN_IDENTIFIER, &name)) {
-            return (Ast*)createError(getScannerOffset(scanner), mem);
-        } else {
-            VarType type = VAR_UNDEF;
-            if(acceptToken(scanner, TOKEN_DOT)) {
-                type = VAR_FLOAT;
-            } else if(acceptToken(scanner, TOKEN_DOLLAR)) {
-                type = VAR_STR;
-            } else if(acceptToken(scanner, TOKEN_PERCENT)) {
-                type = VAR_INT;
-            } else if(acceptToken(scanner, TOKEN_QUESTION_MARK)) {
-                type = VAR_BOOL;
-            }
-            if (!acceptToken(scanner, TOKEN_BRAC_OPEN)) {
-                return (Ast*)createError(getScannerOffset(scanner), mem);
-            } else {
-                int count = 0;
-                int capacity = INITIAL_LIST_LENGTH;
-                Ast** tmp_data = (Ast**)malloc(sizeof(Ast*) * capacity);
-                do {
-                    if (count == capacity) {
-                        capacity *= 2;
-                        tmp_data = (Ast**)realloc(tmp_data, sizeof(Ast*) * capacity);
-                    }
-                    tmp_data[count] = parseExpression(scanner, mem);
-                    if (tmp_data[count] != NULL) {
-                        if (tmp_data[count]->type == AST_ERROR) {
-                            free(tmp_data);
-                            return tmp_data[count];
-                        }
-                        count++;
-                    }
-                } while (acceptToken(scanner, TOKEN_COMMA));
-                if (!acceptToken(scanner, TOKEN_BRAC_CLOSE)) {
-                    free(tmp_data);
-                    return (Ast*)createError(getScannerOffset(scanner), mem);
-                } else {
-                    AstFn* ret = (AstFn*)allocAligned(mem, sizeof(AstFn));
-                    ret->type = AST_FN;
-                    ret->name = (AstVar*)allocAligned(mem, sizeof(AstVar));
-                    ret->name->type = AST_VAR;
-                    ret->name->name = copyIdentifier(scanner->input + name.start, name.len, mem);
-                    ret->name->var_type = type;
-                    ret->value_count = count;
-                    ret->values = (Ast**)allocAligned(mem, sizeof(Ast*) * count);
-                    for (int i = 0; i < count; i++) {
-                        ret->values[i] = tmp_data[i];
-                    }
-                    free(tmp_data);
-                    return (Ast*)ret;
-                }
-            }
-        }
     } else if(acceptToken(scanner, TOKEN_IF)) {
         Ast* condition = parseExpression(scanner, mem);
         if (condition == NULL) {
@@ -421,7 +427,7 @@ static Ast* parseBaseExpression(Scanner* scanner, StackAllocator* mem) {
             }
         }
     } else {
-        return NULL;
+        return parseFnCall(scanner, mem);
     }
 }
 
@@ -1367,6 +1373,7 @@ static Ast* parseSingleOperation(Scanner* scanner, StackAllocator* mem) {
     Ast* ret = NULL;
     if((ret = parseSimpleStatement(scanner, mem)) != NULL ||
        (ret = parseUnaryStatement(scanner, mem)) != NULL ||
+       (ret = parseFnCall(scanner, mem)) != NULL ||
        (ret = parseAssertStatement(scanner, mem)) != NULL ||
        (ret = parseDefStatement(scanner, mem)) != NULL ||
        (ret = parseEndStatement(scanner, mem)) != NULL ||

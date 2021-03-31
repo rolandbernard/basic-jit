@@ -694,6 +694,7 @@ void addInstFunctionCall(StackAllocator* mem, RegisterSet regs, Register ret, in
                         if (args[j] == to_use) {
                             addInstMovFRegToFReg(mem, tmp_regs, tmp, args[j]);
                             args[j] = tmp;
+                            tmp_regs |= tmp;
                         }
                     }
                     addInstMovFRegToFReg(mem, tmp_regs, to_use, args[i]);
@@ -709,6 +710,7 @@ void addInstFunctionCall(StackAllocator* mem, RegisterSet regs, Register ret, in
                         if (args[j] == to_use) {
                             addInstMovRegToReg(mem, tmp_regs, tmp, args[j]);
                             args[j] = tmp;
+                            tmp_regs |= tmp;
                         }
                     }
                     addInstMovRegToReg(mem, tmp_regs, to_use, args[i]);
@@ -719,7 +721,7 @@ void addInstFunctionCall(StackAllocator* mem, RegisterSet regs, Register ret, in
         }
     }
     addInstMovImmToReg(mem, tmp_regs, REG_A, float_count);
-    addInstCall(mem, tmp_regs, func);
+    addInstCall(mem, tmp_regs | REG_A, func);
     if (ret != 0) {
         if (ret >= (1 << REG_COUNT)) {
             if (ret != FREG_0) {

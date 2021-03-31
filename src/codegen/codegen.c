@@ -1539,15 +1539,23 @@ static Value generateMCExt(AstExt* ast, MCGenerationData* data) {
     }
     char name[strlen(ast->name->name) + 1];
     strcpy(name, ast->name->name);
-    void* handle = dlopen(NULL, RTLD_LAZY);
-    function->function = dlsym(handle, name);
-    if (function->function != NULL) {
-        addVariable(data->func_table, ast->name->name, (Variable*)function, data->variable_mem);
-        Value ret = { .type = VALUE_NONE, };
-        return ret;
-    } else {
+    static void* handle = NULL;
+    if (handle == NULL) {
+        handle = dlopen(NULL, RTLD_LAZY);
+    }
+    if (handle == NULL) {
         Value ret = { .type = VALUE_ERROR, .error = ERROR_FUNC_NOT_DEF };
         return ret;
+    } else {
+        function->function = dlsym(handle, name);
+        if (function->function != NULL) {
+            addVariable(data->func_table, ast->name->name, (Variable*)function, data->variable_mem);
+            Value ret = { .type = VALUE_NONE, };
+            return ret;
+        } else {
+            Value ret = { .type = VALUE_ERROR, .error = ERROR_FUNC_NOT_DEF };
+            return ret;
+        }
     }
 #else
     Value ret = { .type = VALUE_ERROR, .error = ERROR_NOT_SUPPORTED };
@@ -1686,7 +1694,7 @@ static Value generateMCFn(AstFn* ast, MCGenerationData* data) {
             }
             arg_registers[i] = argument.reg;
         }
-        addInstFunctionCall(data->inst_mem, data->registers, ret.reg, function->param_count, arg_registers, function->function);
+        addInstFunctionCall(data->inst_mem, 0, ret.reg, function->param_count, arg_registers, function->function);
         addInstPopAll(data->inst_mem, data->registers, old_regs);
         data->registers |= old_regs;
         return ret;
