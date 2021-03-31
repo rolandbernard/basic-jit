@@ -25,6 +25,7 @@ typedef enum {
     ERROR_FUNC_NOT_DEF,
     ERROR_TO_MANY_PARAMS,
     ERROR_TO_FEW_PARAMS,
+    ERROR_NOT_SUPPORTED,
 } Error;
 
 typedef struct {

@@ -1271,7 +1271,8 @@ static Ast* parseDimStatement(Scanner* scanner, StackAllocator* mem) {
 }
 
 static Ast* parseDefStatement(Scanner* scanner, StackAllocator* mem) {
-    if (acceptToken(scanner, TOKEN_DEF)) {
+    Token token;
+    if (consumeToken(scanner, TOKEN_DEF, &token) || consumeToken(scanner, TOKEN_EXT, &token)) {
         if (acceptToken(scanner, TOKEN_FN)) {
             Token name;
             if (!consumeToken(scanner, TOKEN_IDENTIFIER, &name)) {
@@ -1315,32 +1316,48 @@ static Ast* parseDefStatement(Scanner* scanner, StackAllocator* mem) {
                 free(tmp_data);
                 return (Ast*)createError(getScannerOffset(scanner), mem);
             }
-            if (!acceptToken(scanner, TOKEN_EQ)) {
+            if (token.type == TOKEN_DEF) {
+                if (!acceptToken(scanner, TOKEN_EQ)) {
+                    free(tmp_data);
+                    return (Ast*)createError(getScannerOffset(scanner), mem);
+                }
+                Ast* value = parseExpression(scanner, mem);
+                if (value == NULL) {
+                    free(tmp_data);
+                    return (Ast*)createError(getScannerOffset(scanner), mem);
+                } else if (value->type == AST_ERROR) {
+                    free(tmp_data);
+                    return value;
+                }
+                AstDef* ret = (AstDef*)allocAligned(mem, sizeof(AstDef));
+                ret->type = AST_DEF;
+                ret->name = (AstVar*)allocAligned(mem, sizeof(AstVar));
+                ret->name->type = AST_VAR;
+                ret->name->name = copyIdentifier(scanner->input + name.start, name.len, mem);
+                ret->name->var_type = type;
+                ret->function = value;
+                ret->variable_count = count;
+                ret->variables = (AstVar**)allocAligned(mem, sizeof(Ast*) * count);
+                for (int i = 0; i < count; i++) {
+                    ret->variables[i] = (AstVar*)tmp_data[i];
+                }
                 free(tmp_data);
-                return (Ast*)createError(getScannerOffset(scanner), mem);
-            }
-            Ast* value = parseExpression(scanner, mem);
-            if (value == NULL) {
+                return (Ast*)ret;
+            } else {
+                AstExt* ret = (AstExt*)allocAligned(mem, sizeof(AstExt));
+                ret->type = AST_EXT;
+                ret->name = (AstVar*)allocAligned(mem, sizeof(AstVar));
+                ret->name->type = AST_VAR;
+                ret->name->name = copyIdentifier(scanner->input + name.start, name.len, mem);
+                ret->name->var_type = type;
+                ret->variable_count = count;
+                ret->variables = (AstVar**)allocAligned(mem, sizeof(Ast*) * count);
+                for (int i = 0; i < count; i++) {
+                    ret->variables[i] = (AstVar*)tmp_data[i];
+                }
                 free(tmp_data);
-                return (Ast*)createError(getScannerOffset(scanner), mem);
-            } else if (value->type == AST_ERROR) {
-                free(tmp_data);
-                return value;
+                return (Ast*)ret;
             }
-            AstDef* ret = (AstDef*)allocAligned(mem, sizeof(AstDef));
-            ret->type = AST_DEF;
-            ret->name = (AstVar*)allocAligned(mem, sizeof(AstVar));
-            ret->name->type = AST_VAR;
-            ret->name->name = copyIdentifier(scanner->input + name.start, name.len, mem);
-            ret->name->var_type = type;
-            ret->function = value;
-            ret->variable_count = count;
-            ret->variables = (AstVar**)allocAligned(mem, sizeof(Ast*) * count);
-            for (int i = 0; i < count; i++) {
-                ret->variables[i] = (AstVar*)tmp_data[i];
-            }
-            free(tmp_data);
-            return (Ast*)ret;
         }
     }
     return NULL;

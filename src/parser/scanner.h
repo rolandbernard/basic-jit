@@ -74,6 +74,7 @@ typedef enum {
     TOKEN_FN,
     TOKEN_LEN,
     TOKEN_EDIT,
+    TOKEN_EXT,
     TOKEN_KEYWORDS_END,
     
     TOKEN_PLUS,
