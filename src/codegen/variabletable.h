@@ -97,6 +97,7 @@ typedef struct {
     int param_count;
     ValueType* params;
     ValueType return_type;
+    bool vararg;
     void* function;
 } VariableNativeFunc;
 

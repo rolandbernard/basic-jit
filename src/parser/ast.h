@@ -230,6 +230,7 @@ typedef struct {
     AstVar* name;
     int variable_count;
     AstVar** variables;
+    bool vararg;
 } AstExt;
 
 typedef struct {

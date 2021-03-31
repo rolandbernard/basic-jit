@@ -1318,6 +1318,10 @@ static Ast* parseDefStatement(Scanner* scanner, StackAllocator* mem) {
                     count++;
                 }
             } while (acceptToken(scanner, TOKEN_COMMA));
+            bool vararg = false;
+            if (token.type == TOKEN_EXT && acceptToken(scanner, TOKEN_STAR)) {
+                vararg = true;
+            }
             if (!acceptToken(scanner, TOKEN_BRAC_CLOSE)) {
                 free(tmp_data);
                 return (Ast*)createError(getScannerOffset(scanner), mem);
@@ -1357,6 +1361,7 @@ static Ast* parseDefStatement(Scanner* scanner, StackAllocator* mem) {
                 ret->name->name = copyIdentifier(scanner->input + name.start, name.len, mem);
                 ret->name->var_type = type;
                 ret->variable_count = count;
+                ret->vararg = vararg;
                 ret->variables = (AstVar**)allocAligned(mem, sizeof(Ast*) * count);
                 for (int i = 0; i < count; i++) {
                     ret->variables[i] = (AstVar*)tmp_data[i];

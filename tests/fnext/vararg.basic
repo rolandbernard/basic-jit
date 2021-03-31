@@ -1,0 +1,7 @@
+Rem test: Native vararg functions can be called from basic
+Rem stdout: = Hello world! 42\n
+
+Ext Fn printf%(fmt$, *)
+
+Assert Fn printf("%s %s! %i\n", "Hello", "world", 42) = 16
+

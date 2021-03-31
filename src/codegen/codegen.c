@@ -1515,6 +1515,7 @@ static Value generateMCExt(AstExt* ast, MCGenerationData* data) {
 #ifndef NONATIVEFN
     VariableNativeFunc* function = (VariableNativeFunc*)allocAligned(data->variable_mem, sizeof(VariableNativeFunc));
     function->type = VARIABLE_NATIVE_FUNC;
+    function->vararg = ast->vararg;
     function->param_count = ast->variable_count;
     function->params = (ValueType*)allocAligned(data->variable_mem, sizeof(ValueType) * ast->variable_count);
     for (int i = 0; i < ast->variable_count; i++) {
@@ -1537,8 +1538,6 @@ static Value generateMCExt(AstExt* ast, MCGenerationData* data) {
     } else if (ast->name->var_type == VAR_BOOL) {
         function->return_type = VALUE_BOOLEAN;
     }
-    char name[strlen(ast->name->name) + 1];
-    strcpy(name, ast->name->name);
     static void* handle = NULL;
     if (handle == NULL) {
         handle = dlopen(NULL, RTLD_LAZY);
@@ -1547,7 +1546,7 @@ static Value generateMCExt(AstExt* ast, MCGenerationData* data) {
         Value ret = { .type = VALUE_ERROR, .error = ERROR_FUNC_NOT_DEF };
         return ret;
     } else {
-        function->function = dlsym(handle, name);
+        function->function = dlsym(handle, ast->name->name);
         if (function->function != NULL) {
             addVariable(data->func_table, ast->name->name, (Variable*)function, data->variable_mem);
             Value ret = { .type = VALUE_NONE, };
@@ -1661,14 +1660,14 @@ static Value generateMCFn(AstFn* ast, MCGenerationData* data) {
     } else if (variable->type == VARIABLE_NATIVE_FUNC) {
         // TODO: Find a way to do this without the register limit
         VariableNativeFunc* function = (VariableNativeFunc*)variable;
-        Register arg_registers[function->param_count];
         if (ast->value_count < function->param_count) {
             Value ret = {.type = VALUE_ERROR, .error = ERROR_TO_FEW_PARAMS};
             return ret;
-        } else if (ast->value_count > function->param_count) {
+        } else if (ast->value_count > function->param_count && !function->vararg) {
             Value ret = {.type = VALUE_ERROR, .error = ERROR_TO_MANY_PARAMS};
             return ret;
         }
+        Register arg_registers[ast->value_count];
         Value ret = { .type = function->return_type };
         if (function->return_type == VALUE_FLOAT) {
             ret.reg = getFreeFRegister(data->registers);
@@ -1694,7 +1693,15 @@ static Value generateMCFn(AstFn* ast, MCGenerationData* data) {
             }
             arg_registers[i] = argument.reg;
         }
-        addInstFunctionCall(data->inst_mem, 0, ret.reg, function->param_count, arg_registers, function->function);
+        for (int i = function->param_count; i < ast->value_count; i++) {
+            Value argument = generateMCForAst(ast->values[i], data);
+            if (argument.type == VALUE_ERROR) {
+                return argument;
+            } else {
+                arg_registers[i] = argument.reg;
+            }
+        }
+        addInstFunctionCall(data->inst_mem, 0, ret.reg, ast->value_count, arg_registers, function->function);
         addInstPopAll(data->inst_mem, data->registers, old_regs);
         data->registers |= old_regs;
         return ret;
