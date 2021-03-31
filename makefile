@@ -2,6 +2,7 @@
 # == Defaults
 BUILD := debug
 NOREADLINE := False
+NONATIVEFN := False
 NUMTESTJOBS := 6
 # ==
 
@@ -41,12 +42,17 @@ CCFLAGS.release := -O3 -flto
 LDFLAGS.release := -O3 -flto
 
 CCFLAGS := $(CCFLAGS.$(BUILD)) -I$(SOURCE_DIR) -Wall -Wextra -Wno-unused-parameter
-LDFLAGS := $(LDFLAGS.$(BUILD))
+LDFLAGS := $(LDFLAGS.$(BUILD)) -rdynamic
 LIBS    := -lm
 ifneq ($(NOREADLINE),True)
 LIBS += -lreadline
 else
 CCFLAGS += -DNOREADLINE
+endif
+ifneq ($(NONATIVEFN),True)
+LIBS += -ldl
+else
+CCFLAGS += -DNONATIVEFN
 endif
 # ==
 
