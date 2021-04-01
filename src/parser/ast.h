@@ -58,6 +58,7 @@ typedef enum {
     AST_LOAD,
     AST_LEN,
     AST_EDIT,
+    AST_EXT,
 
     // binary
     AST_ADD,
@@ -223,6 +224,14 @@ typedef struct {
     AstVar** variables;
     Ast* function;
 } AstDef;
+
+typedef struct {
+    AST_BASE
+    AstVar* name;
+    int variable_count;
+    AstVar** variables;
+    bool vararg;
+} AstExt;
 
 typedef struct {
     AST_BASE

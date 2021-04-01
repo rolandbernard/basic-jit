@@ -14,6 +14,7 @@ static const char* error_to_name[] = {
     [ERROR_FUNC_NOT_DEF] = "Function not defined",
     [ERROR_TO_MANY_PARAMS] = "To many function arguments",
     [ERROR_TO_FEW_PARAMS] = "To few function arguments",
+    [ERROR_NOT_SUPPORTED] = "Operation not supported",
 };
 
 const char* getErrorName(Error e) {

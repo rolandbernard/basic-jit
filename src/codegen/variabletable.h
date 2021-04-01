@@ -19,6 +19,7 @@ typedef enum {
     VARIABLE_BOOLEAN_ARRAY,
     VARIABLE_LABEL,
     VARIABLE_FUNC,
+    VARIABLE_NATIVE_FUNC,
 } VariableType;
 
 typedef struct {
@@ -90,6 +91,15 @@ typedef struct {
     Variable** params;
     ValueType return_type;
 } VariableFunc;
+
+typedef struct {
+    VARIABLE_BASE
+    int param_count;
+    ValueType* params;
+    ValueType return_type;
+    bool vararg;
+    void* function;
+} VariableNativeFunc;
 
 typedef struct {
     char* key;
