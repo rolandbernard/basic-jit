@@ -1,4 +1,3 @@
-
 JIT compiler for BASIC
 ======================
 This is a small JIT compiler for a version of the BASIC programming language, running on the x86-64 or 64-bit ARM (aarch64) architecture.
@@ -11,6 +10,7 @@ This is a relatively _basic_ version of BASIC, but it has some interesting featu
 * Labels can be used instead of line numbers
 * There is support for 64bit integers, double-precision floats, strings and booleans
 * Being a JIT compiler the execution is relatively fast (There is some compilation overhead)
+* The JIT supports calling out to simple native functions
 
 ### Limitations
 This implementation of the BASIC programming language has multiple limitations, not present in some others.
