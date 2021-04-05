@@ -1,14 +1,11 @@
 
 # == Defaults
-BUILD := debug
-NOREADLINE := False
-NONATIVEFN := False
+BUILD       := debug
 NUMTESTJOBS := 6
 # ==
 
-# == Targets (and sources relative to SOURCE_DIR/)
-TARGETS += basicjit
-SOURCES.basicjit := basicjit.c
+# == Targets
+TARGETS := basicjit
 # ==
 
 # == Directories
@@ -19,37 +16,47 @@ BINARY_DIR := $(BUILD_DIR)/$(BUILD)/bin
 # ==
 
 # == Files
-$(foreach TARGET, $(TARGETS), $(eval OBJECTS.$(TARGET) := $(patsubst %.c, $(OBJECT_DIR)/%.o, $(SOURCES.$(TARGET)))))
+$(foreach TARGET, $(TARGETS), \
+	$(eval SOURCES.$(TARGET) := $(shell find $(SOURCE_DIR)/$(TARGET) -type f -name '*.c')) \
+	$(eval OBJECTS.$(TARGET) := $(patsubst $(SOURCE_DIR)/%.c, $(OBJECT_DIR)/%.o, $(SOURCES.$(TARGET)))))
+SOURCES        := $(shell find $(SOURCE_DIR) -type f -name '*.c')
+ALL_OBJECTS    := $(patsubst $(SOURCE_DIR)/%.c, $(OBJECT_DIR)/%.o, $(SOURCES))
 TARGET_OBJECTS := $(foreach TARGET, $(TARGETS), $(OBJECTS.$(TARGET)))
-SOURCES := $(shell find $(SOURCE_DIR) -type f -name '*.c')
-OBJECTS := $(filter-out $(TARGET_OBJECTS), $(patsubst $(SOURCE_DIR)/%.c, $(OBJECT_DIR)/%.o, $(SOURCES)))
-HEADERS := $(shell find $(SOURCE_DIR) -type f -name '*.h')
-BINARYS := $(patsubst %, $(BINARY_DIR)/%, $(TARGETS))
+OBJECTS        := $(filter-out $(TARGET_OBJECTS), $(ALL_OBJECTS))
+DEPENDENCIES   := $(ALL_OBJECTS:.o=.d)
+BINARYS        := $(patsubst %, $(BINARY_DIR)/%, $(TARGETS))
 # ==
 
 # == Tools
-CC := clang
-LD := clang
+CC   ?= clang
+LINK := $(CC)
 # ==
 
 # == Flags
 SANITIZE := address,leak,undefined
 # SANITIZE := thread,undefined
+WARNINGS := -Wall -Wextra -Wno-unused-parameter
 
-CCFLAGS.debug   := -O0 -g -fsanitize=$(SANITIZE) #-DDEBUG
-LDFLAGS.debug   := -O0 -g -fsanitize=$(SANITIZE)
-CCFLAGS.release := -O3 -flto
-LDFLAGS.release := -O3 -flto
+CCFLAGS.debug   += -O0 -g -fsanitize=$(SANITIZE) #-DDEBUG
+LDFLAGS.debug   += -O0 -g -fsanitize=$(SANITIZE)
+CCFLAGS.release += -O3 -flto
+LDFLAGS.release += -O3 -flto
 
-CCFLAGS := $(CCFLAGS.$(BUILD)) -I$(SOURCE_DIR) -Wall -Wextra -Wno-unused-parameter
-LDFLAGS := $(LDFLAGS.$(BUILD)) -rdynamic
-LIBS    := -lm
-ifneq ($(NOREADLINE),True)
+CCFLAGS += $(CCFLAGS.$(BUILD)) $(WARNINGS) -I$(SOURCE_DIR) -MMD -MP
+LDFLAGS += $(LDFLAGS.$(BUILD)) -rdynamic
+LIBS    += -lm
+# ==
+
+# == Extra flags (enable/disable readline)
+ifndef NOREADLINE
 LIBS += -lreadline
 else
 CCFLAGS += -DNOREADLINE
 endif
-ifneq ($(NONATIVEFN),True)
+# ==
+
+# == Extra flags (enable/disable native functions)
+ifndef NONATIVEFN
 LIBS += -ldl
 else
 CCFLAGS += -DNONATIVEFN
@@ -57,9 +64,16 @@ endif
 # ==
 
 # == Progress
-TOTAL   := $(words $(sort $(OBJECTS) $(TARGET_OBJECTS) $(BINARYS)))
-COUNTER  = $(words $(HIDDEN_COUNT))$(eval HIDDEN_COUNT := x $(HIDDEN_COUNT))
-PROGRESS = $(shell expr $(COUNTER) '*' 100 / $(TOTAL))
+ifndef ECHO
+TOTAL   := \
+	$(shell $(MAKE) $(MAKECMDGOALS) --no-print-directory -nrRf $(firstword $(MAKEFILE_LIST)) \
+		ECHO="__HIT_MARKER__" BUILD=$(BUILD) | grep -c "__HIT_MARKER__")
+TLENGTH := $(shell expr length $(TOTAL))
+COUNTER  = $(words $(HIDDEN_COUNT))
+COUNTINC = $(eval HIDDEN_COUNT := x $(HIDDEN_COUNT))
+PERCENT  = $(shell expr $(COUNTER) '*' 100 / $(TOTAL))
+ECHO     = $(COUNTINC)printf "[%*i/%i](%3i%%) %s\n" $(TLENGTH) $(COUNTER) $(TOTAL) $(PERCENT)
+endif
 # ==
 
 .SILENT:
@@ -68,23 +82,28 @@ PROGRESS = $(shell expr $(COUNTER) '*' 100 / $(TOTAL))
 .PHONY: build clean test
 
 build: $(BINARYS)
-	printf "[100%%] Build successful.\n"
+	@$(ECHO) "Build successful."
 
 $(BINARYS): $(BINARY_DIR)/%: $(OBJECTS) $$(OBJECTS.$$*) | $$(dir $$@)
-	printf "[%3i%%] Building $@\n" $(PROGRESS)
-	$(LD) $(LDFLAGS) -o $@ $^ $(LIBS)
+	@$(ECHO) "Building $@"
+	$(LINK) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-$(OBJECT_DIR)/%.o: $(SOURCE_DIR)/%.c $(HEADERS) $(MAKEFILE_LIST) | $$(dir $$@)
-	printf "[%3i%%] Building $@\n" $(PROGRESS)
+$(OBJECT_DIR)/%.o: $(SOURCE_DIR)/%.c $(MAKEFILE_LIST) | $$(dir $$@)
+	@$(ECHO) "Building $@"
 	$(CC) $(CCFLAGS) -c -o $@ $<
 
 %/:
+	@$(ECHO) "Building $@"
 	mkdir -p $@
 
 clean:
-	echo Cleaning local files
+	@$(ECHO) "Cleaning local files"
 	rm -rf $(BUILD_DIR)/*
 
 test: build
 	$(MAKE) -C tested BUILD=release
+	@$(ECHO) "Running tests"
 	BUILD=$(BUILD) ./tested/build/release/bin/tested -j$(NUMTESTJOBS) tests
+
+-include $(DEPENDENCIES)
+
