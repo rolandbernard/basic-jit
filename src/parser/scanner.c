@@ -1,7 +1,9 @@
 
-#include <strings.h>
-#include <string.h>
 #include <ctype.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
+#include <strings.h>
 
 #include "parser/scanner.h"
 
@@ -78,6 +80,44 @@ static const char* tokenTypeToString[] = {
     [TOKEN_EXT] = "EXT",
 };
 
+typedef struct {
+    const char* string;
+    TokenType token;
+} StringToTokenEntry;
+
+#define NUM_KEYWORDS (TOKEN_KEYWORDS_END - TOKEN_KEYWORDS_START - 1)
+
+StringToTokenEntry tokenStringToType[NUM_KEYWORDS];
+
+static int stringToTokenEntryCompare(const void* a, const void* b) {
+    return strcasecmp(((const StringToTokenEntry*)a)->string, ((const StringToTokenEntry*)b)->string);
+}
+
+static void initTokenSearchTable() {
+    static bool initialized = false;
+    if (!initialized) {
+        for(int i = TOKEN_KEYWORDS_START + 1; i < TOKEN_KEYWORDS_END; i++) {
+            tokenStringToType[i - TOKEN_KEYWORDS_START - 1].string = tokenTypeToString[i];
+            tokenStringToType[i - TOKEN_KEYWORDS_START - 1].token = (TokenType)i;
+        }
+        qsort(tokenStringToType, NUM_KEYWORDS, sizeof(StringToTokenEntry), stringToTokenEntryCompare);
+        initialized = true;
+    }
+}
+
+static TokenType searchForToken(const char* string, int len) {
+    char tmp[len + 1];
+    memcpy(tmp, string, len);
+    tmp[len] = 0;
+    StringToTokenEntry search = { .string = tmp };
+    StringToTokenEntry* result = bsearch(&search, tokenStringToType, NUM_KEYWORDS, sizeof(StringToTokenEntry), stringToTokenEntryCompare);
+    if (result == NULL) {
+        return TOKEN_NONE;
+    } else {
+        return result->token;
+    }
+}
+
 bool isHexChar(char c) {
     return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
 }
@@ -100,11 +140,8 @@ static Token getToken(const char* input) {
         while ((input[len] >= 'a' && input[len] <= 'z') || (input[len] >= 'A' && input[len] <= 'Z') || (input[len] >= '0' && input[len] <= '9') || input[len] == '_') {
             len++;
         }
-        for(int i = TOKEN_KEYWORDS_START + 1; i < TOKEN_KEYWORDS_END; i++) {
-            if (strlen(tokenTypeToString[i]) == len && strncasecmp(tokenTypeToString[i], input, len) == 0) {
-                ret.type = i;
-            }
-        }
+        initTokenSearchTable();
+        ret.type = searchForToken(input, len);
         if(ret.type == TOKEN_NONE) {
             ret.type = TOKEN_IDENTIFIER;
         }
