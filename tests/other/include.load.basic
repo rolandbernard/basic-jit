@@ -1,0 +1,11 @@
+
+Let A = 42
+
+Def Fn F(X) = 2 * X
+
+Goto test_skip
+test:
+    A = 5
+    Return
+test_skip:
+

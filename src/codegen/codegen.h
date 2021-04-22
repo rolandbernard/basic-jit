@@ -19,6 +19,7 @@ typedef struct {
     DataList* data_mem;
     RegisterSet registers;
     int line;
+    const char* filename;
 } MCGenerationData;
 
 typedef Value (*GenerateMCFunction)(Ast*, MCGenerationData*);

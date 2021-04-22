@@ -146,6 +146,7 @@ static void runProgram() {
         .func_table = &func_table,
         .registers = 0,
         .line = 1,
+        .filename = NULL,
     };
     addInstPushCallerRegs(data.inst_mem, data.registers);
     bool had_error = false;
@@ -337,6 +338,7 @@ static bool executeLine(const char* line) {
         .func_table = &func_table,
         .registers = 0,
         .line = 1,
+        .filename = NULL,
     };
     bool end = false;
     Ast* ast = parseExpressionLine(line, &ast_memory);

@@ -5,7 +5,6 @@
 
 #include "exec/fileexec.h"
 #include "common/stackalloc.h"
-#include "codegen/codegen.h"
 #include "codegen/datalist.h"
 #include "codegen/labellist.h"
 #include "codegen/variabletable.h"
@@ -17,33 +16,30 @@
 static char* line_buffer;
 static int line_buffer_capacity = 0;
 
-int executeFile(const char* filename) {
+int generateMcIntoData(const char* filename, MCGenerationData* data) {
     int exit_code = EXIT_SUCCESS;
-    FILE* file = fopen(filename, "r");
+    const char* old_filename = data->filename;
+    int len_base = strlen(data->filename);
+    int len_relative = strlen(filename);
+    while (len_base > 0 && data->filename[len_base - 1] != '/') {
+        len_base--;
+    }
+    char real_filename[len_base + len_relative + 1];
+    if (filename[0] == '.') {
+        memcpy(real_filename, old_filename, len_base);
+        memcpy(real_filename + len_base, filename, len_relative);
+        real_filename[len_base + len_relative] = 0;
+    } else {
+        memcpy(real_filename, filename, len_relative);
+        real_filename[len_relative] = 0;
+    }
+    data->filename = real_filename;
+    FILE* file = fopen(real_filename, "r");
     if(file == NULL) {
-        fprintf(stderr, "error: Failed to open the file '%s': %s\n", filename, strerror(errno));
-        return EXIT_FAILURE;
+        fprintf(stderr, "error: Failed to open the file '%s': %s\n", real_filename, strerror(errno));
+        exit_code = EXIT_FAILURE;
     } else {
         StackAllocator ast_memory = STACK_ALLOCATOR_INITIALIZER;
-        DataList data_list = DATA_LIST_INITIALIZER;
-        StackAllocator var_memory = STACK_ALLOCATOR_INITIALIZER;
-        VariableTable var_table = VARIABLE_TABLE_INITIALIZER;
-        StackAllocator jit_memory = STACK_ALLOCATOR_INITIALIZER;
-        VariableTable label_table = VARIABLE_TABLE_INITIALIZER;
-        UnhandeledLabelList label_list = UNHANDLED_LABEL_LIST_INITIALIZER;
-        VariableTable func_table = VARIABLE_TABLE_INITIALIZER;
-        MCGenerationData data = {
-            .inst_mem = &jit_memory,
-            .variable_mem = &var_memory,
-            .variable_table = &var_table,
-            .label_table = &label_table,
-            .label_list = &label_list,
-            .data_mem = &data_list,
-            .func_table = &func_table,
-            .registers = 0,
-            .line = 1,
-        };
-        addInstPushCallerRegs(data.inst_mem, data.registers);
         bool had_error = false;
         bool end_of_file = false;
         while(!had_error && !end_of_file) {
@@ -77,7 +73,7 @@ int executeFile(const char* filename) {
                 if (ast != NULL) {
                     if (ast->type == AST_ERROR) {
                         AstError* error = (AstError*)ast;
-                        fprintf(stderr, "error: Syntax error at line %i:%i\n", data.line, error->offset + 1);
+                        fprintf(stderr, "error: Syntax error at %s:%i:%i\n", filename, data->line, error->offset + 1);
                         fprintf(stderr, " | %s\n", line_buffer);
                         fprintf(stderr, " | ");
                         for (int i = 0; i < error->offset; i++) {
@@ -92,36 +88,64 @@ int executeFile(const char* filename) {
                         had_error = true;
                         exit_code = EXIT_FAILURE;
                     } else {
-                        Error error= generateMC(ast, &data);
+                        Error error= generateMC(ast, data);
                         if (error != ERROR_NONE) {
-                            fprintf(stderr, "error: %s at line %i\n", getErrorName(error), data.line);
+                            fprintf(stderr, "error: %s at %s:%i\n", getErrorName(error), filename, data->line);
                             had_error = true;
                             exit_code = EXIT_FAILURE;
                         }
                     }
                 }
                 resetStack(&ast_memory);
-                data.line++;
+                data->line++;
             }
         }
         fclose(file);
-        if(!had_error) {
-            addInstPopCallerRegs(data.inst_mem, data.registers);
-            addInstReturn(data.inst_mem, data.registers);
-            int err = fillUnhandledLabelLocations(data.label_list, data.label_table, data.inst_mem);
-            if(err >= 0) {
-                fprintf(stderr, "error: Unresolved label %s at line %i\n", label_list.data[err].name, label_list.data[err].line);
-                exit_code = EXIT_FAILURE;
-            } else {
-                int ret;
+        freeStack(&ast_memory);
+    }
+    data->filename = old_filename;
+    return exit_code;
+}
+
+int executeFile(const char* filename) {
+    DataList data_list = DATA_LIST_INITIALIZER;
+    StackAllocator var_memory = STACK_ALLOCATOR_INITIALIZER;
+    VariableTable var_table = VARIABLE_TABLE_INITIALIZER;
+    StackAllocator jit_memory = STACK_ALLOCATOR_INITIALIZER;
+    VariableTable label_table = VARIABLE_TABLE_INITIALIZER;
+    UnhandeledLabelList label_list = UNHANDLED_LABEL_LIST_INITIALIZER;
+    VariableTable func_table = VARIABLE_TABLE_INITIALIZER;
+    MCGenerationData data = {
+        .inst_mem = &jit_memory,
+        .variable_mem = &var_memory,
+        .variable_table = &var_table,
+        .label_table = &label_table,
+        .label_list = &label_list,
+        .data_mem = &data_list,
+        .func_table = &func_table,
+        .registers = 0,
+        .line = 1,
+        .filename = filename,
+    };
+    addInstPushCallerRegs(data.inst_mem, data.registers);
+    int exit_code = generateMcIntoData(filename, &data);
+    if(exit_code == EXIT_SUCCESS) {
+        addInstPopCallerRegs(data.inst_mem, data.registers);
+        addInstReturn(data.inst_mem, data.registers);
+        int err = fillUnhandledLabelLocations(data.label_list, data.label_table, data.inst_mem);
+        if(err >= 0) {
+            fprintf(stderr, "error: Unresolved label %s at line %i\n", data.label_list->data[err].name, data.label_list->data[err].line);
+            exit_code = EXIT_FAILURE;
+        } else {
+            int ret;
 #ifdef DEBUG
-                printMemoryContent(stderr, jit_memory.memory, jit_memory.occupied);
+            printMemoryContent(stderr, jit_memory.memory, jit_memory.occupied);
 #endif
-                executeFunctionInMemory(jit_memory.memory, jit_memory.occupied, &ret);
-                if (ret > EXIT_SIGNAL_ERROR_START) {
-                    fprintf(stderr, "error: Child terminated: %s\n", strsignal(ret - EXIT_SIGNAL_ERROR_START));
-                } else {
-                    switch (ret) {
+            executeFunctionInMemory(data.inst_mem->memory, data.inst_mem->occupied, &ret);
+            if (ret > EXIT_SIGNAL_ERROR_START) {
+                fprintf(stderr, "error: Child terminated: %s\n", strsignal(ret - EXIT_SIGNAL_ERROR_START));
+            } else {
+                switch (ret) {
                     case EXIT_FORK_ERROR:
                         perror("error: Failed to fork");
                         break;
@@ -136,20 +160,18 @@ int executeFile(const char* filename) {
                         break;
                     default:
                         break;
-                    }
                 }
-                exit_code = ret;
             }
+            exit_code = ret;
         }
-        freeLabelList(&label_list);
-        freeDataList(&data_list);
-        freeVariableTable(&var_table);
-        freeVariableTable(&label_table);
-        freeVariableTable(&func_table);
-        freeStack(&var_memory);
-        freeStack(&ast_memory);
-        freeStack(&jit_memory);
-        freeStack(&global_exec_alloc);
-        return exit_code;
     }
+    freeLabelList(&label_list);
+    freeDataList(&data_list);
+    freeVariableTable(&var_table);
+    freeVariableTable(&label_table);
+    freeVariableTable(&func_table);
+    freeStack(&var_memory);
+    freeStack(&jit_memory);
+    freeStack(&global_exec_alloc);
+    return exit_code;
 }
