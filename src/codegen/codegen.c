@@ -1,5 +1,6 @@
 
 #include <string.h>
+#include <stdlib.h>
 
 #ifndef NONATIVEFN
 #include <dlfcn.h>
@@ -8,6 +9,7 @@
 #include "codegen/codegen.h"
 #include "codegen/codegenfunc.h"
 #include "exec/execalloc.h"
+#include "exec/fileexec.h"
 
 static uint64_t data_index = 0;
 
@@ -1760,6 +1762,17 @@ static Value generateMCExprIfElse(AstIfThenElse* ast, MCGenerationData* data) {
     return withFreeRegister((Ast*)ast, data, (GenerateMCFunction)generateMCExprIfElseAfterFreeReg, 2, 2);
 }
 
+static Value generateMCLoad(AstUnary* ast, MCGenerationData* data) {
+    AstString* filename = (AstString*)ast->value;
+    if (generateMcIntoData(filename->str, data) == EXIT_SUCCESS) {
+        Value ret = { .type = VALUE_NONE };
+        return ret;
+    } else {
+        Value ret = { .type = VALUE_ERROR, .error = ERROR_LOAD };
+        return ret;
+    }
+}
+
 Value generateMCForAst(Ast* ast, MCGenerationData* data) {
     Value value = {.type = VALUE_NONE};
     switch (ast->type) {
@@ -1863,6 +1876,9 @@ Value generateMCForAst(Ast* ast, MCGenerationData* data) {
     case AST_FN:
         value = generateMCFn((AstFn*)ast, data);
         break;
+    case AST_LOAD:
+        value = generateMCLoad((AstUnary*)ast, data);
+        break;
     default:
         value = generateMCForFunctions(ast, data);
         break;
@@ -1883,3 +1899,4 @@ Error generateMC(Ast* ast, MCGenerationData* data) {
         return ERROR_SYNTAX;
     }
 }
+

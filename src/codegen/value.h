@@ -26,6 +26,7 @@ typedef enum {
     ERROR_TO_MANY_PARAMS,
     ERROR_TO_FEW_PARAMS,
     ERROR_NOT_SUPPORTED,
+    ERROR_LOAD,
 } Error;
 
 typedef struct {
