@@ -1,0 +1,9 @@
+Rem test: loading should be possible using relative paths
+
+load "./include.load.basic"
+
+Assert A = 42
+Assert Fn F(5) = 10
+GoSub test
+Assert A = 5
+

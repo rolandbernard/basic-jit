@@ -17,13 +17,29 @@ static char* line_buffer;
 static int line_buffer_capacity = 0;
 
 int generateMcIntoData(const char* filename, MCGenerationData* data) {
-    FILE* file = fopen(filename, "r");
+    int exit_code = EXIT_SUCCESS;
+    const char* old_filename = data->filename;
+    int len_base = strlen(data->filename);
+    int len_relative = strlen(filename);
+    while (len_base > 0 && data->filename[len_base - 1] != '/') {
+        len_base--;
+    }
+    char real_filename[len_base + len_relative + 1];
+    if (filename[0] == '.') {
+        memcpy(real_filename, old_filename, len_base);
+        memcpy(real_filename + len_base, filename, len_relative);
+        real_filename[len_base + len_relative] = 0;
+    } else {
+        memcpy(real_filename, filename, len_relative);
+        real_filename[len_relative] = 0;
+    }
+    data->filename = real_filename;
+    FILE* file = fopen(real_filename, "r");
     if(file == NULL) {
-        fprintf(stderr, "error: Failed to open the file '%s': %s\n", filename, strerror(errno));
-        return EXIT_FAILURE;
+        fprintf(stderr, "error: Failed to open the file '%s': %s\n", real_filename, strerror(errno));
+        exit_code = EXIT_FAILURE;
     } else {
         StackAllocator ast_memory = STACK_ALLOCATOR_INITIALIZER;
-        int exit_code = EXIT_SUCCESS;
         bool had_error = false;
         bool end_of_file = false;
         while(!had_error && !end_of_file) {
@@ -86,8 +102,9 @@ int generateMcIntoData(const char* filename, MCGenerationData* data) {
         }
         fclose(file);
         freeStack(&ast_memory);
-        return exit_code;
     }
+    data->filename = old_filename;
+    return exit_code;
 }
 
 int executeFile(const char* filename) {
@@ -108,6 +125,7 @@ int executeFile(const char* filename) {
         .func_table = &func_table,
         .registers = 0,
         .line = 1,
+        .filename = filename,
     };
     addInstPushCallerRegs(data.inst_mem, data.registers);
     int exit_code = generateMcIntoData(filename, &data);

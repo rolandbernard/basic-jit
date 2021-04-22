@@ -1,0 +1,10 @@
+Rem test: loaded files should be able to load other files
+
+load "./include.load2.basic"
+
+Assert A = 42
+Assert B = 12
+Assert Fn F(5) = 10
+GoSub test
+Assert A = 5
+

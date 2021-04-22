@@ -1763,13 +1763,18 @@ static Value generateMCExprIfElse(AstIfThenElse* ast, MCGenerationData* data) {
 }
 
 static Value generateMCLoad(AstUnary* ast, MCGenerationData* data) {
-    AstString* filename = (AstString*)ast->value;
-    if (generateMcIntoData(filename->str, data) == EXIT_SUCCESS) {
-        Value ret = { .type = VALUE_NONE };
+    if (data->filename == NULL) {
+        Value ret = { .type = VALUE_ERROR, .error = ERROR_NOT_SUPPORTED };
         return ret;
     } else {
-        Value ret = { .type = VALUE_ERROR, .error = ERROR_LOAD };
-        return ret;
+        AstString* filename = (AstString*)ast->value;
+        if (generateMcIntoData(filename->str, data) == EXIT_SUCCESS) {
+            Value ret = { .type = VALUE_NONE };
+            return ret;
+        } else {
+            Value ret = { .type = VALUE_ERROR, .error = ERROR_LOAD };
+            return ret;
+        }
     }
 }
 
