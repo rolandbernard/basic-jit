@@ -2,6 +2,7 @@
 build/
 .vscode/
 compile_flags.txt
+.vimspector.json
 
 *.log
 callgrind.*
