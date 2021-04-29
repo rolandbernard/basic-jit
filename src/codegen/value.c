@@ -16,6 +16,7 @@ static const char* error_to_name[] = {
     [ERROR_TO_FEW_PARAMS] = "To few function arguments",
     [ERROR_NOT_SUPPORTED] = "Operation not supported",
     [ERROR_LOAD] = "Failed to load file",
+    [ERROR_DL_LOAD] = "Failed to load library",
 };
 
 const char* getErrorName(Error e) {

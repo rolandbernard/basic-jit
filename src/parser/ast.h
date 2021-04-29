@@ -58,7 +58,7 @@ typedef enum {
     AST_LOAD,
     AST_LEN,
     AST_EDIT,
-    AST_EXT,
+    AST_DLIB,
 
     // binary
     AST_ADD,
@@ -100,6 +100,7 @@ typedef enum {
     AST_LINENUM,
     AST_DEF,
     AST_FN,
+    AST_EXT,
 
     // If/else
     AST_IF_THEN_ELSE,

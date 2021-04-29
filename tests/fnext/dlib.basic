@@ -1,0 +1,13 @@
+Rem test: Other external libraries can also be called
+Rem stdout: = Hello world\n
+Rem time: < 5s
+
+Dlib "libLLVM.so"
+
+Ext Fn LLVMCreateMessage$(reg$)
+Ext Fn LLVMDisposeMessage(msg$)
+
+test = Fn LLVMCreateMessage("Hello world")
+Print test
+Fn LLVMDisposeMessage(test)
+

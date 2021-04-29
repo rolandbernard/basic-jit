@@ -1778,6 +1778,22 @@ static Value generateMCLoad(AstUnary* ast, MCGenerationData* data) {
     }
 }
 
+static Value generateMCDlib(AstUnary* ast, MCGenerationData* data) {
+#ifndef NONATIVEFN
+    AstString* filename = (AstString*)ast->value;
+    if (dlopen(filename->str, RTLD_LAZY | RTLD_GLOBAL) != NULL) {
+        Value ret = { .type = VALUE_NONE };
+        return ret;
+    } else {
+        Value ret = { .type = VALUE_ERROR, .error = ERROR_DL_LOAD };
+        return ret;
+    }
+#else
+    Value ret = { .type = VALUE_ERROR, .error = ERROR_NOT_SUPPORTED };
+    return ret;
+#endif
+}
+
 Value generateMCForAst(Ast* ast, MCGenerationData* data) {
     Value value = {.type = VALUE_NONE};
     switch (ast->type) {
@@ -1883,6 +1899,9 @@ Value generateMCForAst(Ast* ast, MCGenerationData* data) {
         break;
     case AST_LOAD:
         value = generateMCLoad((AstUnary*)ast, data);
+        break;
+    case AST_DLIB:
+        value = generateMCDlib((AstUnary*)ast, data);
         break;
     default:
         value = generateMCForFunctions(ast, data);
