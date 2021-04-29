@@ -230,6 +230,10 @@ static bool inputLine(FILE* input) {
     bool end = false;
     int next_char = 0;
     int len = 0;
+    if (len >= line_buffer_capacity) {
+        line_buffer_capacity = INITIAL_LINE_BUFFER;
+        line_buffer = (char*)malloc(sizeof(char) * line_buffer_capacity);
+    }
 #ifndef NOREADLINE
     if (isatty(fileno(input))) {
         char* line = readline(">");
@@ -239,13 +243,8 @@ static bool inputLine(FILE* input) {
         } else {
             len = strlen(line);
             while (len >= line_buffer_capacity) {
-                if (line_buffer_capacity == 0) {
-                    line_buffer_capacity = INITIAL_LINE_BUFFER;
-                    line_buffer = (char*)malloc(sizeof(char) * line_buffer_capacity);
-                } else {
-                    line_buffer_capacity *= 2;
-                    line_buffer = (char*)realloc(line_buffer, sizeof(char) * line_buffer_capacity);
-                }
+                line_buffer_capacity *= 2;
+                line_buffer = (char*)realloc(line_buffer, sizeof(char) * line_buffer_capacity);
             }
             memcpy(line_buffer, line, len);
             add_history(line);
@@ -453,6 +452,15 @@ static bool executeLine(const char* line) {
 int executeCli() {
 #ifndef NOREADLINE
     rl_startup_hook = readlineHook;
+    using_history();
+    char* homedir = getenv("HOME");
+    char history_file[strlen(homedir) + 20];
+    if (homedir != NULL) {
+        strcpy(history_file, homedir);
+        strcat(history_file, "/.basicjit_history");
+        read_history(history_file);
+    }
+    int start_length = history_length;
 #endif
     bool end = false;
     while(!end) {
@@ -473,6 +481,11 @@ int executeCli() {
     removeAllLines();
     free(line_buffer);
 #ifndef NOREADLINE
+    if (homedir != NULL) {
+        if (append_history(history_length - start_length, history_file) && errno == ENOENT) {
+            write_history(history_file);
+        }
+    }
     clear_history();
 #endif
     line_buffer = NULL;
