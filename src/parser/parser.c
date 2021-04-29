@@ -802,12 +802,14 @@ static Ast* parseEndStatement(Scanner* scanner, StackAllocator* mem) {
     }
 }
 
-static Ast* parseSaveStatement(Scanner* scanner, StackAllocator* mem) {
+static Ast* parseUnaryStringStatement(Scanner* scanner, StackAllocator* mem) {
     AstType type = AST_NONE;
     if (acceptToken(scanner, TOKEN_SAVE)) {
         type = AST_SAVE;
     } else if (acceptToken(scanner, TOKEN_LOAD)) {
         type = AST_LOAD;
+    } else if (acceptToken(scanner, TOKEN_DLIB)) {
+        type = AST_DLIB;
     }
     if (type != AST_NONE) {
         int error_offset = getScannerOffset(scanner);
@@ -1382,7 +1384,7 @@ static Ast* parseSingleOperation(Scanner* scanner, StackAllocator* mem) {
        (ret = parseAssertStatement(scanner, mem)) != NULL ||
        (ret = parseDefStatement(scanner, mem)) != NULL ||
        (ret = parseEndStatement(scanner, mem)) != NULL ||
-       (ret = parseSaveStatement(scanner, mem)) != NULL ||
+       (ret = parseUnaryStringStatement(scanner, mem)) != NULL ||
        (ret = parseSleepStatement(scanner, mem)) != NULL ||
        (ret = parseSwitchStatement(scanner, mem)) != NULL ||
        (ret = parseIfThenElseStatement(scanner, mem)) != NULL ||

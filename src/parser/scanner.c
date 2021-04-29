@@ -78,6 +78,7 @@ static const char* tokenTypeToString[] = {
     [TOKEN_LEN] = "LEN",
     [TOKEN_EDIT] = "EDIT",
     [TOKEN_EXT] = "EXT",
+    [TOKEN_DLIB] = "DLIB",
 };
 
 typedef struct {
