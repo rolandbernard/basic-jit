@@ -1,5 +1,6 @@
 Rem test: Other external libraries can also be called
 Rem stdout: = Hello world\n
+Rem time: < 5s
 
 Dlib "libLLVM.so"
 
