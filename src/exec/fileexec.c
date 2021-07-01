@@ -113,7 +113,7 @@ int executeFile(const char* filename) {
     VariableTable var_table = VARIABLE_TABLE_INITIALIZER;
     StackAllocator jit_memory = STACK_ALLOCATOR_INITIALIZER;
     VariableTable label_table = VARIABLE_TABLE_INITIALIZER;
-    UnhandeledLabelList label_list = UNHANDLED_LABEL_LIST_INITIALIZER;
+    UnhandledLabelList label_list = UNHANDLED_LABEL_LIST_INITIALIZER;
     VariableTable func_table = VARIABLE_TABLE_INITIALIZER;
     MCGenerationData data = {
         .inst_mem = &jit_memory,
@@ -175,3 +175,4 @@ int executeFile(const char* filename) {
     freeStack(&global_exec_alloc);
     return exit_code;
 }
+

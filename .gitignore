@@ -1,6 +1,7 @@
 
 build/
 .vscode/
+.vim/
 compile_flags.txt
 .vimspector.json
 
@@ -13,3 +14,4 @@ tmp.*
 *.tmp.basic
 
 .gdb_history
+

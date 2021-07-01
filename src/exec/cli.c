@@ -37,7 +37,7 @@ static StackAllocator var_memory = STACK_ALLOCATOR_INITIALIZER;
 static VariableTable var_table = VARIABLE_TABLE_INITIALIZER;
 static StackAllocator jit_memory = STACK_ALLOCATOR_INITIALIZER;
 static VariableTable label_table = VARIABLE_TABLE_INITIALIZER;
-static UnhandeledLabelList label_list = UNHANDLED_LABEL_LIST_INITIALIZER;
+static UnhandledLabelList label_list = UNHANDLED_LABEL_LIST_INITIALIZER;
 static VariableTable func_table = VARIABLE_TABLE_INITIALIZER;
             
 static int exit_code = EXIT_SUCCESS;
@@ -492,3 +492,4 @@ int executeCli() {
     line_buffer_capacity = 0;
     return exit_code;
 }
+

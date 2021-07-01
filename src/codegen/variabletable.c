@@ -37,7 +37,7 @@ static int findEntry(const VariableTableEntry* data, int capacity, const char* k
     return -1;
 }
 
-static void rehashEntrys(VariableTable* ht, VariableTableEntry* new_data, int new_capacity) {
+static void rehashEntries(VariableTable* ht, VariableTableEntry* new_data, int new_capacity) {
     for(int i = 0; i < ht->capacity; i++) {
         if(ht->data[i].key != NULL) {
             insertIntoData(new_data, new_capacity, ht->data[i].key, ht->data[i].value);
@@ -53,7 +53,7 @@ void addVariable(VariableTable* table, const char* name, Variable* variable, Sta
         } else {
             int new_capacity = table->capacity * 2;
             VariableTableEntry* new_data = (VariableTableEntry*)calloc(new_capacity, sizeof(VariableTableEntry));
-            rehashEntrys(table, new_data, new_capacity);
+            rehashEntries(table, new_data, new_capacity);
             free(table->data);
             table->capacity = new_capacity;
             table->data = new_data;

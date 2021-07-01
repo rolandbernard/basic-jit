@@ -15,7 +15,7 @@ typedef struct {
     VariableTable* variable_table;
     VariableTable* label_table;
     VariableTable* func_table;
-    UnhandeledLabelList* label_list;
+    UnhandledLabelList* label_list;
     DataList* data_mem;
     RegisterSet registers;
     int line;

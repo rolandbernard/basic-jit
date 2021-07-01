@@ -64,3 +64,4 @@ void printMemoryContent(FILE* file, void* mem, size_t len) {
         fprintf(file, "\n");
     }
 }
+

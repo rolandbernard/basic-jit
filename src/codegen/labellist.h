@@ -11,22 +11,22 @@ typedef struct {
     int line;
     size_t position;
     bool for_restore;
-} UnhandeledLabelEntry;
+} UnhandledLabelEntry;
 
 typedef struct {
     size_t count;
     size_t capacity;
-    UnhandeledLabelEntry* data;
-} UnhandeledLabelList;
+    UnhandledLabelEntry* data;
+} UnhandledLabelList;
 
 #define UNHANDLED_LABEL_LIST_INITIALIZER { .count = 0, .capacity = 0, .data = NULL }
 
-void addLabelToList(UnhandeledLabelList* list, UnhandeledLabelEntry entry);
+void addLabelToList(UnhandledLabelList* list, UnhandledLabelEntry entry);
 
-void freeLabelList(UnhandeledLabelList* list);
+void freeLabelList(UnhandledLabelList* list);
 
-int fillUnhandledLabelLocations(UnhandeledLabelList* list, VariableTable* table, StackAllocator* inst_mem);
+int fillUnhandledLabelLocations(UnhandledLabelList* list, VariableTable* table, StackAllocator* inst_mem);
 
-void resetLabelList(UnhandeledLabelList* list);
+void resetLabelList(UnhandledLabelList* list);
 
 #endif
