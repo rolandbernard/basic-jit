@@ -512,11 +512,17 @@ static double inputFloat() {
 
 static char* inputString() {
     char tmp[2048];
-    fgets(tmp, 2048, stdin);
-    size_t len = strlen(tmp);
-    if (tmp[len - 1] == '\n') {
-        len--;
-        tmp[len] = 0;
+    char* res = fgets(tmp, 2048, stdin);
+    size_t len;
+    if (res != NULL) {
+        len = strlen(tmp);
+        if (len > 0 && tmp[len - 1] == '\n') {
+            len--;
+            tmp[len] = 0;
+        }
+    } else {
+        len = 0;
+        tmp[0] = 0;
     }
     char* ret = (char*)allocAligned(&global_exec_alloc, len + 1);
     memcpy(ret, tmp, len + 1);
