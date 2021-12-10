@@ -4,26 +4,26 @@
 #include "codegen/labellist.h"
 #include "codegen/instructions.h"
 
-void addLabelToList(UnhandeledLabelList* list, UnhandeledLabelEntry entry) {
+void addLabelToList(UnhandledLabelList* list, UnhandledLabelEntry entry) {
     if(list->count == list->capacity) {
         if(list->capacity == 0) {
             list->capacity = 16;
         } else {
             list->capacity *= 2;
         }
-        list->data = (UnhandeledLabelEntry*)realloc(list->data, sizeof(UnhandeledLabelEntry) * list->capacity);
+        list->data = (UnhandledLabelEntry*)realloc(list->data, sizeof(UnhandledLabelEntry) * list->capacity);
     }
     list->data[list->count] = entry;
     list->count++;
 }
 
-void freeLabelList(UnhandeledLabelList* list) {
+void freeLabelList(UnhandledLabelList* list) {
     if(list != NULL) {
         free(list->data);
     }
 }
 
-int fillUnhandledLabelLocations(UnhandeledLabelList* list, VariableTable* table, StackAllocator* inst_mem) {
+int fillUnhandledLabelLocations(UnhandledLabelList* list, VariableTable* table, StackAllocator* inst_mem) {
     for(size_t i = 0; i < list->count; i++) {
         VariableLabel* label = (VariableLabel*)getVariable(table, list->data[i].name);
         if(label == NULL || label->type != VARIABLE_LABEL) {
@@ -40,6 +40,6 @@ int fillUnhandledLabelLocations(UnhandeledLabelList* list, VariableTable* table,
     return -1;
 }
 
-void resetLabelList(UnhandeledLabelList* list) {
+void resetLabelList(UnhandledLabelList* list) {
     list->count = 0;
 }

@@ -512,11 +512,17 @@ static double inputFloat() {
 
 static char* inputString() {
     char tmp[2048];
-    fgets(tmp, 2048, stdin);
-    size_t len = strlen(tmp);
-    if (tmp[len - 1] == '\n') {
-        len--;
-        tmp[len] = 0;
+    char* res = fgets(tmp, 2048, stdin);
+    size_t len;
+    if (res != NULL) {
+        len = strlen(tmp);
+        if (len > 0 && tmp[len - 1] == '\n') {
+            len--;
+            tmp[len] = 0;
+        }
+    } else {
+        len = 0;
+        tmp[0] = 0;
     }
     char* ret = (char*)allocAligned(&global_exec_alloc, len + 1);
     memcpy(ret, tmp, len + 1);
@@ -619,27 +625,27 @@ static Value generateMCInputAfterFreeReg(AstVariable* ast, MCGenerationData* dat
             Variable* variable = getVariable(data->variable_table, var->name);
             if (variable == NULL) {
                 if (var->var_type == VAR_UNDEF || var->var_type == VAR_FLOAT) {
-                    VariableFloat* varib = (VariableFloat*)allocAligned(data->variable_mem, sizeof(VariableFloat));
-                    varib->type = VARIABLE_FLOAT;
-                    varib->for_jmp_loc = ~0;
-                    varib->for_call_loc = ~0;
-                    varib->value = 0.0;
-                    addVariable(data->variable_table, var->name, (Variable*)varib, data->variable_mem);
-                    variable = (Variable*)varib;
+                    VariableFloat* real = (VariableFloat*)allocAligned(data->variable_mem, sizeof(VariableFloat));
+                    real->type = VARIABLE_FLOAT;
+                    real->for_jmp_loc = ~0;
+                    real->for_call_loc = ~0;
+                    real->value = 0.0;
+                    addVariable(data->variable_table, var->name, (Variable*)real, data->variable_mem);
+                    variable = (Variable*)real;
                 } else if (var->var_type == VAR_INT) {
-                    VariableInt* varib = (VariableInt*)allocAligned(data->variable_mem, sizeof(VariableInt));
-                    varib->type = VARIABLE_INT;
-                    varib->for_jmp_loc = ~0;
-                    varib->for_call_loc = ~0;
-                    varib->value = 0;
-                    addVariable(data->variable_table, var->name, (Variable*)varib, data->variable_mem);
-                    variable = (Variable*)varib;
+                    VariableInt* integer = (VariableInt*)allocAligned(data->variable_mem, sizeof(VariableInt));
+                    integer->type = VARIABLE_INT;
+                    integer->for_jmp_loc = ~0;
+                    integer->for_call_loc = ~0;
+                    integer->value = 0;
+                    addVariable(data->variable_table, var->name, (Variable*)integer, data->variable_mem);
+                    variable = (Variable*)integer;
                 } else if (var->var_type == VAR_STR) {
-                    VariableString* varib = (VariableString*)allocAligned(data->variable_mem, sizeof(VariableString));
-                    varib->type = VARIABLE_STRING;
-                    varib->str = NULL;
-                    addVariable(data->variable_table, var->name, (Variable*)varib, data->variable_mem);
-                    variable = (Variable*)varib;
+                    VariableString* string = (VariableString*)allocAligned(data->variable_mem, sizeof(VariableString));
+                    string->type = VARIABLE_STRING;
+                    string->str = NULL;
+                    addVariable(data->variable_table, var->name, (Variable*)string, data->variable_mem);
+                    variable = (Variable*)string;
                 }
             } else if (var->var_type != VAR_UNDEF) {
                 if ((variable->type == VARIABLE_INT && var->var_type != VAR_INT) || (variable->type == VARIABLE_FLOAT && var->var_type != VAR_FLOAT) || (variable->type == VARIABLE_STRING && var->var_type != VAR_STR)) {
@@ -647,7 +653,7 @@ static Value generateMCInputAfterFreeReg(AstVariable* ast, MCGenerationData* dat
                     return ret;
                 }
             } else if (variable->type != VARIABLE_FLOAT && variable->type != VARIABLE_INT && variable->type != VARIABLE_STRING) {
-                Value ret = {.type = VALUE_ERROR, .error = ERROR_UNINDEXED_ARRAY};
+                Value ret = {.type = VALUE_ERROR, .error = ERROR_NON_INDEXED_ARRAY};
                 return ret;
             }
             if (variable->type == VARIABLE_INT) {
@@ -1035,3 +1041,4 @@ Value generateMCForFunctions(Ast* ast, MCGenerationData* data) {
     }
     return value;
 }
+

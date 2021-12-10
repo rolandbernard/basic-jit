@@ -51,3 +51,4 @@ int parseUTF8(char* str, uint64_t* out) {
         return i;
     }
 }
+

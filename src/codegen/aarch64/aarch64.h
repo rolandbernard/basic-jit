@@ -722,7 +722,7 @@ typedef union {
         uint32_t opcode : 3;
         uint32_t rmode : 2;
         uint32_t cnst2 : 1;
-        uint32_t ptyoe : 2;
+        uint32_t ptype : 2;
         uint32_t cnst1 : 5;
         uint32_t s : 1;
         uint32_t cnst0 : 1;

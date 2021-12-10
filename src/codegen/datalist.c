@@ -25,3 +25,4 @@ void freeDataList(DataList* list) {
 void resetDataList(DataList* list) {
     list->count = 0;
 }
+

@@ -1479,13 +1479,13 @@ Ast* parseExpressionLine(const char* line, StackAllocator* mem) {
     Ast* ret;
     Ast* exp = parseExpression(&scanner, mem);
     if(exp != NULL && exp->type != AST_ERROR) {
-        AstVariable* prnt = (AstVariable*)allocAligned(mem, sizeof(AstVariable));
-        prnt->type = AST_PRINT;
-        prnt->open_end = false;
-        prnt->count = 1;
-        prnt->values = (Ast**)allocAligned(mem, sizeof(Ast*));
-        prnt->values[0] = exp;
-        ret = (Ast*)prnt;
+        AstVariable* print = (AstVariable*)allocAligned(mem, sizeof(AstVariable));
+        print->type = AST_PRINT;
+        print->open_end = false;
+        print->count = 1;
+        print->values = (Ast**)allocAligned(mem, sizeof(Ast*));
+        print->values[0] = exp;
+        ret = (Ast*)print;
     } else if(exp == NULL) {
         ret = parseLineRoot(&scanner, mem);
     } else {
@@ -1497,3 +1497,4 @@ Ast* parseExpressionLine(const char* line, StackAllocator* mem) {
         return ret;
     }
 }
+

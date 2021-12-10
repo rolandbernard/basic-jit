@@ -79,3 +79,4 @@ void resetStack(StackAllocator* mem) {
         resetStack(mem->next);
     }
 }
+
